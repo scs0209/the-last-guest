@@ -57,9 +57,10 @@ function canvasTex(w, h, draw, repeat) {
 }
 
 export function createWorld(canvas, opts) {
+  const isTouchDevice = matchMedia("(pointer: coarse)").matches;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, isTouchDevice ? 1 : 1.5));
+  renderer.shadowMap.enabled = !isTouchDevice; renderer.shadowMap.autoUpdate = false; // one shadow light, redrawn every third frame (below) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 
@@ -164,7 +165,7 @@ export function createWorld(canvas, opts) {
   const tinted = new WeakSet();
   function place(name, { x, y = 0, z, ry = 0, rx = 0, rz = 0, height, width, size, anchor = "bottom", against, tint, hide = [] }) {
     loaded[name] ||= gltf.loadAsync(`models/${name}.glb`).then((g) => g.scene);
-    return loaded[name].then((src) => {
+    const done = loaded[name].then((src) => {
       const o = src.clone(true), holder = new THREE.Group();
       o.rotation.set(rx, 0, rz); holder.add(o);
       b3.setFromObject(o).getSize(v3);
@@ -186,7 +187,10 @@ export function createWorld(canvas, opts) {
       hide.forEach((h) => { h.visible = false; });
       return { holder, box: b3.setFromObject(holder).clone() };
     }).catch((e) => { console.warn(`model ${name} failed to load`, e); return null; });
+    placing.push(done);
+    return done;
   }
+  const placing = [];
 
   // ------------------------------------------------ rooms
   const H = 4;
@@ -221,22 +225,23 @@ export function createWorld(canvas, opts) {
     if (shadow) { l.castShadow = true; l.shadow.mapSize.set(512, 512); l.shadow.bias = -.003; }
     scene.add(l); return l;
   };
-  const chandelier = point(0xffa955, 24, 11, 0, 2.55, 6.5, true); // below the shades, so they are lit from inside without glaring
+  const chandelier = point(0xffa955, 24, 11, 0, 2.55, 6.5, false); // below the shades, so they are lit from inside without glaring
   const dinA = point(0xffb45a, 9, 9, -.9, 1.6, -2, true); candleLights.push(dinA);
   const dinB = point(0xffb45a, 9, 9, .9, 1.6, -2, false); candleLights.push(dinB);
   const fire = point(0xff5a20, 8, 6, -4.3, .6, -2, false);
-  const lamp = point(0xffc890, 6, 5, 8.2, 1.5, 5.4, true);
+  const lamp = point(0xffc890, 6, 5, 8.2, 1.5, 5.4, false);
   const pianoLight = point(0x9fb4ff, 0, 5, 3.2, 1.8, -4.4, false);
   // moonlit windows
-  const windowAt = (x, z, ry) => {
+  const windowAt = (x, z, ry, moonlit = true) => {
     const g = new THREE.Group();
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.2), M.glass); g.add(pane);
     [[0, 1.12, 1.4, .1], [0, -1.12, 1.4, .1], [-.62, 0, .1, 2.3], [.62, 0, .1, 2.3], [0, 0, .06, 2.2], [0, .3, 1.2, .06]].forEach(([a, b, w, h]) => { const m = box(w, h, .08, M.darkwood); m.position.set(a, b, .02); g.add(m); });
     at(g, x, 2.2, z, ry);
+    if (!moonlit) return;
     const moon = new THREE.SpotLight(0x6f86d8, 4.5, 11, .5, .7); moon.position.set(x - Math.sin(ry) * .2, 3.2, z - Math.cos(ry) * .2);
     moon.target.position.set(x + Math.sin(ry) * 3, 0, z + Math.cos(ry) * 3); scene.add(moon, moon.target);
   };
-  windowAt(-3.98, 7, Math.PI / 2); windowAt(9.98, 0, 0); windowAt(-1.5, -5.98, 0); windowAt(1.5, -5.98, 0); windowAt(7, 8.98, Math.PI);
+  windowAt(-3.98, 7, Math.PI / 2); windowAt(-1.5, -5.98, 0, false); windowAt(1.5, -5.98, 0); windowAt(7, 8.98, Math.PI); // one moon light per room
 
   // ------------------------------------------------ foyer: staircases, chandelier, front door, rug
   const stairs = (x0, dir) => {
@@ -264,11 +269,11 @@ export function createWorld(canvas, opts) {
   const rugMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.6), M.rug); rugMesh.rotation.x = -Math.PI / 2; at(rugMesh, 0, .005, 7);
   // console table by the door, a pumpkin and a clock on it
   const pumpkin = new THREE.Mesh(new THREE.SphereGeometry(.22, 16, 12), new THREE.MeshStandardMaterial({ color: 0xd9640f, emissive: 0x6a2a00, emissiveIntensity: .7, roughness: .7 }));
-  pumpkin.scale.y = .8; at(pumpkin, 3.3, .18, 9.2); const pumpkinLight = point(0xff8a2a, 2.5, 3, 3.3, .5, 9.0, false);
+  pumpkin.scale.y = .8; at(pumpkin, 3.3, .18, 9.2); // its glow is emissive; no light of its own
   place("ClassicConsole_01", { x: 2.6, z: 9.6, ry: Math.PI, width: 1.4, against: ["z+", 9.97] }).then((r) => {
     if (!r) return;
     const top = r.box.max.y, cz = (r.box.min.z + r.box.max.z) / 2;
-    pumpkin.position.set(3.0, top + .17, cz); pumpkinLight.position.set(3.0, top + .5, cz - .3);
+    pumpkin.position.set(3.0, top + .17, cz);
     place("mantel_clock_01", { x: 2.2, y: top, z: cz, ry: Math.PI, height: .34 });
   });
   place("ornate_mirror_01", { x: -3.96, y: 2.1, z: 8.8, ry: Math.PI / 2, height: 1.3, anchor: "center", against: ["x-", -3.98] });
@@ -523,8 +528,7 @@ export function createWorld(canvas, opts) {
     at(group, pos[0], pos[1], pos[2], ry);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
     s.scale.set(.9, .9, 1); s.position.set(pos[0], pos[1] + .25, pos[2]); scene.add(s);
-    const light = point(0x8fb0ff, 1.2, 2.2, pos[0], pos[1] + .4, pos[2], false);
-    OBJ[key] = { group, sprite: s, light, pos: new THREE.Vector3(pos[0], pos[1], pos[2]), done: false };
+    OBJ[key] = { group, sprite: s, pos: new THREE.Vector3(pos[0], pos[1], pos[2]), done: false };
     group.userData.pick = s.userData.pick = key; pickables.push(group, s);
   };
   // photograph standing on the mantel
@@ -740,8 +744,24 @@ export function createWorld(canvas, opts) {
   const clock = new THREE.Clock();
   let candleCount = 7, turn = 0, gust = 0, pianoFlash = 0, herAlpha = -1, endingT = 0;
 
+  // compile every material's shader once the furniture is in, so walking into a room for the first time does not stutter
+  (async () => { let n; do { n = placing.length; await Promise.allSettled(placing.slice()); } while (placing.length !== n); renderer.compileAsync?.(scene, camera).catch(() => {}); })();
+
+  // Quality steps down on its own if frames are slow: first resolution and bloom, then the one shadow.
+  let quality = 2, slowFor = 0, frameN = 0;
+  function adapt(dt) {
+    slowFor = dt > 1 / 38 ? slowFor + dt : Math.max(0, slowFor - dt * .5);
+    if (slowFor < 2.5 || quality === 0) return;
+    slowFor = 0; quality--;
+    if (quality === 1) { renderer.setPixelRatio(1); bloom.enabled = false; resize(); }
+    if (quality === 0) { renderer.shadowMap.enabled = false; scene.traverse((m) => { if (m.material) [].concat(m.material).forEach((mt) => { mt.needsUpdate = true; }); }); }
+    console.info("quality lowered to", quality);
+  }
+
   function update() {
-    const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+    const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
+    if (enabled) adapt(raw);
+    if (++frameN % 3 === 0) renderer.shadowMap.needsUpdate = true;
     // movement
     if (enabled && !cinematic) {
       let ix = 0, iz = 0;
@@ -804,7 +824,7 @@ export function createWorld(canvas, opts) {
     // remembering objects pulse until found
     for (const o of Object.values(OBJ)) {
       const p = o.done ? .25 : .7 + Math.sin(t * 2.4 + o.pos.x) * .3;
-      o.sprite.material.opacity = p * .55; o.light.intensity = o.done ? .15 : .4 + p * .4;
+      o.sprite.material.opacity = p * .55;
       o.sprite.position.y = o.pos.y + .25 + Math.sin(t * 1.7 + o.pos.z) * .04;
     }
     disc.rotation.y += dt * (opts.isSpinning?.() ? 3.5 : .1);
@@ -839,6 +859,7 @@ export function createWorld(canvas, opts) {
 
   return {
     update, resize, isTouch, OBJECT_KEYS: Object.keys(OBJ), rooms: ROOMS, walls: WALLS,
+    debug: { renderer, scene, composer, bloom }, // for profiling from the console
     get player() { return player; },
     get looked() { return looked; },
     nearest,
