@@ -1,6 +1,7 @@
 # Render Blueprint: one Docker web service running the game server and Gemma on CPU.
-# Gemma 4 E4B (Q4_K_M) needs several GB of RAM on top of the server; pick a plan with
-# at least 8 GB and confirm it against your credits before deploying.
+# Measured locally: the container holds about 7.1 GB with Gemma 4 E4B (Q4_K_M) loaded, so an
+# 8 GB plan leaves almost no headroom. Pick a plan with more memory and confirm it against
+# your credits before deploying.
 services:
   - type: web
     name: the-last-guest
