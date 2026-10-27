@@ -41,3 +41,13 @@ npx @gltf-transform/cli@4.5.1 optimize <asset>_1k.gltf web/models/<asset>.glb --
 
 Small props (clock, vase, books, frames, goblets, bust) use `--texture-size 512`; `dining_table` also uses `--join false --flatten false`
 so its cloth stays a separate mesh. Textures were resized with macOS `sips` (diffuse 1024 px, normal and roughness 512 px, JPEG quality 72).
+
+Shrunk again on 2026-10-28 for download size and GPU memory (8.7 MB -> 4.2 MB for all models): textures resized to
+256 px for small props (goblets, clock, vase, books, frames) and 512 px for everything else, re-encoded as WebP at
+quality 80, geometry re-compressed with meshopt; a file was replaced only if the result was smaller.
+
+```bash
+npx @gltf-transform/cli@4.5.1 resize <model>.glb r.glb --width 512 --height 512
+npx @gltf-transform/cli@4.5.1 webp r.glb w.glb --quality 80
+npx @gltf-transform/cli@4.5.1 meshopt w.glb <model>.glb
+```
