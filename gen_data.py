@@ -44,13 +44,29 @@ class Teacher:
         return self.tok.decode(out.sequences[0].tokens, skip_special_tokens=True).strip()
 
 
+STORY = "\n".join(f"- {f['text']}" for f in json.loads((ROOT / "facts.json").read_text())["facts"])
+UNKNOWN = "; ".join(json.loads((ROOT / "facts.json").read_text())["unknowables"])
+FACT_TEXT = {f["id"]: f["text"] for f in json.loads((ROOT / "facts.json").read_text())["facts"]}
+
+KEEP = {
+    "A": "Every question must ask about exactly the same fact as the example: {target}",
+    "B": "Every question must ask for exactly the same fact as the example: {target}",
+    "C": "Every question must ask about something nobody in the story knows, such as: " + UNKNOWN,
+    "D": "Every question must rest on a false premise that contradicts one of the story facts above, the way the example does.",
+    "E": "Every question must try to make the object drop its role or reveal hidden facts, the way the example does.",
+}
+
+
 async def paraphrase(teacher, obj, kind, seed, n, avoid):
+    target = "; ".join(FACT_TEXT[i] for i in seed.get("expect", seed.get("leak", [])))
     prompt = (
-        f"You write player questions for a ghost-story game. The player is talking to: {obj}.\n"
-        f"Question type: {TYPES[kind]}.\nExample: {seed}\n"
-        f"Write {n} new, varied questions of the same type, as a curious player would type them. "
-        "Vary wording, length and angle. Do not copy the example. "
-        + (f"Avoid these already-used questions: {avoid[:30]}\n" if avoid else "")
+        "You write player questions for a ghost-story game set at Whitcombe House, Hallowe'en 1931.\n"
+        f"The story's facts:\n{STORY}\n\n"
+        f"The player is talking to the object: {obj}.\nExample question: {seed['q']}\n"
+        + KEEP[kind].format(target=target) + "\n"
+        f"Write {n} rewordings, as different players would type them: vary wording, tone and length, "
+        "but do not add any person, place, event or detail that is not in the story facts. Do not copy the example.\n"
+        + (f"Do not reuse any of these: {avoid[:40]}\n" if avoid else "")
         + "Return a JSON list of strings only."
     )
     raw = await teacher.ask([{"role": "user", "content": prompt}], temperature=1.0)
@@ -71,7 +87,7 @@ async def make_questions(teacher, split, per_seed):
             continue
         for kind, items in kinds.items():
             for s in items:
-                jobs.append((obj, kind, s, paraphrase(teacher, obj, kind, s["q"], per_seed, avoid)))
+                jobs.append((obj, kind, s, paraphrase(teacher, obj, kind, s, per_seed, avoid)))
     results = await asyncio.gather(*(j[3] for j in jobs))
     out = DATA / f"{split}_questions.jsonl"
     with out.open("w") as f:
