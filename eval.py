@@ -3,6 +3,9 @@
     uv run --env-file .env python eval.py answer qwen-base     # Qwen3.5-4B, prompt only (Tinker)
     uv run --env-file .env python eval.py answer gemma-base    # Gemma 4 E4B, prompt only (local Ollama)
     uv run --env-file .env python eval.py answer qwen-lora --weights tinker://...
+    uv run python eval.py answer gemma-harness                 # Gemma inside the game harness (server.py)
+    uv run python eval.py answer mlx-base                     # Qwen3.5-4B on this Mac (MLX)
+    uv run python eval.py answer mlx-lora --weights adapters/qwen35-4b
     uv run --env-file .env python eval.py score qwen-base      # check.py + open judge model
     uv run python eval.py summary
 """
@@ -61,8 +64,43 @@ async def answer_ollama(name="gemma4:e4b"):
     return out
 
 
+async def answer_mlx(adapter):
+    """Qwen3.5-4B on this Mac, with or without a LoRA adapter from train_mlx.sh."""
+    from mlx_lm import batch_generate, load
+    from mlx_lm.sample_utils import make_sampler
+    model, tok = load("Qwen/Qwen3.5-4B", adapter_path=adapter)
+    qs = questions()
+    prompts = [tok.apply_chat_template([{"role": "system", "content": card(r["obj"])}, {"role": "user", "content": r["q"]}],
+                                       add_generation_prompt=True, enable_thinking=False) for r in qs]
+    out = []
+    for i in range(0, len(prompts), 32):
+        res = batch_generate(model, tok, prompts[i:i + 32], max_tokens=200, sampler=make_sampler(temp=TEMPERATURE))
+        out += [t.strip() for t in res.texts]
+        print(f"  {len(out)}/{len(qs)}", flush=True)
+    return out
+
+
+async def answer_harness():
+    """Gemma through the game's harness (server.py): scoped card + check.py guardrail."""
+    import server
+    out = []
+    for i, r in enumerate(questions()):
+        a = await asyncio.to_thread(server.answer, r["obj"], r["q"], [])
+        out.append(a["say"])
+        if a["guard"]:
+            print(f"  guard {r['id']}: {a['guard']}", flush=True)
+        if i % 50 == 0:
+            print(f"  {i}/{len(questions())}", flush=True)
+    return out
+
+
 async def answer(model, weights):
-    replies = await (answer_ollama() if model.startswith("gemma") else answer_tinker(model, weights))
+    if model == "gemma-harness":
+        replies = await answer_harness()
+    elif model.startswith("mlx"):
+        replies = await answer_mlx(weights)
+    else:
+        replies = await (answer_ollama() if model.startswith("gemma") else answer_tinker(model, weights))
     RESULTS.mkdir(exist_ok=True)
     with (RESULTS / f"{model}_answers.jsonl").open("w") as f:
         for r, a in zip(questions(), replies):

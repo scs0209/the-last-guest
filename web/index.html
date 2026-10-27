@@ -649,7 +649,7 @@ function focusOn(key) {
 // =====================================================================
 // Game state + UI
 // =====================================================================
-const state = { started: false, current: null, found: new Set(), asked: {}, candles: 7, lastProgress: Date.now(), over: false, turn: 0 };
+const state = { started: false, current: null, found: new Set(), asked: {}, history: {}, candles: 7, lastProgress: Date.now(), over: false, turn: 0 };
 const $ = (id) => document.getElementById(id);
 
 function renderCandles() {
@@ -694,22 +694,37 @@ function reply(key, q) {
   return o.intents.find((it) => it.k.some((k) => text.includes(k))) || { say: o.unknown };
 }
 
-function ask(q) {
+// Ask the local model through server.py; without it, fall back to the scripted replies.
+async function modelReply(key, q) {
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ obj: key, q, history: state.history[key] || [] }),
+    });
+    if (!res.ok) return null;
+    const r = await res.json();
+    (state.history[key] ||= []).push({ q, a: r.say });
+    return { ...r, fx: r.reveals.includes("F18") ? "ink" : undefined, live: true };
+  } catch { return null; }
+}
+
+async function ask(q) {
   if (!state.current || !q.trim() || state.over) return;
   const key = state.current;
   (state.asked[key] ||= new Set()).add(q);
   addMsg(q, "you");
   const wait = addMsg("…", "them " + key);
-  const r = reply(key, q);
-  setTimeout(() => {
-    wait.remove();
-    let say = r.say;
-    if (key === "record" && Math.random() < .18 && !say.includes("save me a seat")) say += " …save me a seat… save me a…";
-    addMsg(say, "them " + key + (r.fx === "ink" ? " ink" : ""));
-    if (key === "record") state.spin = 3;
-    (r.reveals || []).forEach(learn);
-    renderChips();
-  }, 700 + Math.random() * 600);
+  const started = Date.now();
+  const r = (await modelReply(key, q)) || reply(key, q);
+  await new Promise((ok) => setTimeout(ok, Math.max(0, 700 + Math.random() * 600 - (Date.now() - started))));
+  wait.remove();
+  if (state.over) return;
+  let say = r.say;
+  if (!r.live && key === "record" && Math.random() < .18 && !say.includes("save me a seat")) say += " …save me a seat… save me a…";
+  addMsg(say, "them " + key + (r.fx === "ink" ? " ink" : ""));
+  if (key === "record") state.spin = 3;
+  (r.reveals || []).forEach(learn);
+  if (state.current === key) renderChips();
 }
 
 function learn(id) {

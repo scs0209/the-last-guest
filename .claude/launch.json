@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "web",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "web"],
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "server.py"],
       "port": 8765
     }
   ]

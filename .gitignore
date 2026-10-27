@@ -5,3 +5,4 @@ agent-session/
 .env
 .env.*
 !.env.example
+adapters/

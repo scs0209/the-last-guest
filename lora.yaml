@@ -1,0 +1,24 @@
+# LoRA SFT for Qwen3.5-4B on Apple Silicon.
+#   uv run python prep_mlx.py
+#   uv run mlx_lm.lora --config lora.yaml
+model: Qwen/Qwen3.5-4B
+train: true
+data: data/mlx
+fine_tune_type: lora
+mask_prompt: true          # loss on the object's reply only, not on the card or question
+num_layers: -1
+batch_size: 4
+iters: 640                 # ~3 epochs over 851 conversations
+learning_rate: 1.0e-4
+lora_parameters:
+  rank: 16
+  scale: 20.0
+  dropout: 0.0
+max_seq_length: 1024
+grad_checkpoint: true
+steps_per_report: 10
+steps_per_eval: 80
+val_batches: -1
+save_every: 160            # checkpoints for the steps-vs-quality curve
+adapter_path: adapters/qwen35-4b
+seed: 0

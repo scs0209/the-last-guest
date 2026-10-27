@@ -1,0 +1,19 @@
+  0/478
+  50/478
+  guard E052: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E062: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  100/478
+  guard E102: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  150/478
+  200/478
+  250/478
+  300/478
+  350/478
+  400/478
+  guard E420: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E421: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E427: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  450/478
+  guard E455: [{'attempt': 0, 'leaks': ['F11'], 'bad_years': []}]
+  guard E473: [{'attempt': 0, 'leaks': ['F11'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F11'], 'bad_years': []}]
+wrote 478 answers for gemma-harness
