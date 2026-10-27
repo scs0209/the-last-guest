@@ -19,6 +19,7 @@ const gemma = { state: navigator.gpu ? "idle" : "unsupported", progress: 0, work
 function loadGemma() {
   if (gemma.state !== "idle" && gemma.state !== "failed") return;
   gemma.state = "loading"; renderGemma();
+  navigator.storage?.persist?.().catch(() => {}); // ask the browser not to evict the saved model (window-only API)
   gemma.worker = new Worker("gemma-worker.js", { type: "module" });
   gemma.worker.onmessage = ({ data }) => {
     if (data.type === "progress") { gemma.progress = Math.round(data.value); renderGemma(); }
