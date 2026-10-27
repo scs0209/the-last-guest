@@ -402,8 +402,29 @@ function paintPortraitCard(w, h) {
   return { c, cx, cy, rx, ry };
 }
 
+// Her photograph for the ending (web/img/marisol.webp, supplied by the project owner). The drawn card above is the
+// fallback until it loads or if it fails. The photo is cropped to fill the canvas, the flower in her hair is
+// hand-tinted marigold, and the same breathing second exposure and grain are laid over it.
+const marisolPhoto = new Image();
+marisolPhoto.src = "img/marisol.webp";
+const FLOWER = { x: 250 / 1145, y: 420 / 1374, r: 70 / 1145 }; // the flower in her hair, as fractions of the photo
+function paintPhotoCard(w, h) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d"), iw = marisolPhoto.naturalWidth, ih = marisolPhoto.naturalHeight;
+  const k = Math.max(w / iw, h / ih), dw = iw * k, dh = ih * k, dx = (w - dw) / 2, dy = (h - dh) / 2;
+  g.drawImage(marisolPhoto, dx, dy, dw, dh);
+  const fx = dx + FLOWER.x * dw, fy = dy + FLOWER.y * dh, fr = FLOWER.r * dw;
+  g.globalCompositeOperation = "color"; // keep the photo's light and shade, give the flower its colour
+  const tint = g.createRadialGradient(fx, fy, 0, fx, fy, fr);
+  tint.addColorStop(0, "rgba(245,140,25,1)"); tint.addColorStop(.7, "rgba(240,130,20,.85)"); tint.addColorStop(1, "rgba(240,130,20,0)");
+  g.fillStyle = tint; g.beginPath(); g.arc(fx, fy, fr, 0, Math.PI * 2); g.fill();
+  g.globalCompositeOperation = "source-over";
+  return { c, cx: w / 2, cy: h / 2, rx: w / 2, ry: h / 2, photo: true };
+}
+
 export function drawPortrait(g, w, h, t) {
-  if (!portraitCache || portraitCache.c.width !== w) portraitCache = paintPortraitCard(w, h);
+  const ready = marisolPhoto.complete && marisolPhoto.naturalWidth > 0;
+  if (!portraitCache || portraitCache.c.width !== w || (ready && !portraitCache.photo)) portraitCache = ready ? paintPhotoCard(w, h) : paintPortraitCard(w, h);
   const { c, cx, cy, rx, ry } = portraitCache;
   g.clearRect(0, 0, w, h);
   g.drawImage(c, 0, 0);
