@@ -67,9 +67,7 @@ function applyLang() {
 
 // ---------------------------------------------------------------- world
 const world = createWorld($("scene"), {
-  onLockChange: (locked) => {
-    if (!locked && state.playing && !state.current && !anyOverlay() && !world.isTouch) openPause();
-  },
+  onPick: (k) => { if (state.playing && !state.current && !anyOverlay() && !state.over) interact(k); },
   onJoystick: (start, x = 0, z = 0) => {
     const j = $("joy");
     if (!start) { j.classList.add("hidden"); return; }
@@ -126,13 +124,13 @@ $("newGameBtn").addEventListener("click", () => {
 $("enterBtn").addEventListener("click", () => {
   $("intro").classList.add("hidden"); $("hud").classList.remove("hidden");
   state.playing = true; state.lastProgress = Date.now();
-  world.setEnabled(true); world.lock();
+  world.setEnabled(true);
   setTimeout(() => { $("controls").style.opacity = 0; }, 14000);
 });
 
 // ---------------------------------------------------------------- pause
 function openPause() { world.setEnabled(false); $("pause").classList.remove("hidden"); }
-function resume() { overlays.forEach((id) => $(id).classList.add("hidden")); world.setEnabled(true); world.lock(); }
+function resume() { overlays.forEach((id) => $(id).classList.add("hidden")); world.setEnabled(true); }
 $("resumeBtn").addEventListener("click", resume);
 $("toMenuBtn").addEventListener("click", () => location.reload());
 
@@ -146,13 +144,15 @@ addEventListener("keydown", (e) => {
     if (state.current) closeTalk();
     else if (!$("settings").classList.contains("hidden") || !$("about").classList.contains("hidden")) { $("settings").classList.add("hidden"); $("about").classList.add("hidden"); }
     else if (anyOverlay()) resume();
+    else openPause();
   }
 });
 $("touchAct").addEventListener("click", () => interact());
 $("journalBtn").addEventListener("click", () => toggleJournal());
 
-function interact() {
-  const k = world.nearest(); if (!k) return;
+// E or the touch button use what is in reach (the hovered object first); a click passes the object it picked
+function interact(k = world.hovered() || world.nearest()) {
+  if (!k) return;
   if (k === "ofrenda") openOfrenda(); else openTalk(k);
 }
 
@@ -195,7 +195,7 @@ function drawMinimap(time) {
 }
 
 function updateHUD(time) {
-  const k = state.playing && !state.current && !anyOverlay() && !state.over ? world.nearest() : null;
+  const k = state.playing && !state.current && !anyOverlay() && !state.over ? world.hovered() || world.nearest() : null;
   $("prompt").classList.toggle("hidden", !k);
   $("touchAct").classList.toggle("hidden", !k || !world.isTouch);
   if (k) {
@@ -203,7 +203,7 @@ function updateHUD(time) {
     $("promptWhat").textContent = k === "ofrenda" ? "" : "· " + L().objects[k].name;
     $("touchAct").textContent = k === "ofrenda" ? t("hud.ofrenda") : t("hud.investigate");
   }
-  $("clickHint").classList.toggle("hidden", !(state.playing && !world.locked && !world.isTouch && !state.current && !anyOverlay() && !state.over));
+  $("clickHint").classList.toggle("hidden", !(state.playing && !world.looked && !world.isTouch && !state.current && !anyOverlay() && !state.over));
   $("roomName").textContent = L().hud.rooms[roomAt(world.player.x, world.player.z)];
   $("clueCount").textContent = `${state.visited.size - (state.visited.has("ofrenda") ? 1 : 0)}/4`;
   drawMinimap(time);
@@ -230,7 +230,7 @@ function openTalk(key) {
 }
 function closeTalk() {
   state.current = null; $("talk").classList.add("hidden"); audio.crackle(false); audio.stopVoice();
-  if (!state.over) { world.setEnabled(true); world.lock(); }
+  if (!state.over) world.setEnabled(true);
 }
 $("closeTalk").addEventListener("click", closeTalk);
 $("askForm").addEventListener("submit", (e) => { e.preventDefault(); ask($("q").value); $("q").value = ""; });

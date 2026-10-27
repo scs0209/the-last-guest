@@ -97,9 +97,9 @@
       "investigate": "Investigate",
       "ofrenda": "Set the ofrenda",
       "memories": "Memories",
-      "controls": "WASD move · Mouse look · E investigate · J memories · Esc pause",
+      "controls": "WASD or arrows move · Drag to look · Click or E to investigate · J memories · Esc pause",
       "touch": "Left: move · Right: look · Tap the button to investigate",
-      "clickToLook": "Click to look around",
+      "clickToLook": "Drag to look around · click a glowing object",
       "rooms": {
         "foyer": "Foyer",
         "dining": "Dining room",
@@ -636,9 +636,9 @@
       "investigate": "조사하기",
       "ofrenda": "오프렌다 차리기",
       "memories": "기억",
-      "controls": "WASD 이동 · 마우스 시점 · E 조사 · J 기억 · Esc 일시정지",
+      "controls": "WASD·방향키 이동 · 드래그로 둘러보기 · 클릭이나 E로 조사 · J 기억 · Esc 일시정지",
       "touch": "왼쪽: 이동 · 오른쪽: 시점 · 버튼을 눌러 조사",
-      "clickToLook": "클릭하면 둘러볼 수 있어요",
+      "clickToLook": "드래그해서 둘러보고, 빛나는 물건을 클릭하세요",
       "rooms": {
         "foyer": "현관 홀",
         "dining": "식당",
