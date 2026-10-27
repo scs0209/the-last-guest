@@ -2,12 +2,49 @@
 import { createWorld, roomAt } from "./world.js";
 import { drawTitle, OBJECT_ART, drawWave, drawPortrait, drawPhoto, drawLetter, drawGuestList } from "./art.js";
 import * as audio from "./audio.js";
+import * as harness from "./harness.js";
 
 const C = await (await fetch("content.json")).json();
 const $ = (id) => document.getElementById(id);
 const store = { get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
 const settings = { lang: store.get("lg.lang", navigator.language?.startsWith("ko") ? "ko" : "en"), sound: store.get("lg.sound", "on"), sens: +store.get("lg.sens", "1") };
 const L = () => C[settings.lang];
+
+// With server.py (local or a model host) the server answers; on a static host the browser runs the harness itself.
+const MODE = await fetch("/healthz").then((r) => (r.ok && r.headers.get("content-type")?.includes("json") ? "server" : "browser")).catch(() => "browser");
+if (MODE === "browser") await harness.loadHarness();
+
+// Gemma 4 E2B in the player's browser, loaded only when the player agrees to the download
+const gemma = { state: navigator.gpu ? "idle" : "unsupported", progress: 0, worker: null, pending: new Map(), next: 0 };
+function loadGemma() {
+  if (gemma.state !== "idle" && gemma.state !== "failed") return;
+  gemma.state = "loading"; renderGemma();
+  gemma.worker = new Worker("gemma-worker.js", { type: "module" });
+  gemma.worker.onmessage = ({ data }) => {
+    if (data.type === "progress") { gemma.progress = Math.round(data.value); renderGemma(); }
+    else if (data.type === "ready") { gemma.state = "ready"; renderGemma(); }
+    else if (data.type === "result") { gemma.pending.get(data.id)?.resolve(data.text); gemma.pending.delete(data.id); }
+    else if (data.type === "error") {
+      if (data.id != null && gemma.pending.has(data.id)) { gemma.pending.get(data.id).reject(new Error(data.message)); gemma.pending.delete(data.id); }
+      else { gemma.state = "failed"; renderGemma(); console.warn("Gemma failed to load:", data.message); }
+    }
+  };
+  gemma.worker.postMessage({ type: "load" });
+}
+function generate(messages) {
+  return new Promise((resolve, reject) => { const id = gemma.next++; gemma.pending.set(id, { resolve, reject }); gemma.worker.postMessage({ type: "generate", id, messages }); });
+}
+function renderGemma() {
+  const el = $("gemmaBar"); if (!el) return;
+  el.classList.toggle("hidden", MODE !== "browser");
+  const B = L().browser;
+  if (gemma.state === "idle" || gemma.state === "failed") {
+    el.innerHTML = `<p>${gemma.state === "failed" ? B.failed : B.offer}</p>${gemma.state === "idle" ? `<button class="btn gold" type="button">${B.load}</button>` : ""}`;
+    el.querySelector("button")?.addEventListener("click", loadGemma);
+  } else if (gemma.state === "loading") el.innerHTML = `<p>${B.loading.replace("{p}", gemma.progress)}</p><div class="bar"><i style="width:${gemma.progress}%"></i></div>`;
+  else if (gemma.state === "ready") el.innerHTML = `<p class="ok">✦ ${B.ready}</p>`;
+  else el.innerHTML = `<p>${B.noWebgpu}</p>`;
+}
 const t = (path) => path.split(".").reduce((o, k) => o?.[k], L()) ?? "";
 
 // ---------------------------------------------------------------- language
@@ -175,7 +212,7 @@ function renderTalkHead() {
   const o = L().objects[state.current];
   $("who").textContent = o.name; $("whoSub").textContent = o.sub; $("whoDesc").textContent = o.card;
   $("waveTitle").textContent = settings.lang === "ko" ? "기억의 조각" : "A fragment of memory";
-  renderChips();
+  renderChips(); renderGemma();
 }
 function openTalk(key) {
   state.current = key; world.setEnabled(false);
@@ -213,6 +250,13 @@ function scripted(key, q) {
   return o.intents.find((it) => it.k.some((k) => text.includes(k))) || { say: o.unknown, reveals: [] };
 }
 async function modelReply(key, q) {
+  if (MODE === "browser") {
+    const hist = state.history[key + settings.lang] ||= [];
+    const c = harness.cached(settings.lang, key, q);
+    if (c) { hist.push({ q, a: c.say }); return c; }
+    if (gemma.state !== "ready") return null;
+    try { const r = await harness.answer(key, q, hist, settings.lang, generate); hist.push({ q, a: r.say }); return r; } catch (e) { console.warn(e); return null; }
+  }
   try {
     const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ obj: key, q, lang: settings.lang, history: (state.history[key + settings.lang] || []) }) });
     const r = await res.json().catch(() => null);
@@ -232,7 +276,9 @@ async function ask(q) {
   const wait = addMsg("…", "them " + key); state.waiting = true;
   const started = Date.now(), lines = WAITING[settings.lang];
   const ticker = setInterval(() => { wait.textContent = lines[Math.min(lines.length - 1, Math.floor((Date.now() - started) / 4000))]; }, 1000);
-  const r = (await modelReply(key, q)) || scripted(key, q);
+  const live = await modelReply(key, q);
+  const r = live || scripted(key, q);
+  if (!live && MODE === "browser" && !state.toldScript) { state.toldScript = true; addMsg(L().browser.meanwhile, "narrator"); }
   await new Promise((ok) => setTimeout(ok, Math.max(0, 600 + Math.random() * 500 - (Date.now() - started))));
   clearInterval(ticker); wait.remove(); state.waiting = false;
   if (state.current !== key) return;

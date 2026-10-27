@@ -1,15 +1,15 @@
-# Render Blueprint: one Docker web service running the game server and Gemma on CPU.
-# Measured locally: the container holds about 7.1 GB with Gemma 4 E4B (Q4_K_M) loaded, so an
-# 8 GB plan leaves almost no headroom. Pick a plan with more memory and confirm it against
-# your credits before deploying.
+# Render Blueprint: a free static site. No model runs on Render.
+# - Suggested questions use answers Gemma 4 E4B wrote in advance (web/gen/answer_cache.json).
+# - Typed questions run Gemma 4 E2B in the player's own browser (WebGPU), through the same
+#   guardrail ported to JavaScript (web/harness.js, data exported by build_web.py).
+# To serve Gemma from a server instead, see Dockerfile (needs a paid plan with more than 8 GB of RAM).
 services:
   - type: web
     name: the-last-guest
-    runtime: docker
-    plan: pro plus
-    healthCheckPath: /healthz
-    envVars:
-      - key: LIVE_PER_IP
-        value: "30"
-      - key: LIVE_QUEUE
-        value: "4"
+    runtime: static
+    buildCommand: echo "static site, nothing to build"
+    staticPublishPath: web
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache

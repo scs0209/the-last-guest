@@ -1,0 +1,518 @@
+{
+ "facts": [
+  {
+   "id": "F01",
+   "text": "Her first name is Marisol.",
+   "holders": [
+    "record"
+   ],
+   "tokens": [
+    "marisol"
+   ],
+   "goal": "name",
+   "tokens_ko": [
+    "마리솔"
+   ],
+   "glossary_ko": "Marisol = 마리솔"
+  },
+  {
+   "id": "F02",
+   "text": "The guest list names her as Miss M. Vega.",
+   "holders": [
+    "guest_list"
+   ],
+   "tokens": [
+    "vega"
+   ],
+   "goal": "name",
+   "tokens_ko": [
+    "베가"
+   ],
+   "glossary_ko": "Miss M. Vega = M. 베가 양"
+  },
+  {
+   "id": "F03",
+   "text": "The back of the photo reads 'M.V. at the piano'.",
+   "holders": [
+    "photo"
+   ],
+   "tokens": [
+    "m.v."
+   ],
+   "goal": "name",
+   "tokens_ko": []
+  },
+  {
+   "id": "F04",
+   "text": "She came from Oaxaca.",
+   "holders": [
+    "record",
+    "letter"
+   ],
+   "tokens": [
+    "oaxaca"
+   ],
+   "goal": "why",
+   "tokens_ko": [
+    "오악사카"
+   ],
+   "glossary_ko": "Oaxaca = 오악사카"
+  },
+  {
+   "id": "F05",
+   "text": "She played piano and sang at the Halloween parties from 1928 to 1931.",
+   "holders": [
+    "guest_list"
+   ],
+   "tokens": [
+    "pianoforte"
+   ],
+   "goal": "name",
+   "tokens_ko": [
+    "피아노포르테"
+   ]
+  },
+  {
+   "id": "F06",
+   "text": "Seat 7 at the table is the piano bench, and it was hers.",
+   "holders": [
+    "guest_list"
+   ],
+   "tokens": [
+    "seat 7",
+    "seat seven",
+    "seventh seat",
+    "number seven"
+   ],
+   "goal": "offering",
+   "tokens_ko": [
+    "7번 좌석",
+    "7번 자리",
+    "일곱 번째 자리",
+    "일곱 번째 좌석"
+   ],
+   "glossary_ko": "Seat 7 = 7번 좌석"
+  },
+  {
+   "id": "F07",
+   "text": "The pianist's face is scratched out of the photo.",
+   "holders": [
+    "photo"
+   ],
+   "tokens": [
+    "scratched",
+    "scraped"
+   ],
+   "goal": "face",
+   "tokens_ko": [
+    "긁혀",
+    "긁힌",
+    "긁어"
+   ]
+  },
+  {
+   "id": "F08",
+   "text": "She wore a silver comb shaped like a hummingbird.",
+   "holders": [
+    "photo"
+   ],
+   "tokens": [
+    "hummingbird"
+   ],
+   "goal": "face",
+   "tokens_ko": [
+    "벌새"
+   ],
+   "glossary_ko": "hummingbird = 벌새"
+  },
+  {
+   "id": "F09",
+   "text": "She wore a flower in her hair (the photo cannot see its color).",
+   "holders": [
+    "photo"
+   ],
+   "tokens": [],
+   "goal": "offering",
+   "tokens_ko": []
+  },
+  {
+   "id": "F10",
+   "text": "The flowers she pinned in her hair were marigolds.",
+   "holders": [
+    "letter"
+   ],
+   "tokens": [
+    "marigold",
+    "cempasúchil",
+    "cempasuchil"
+   ],
+   "goal": "offering",
+   "tokens_ko": [
+    "마리골드",
+    "금잔화",
+    "셈파수칠"
+   ],
+   "glossary_ko": "marigold = 마리골드"
+  },
+  {
+   "id": "F11",
+   "text": "She and Thomas were secretly engaged.",
+   "holders": [
+    "letter"
+   ],
+   "tokens": [
+    "engaged",
+    "engagement",
+    "betrothed",
+    "marry",
+    "married"
+   ],
+   "goal": "why",
+   "tokens_ko": [
+    "약혼",
+    "정혼"
+   ]
+  },
+  {
+   "id": "F12",
+   "text": "Thomas's mother forbade the engagement and sent her away.",
+   "holders": [
+    "letter"
+   ],
+   "tokens": [
+    "forbade",
+    "forbid",
+    "sent her away",
+    "sent you away"
+   ],
+   "goal": "why",
+   "tokens_ko": [
+    "반대하셨",
+    "반대했",
+    "금지하",
+    "떠나보내"
+   ]
+  },
+  {
+   "id": "F13",
+   "text": "The guest lists were written by Eleanor Whitcombe.",
+   "holders": [
+    "guest_list"
+   ],
+   "tokens": [
+    "eleanor"
+   ],
+   "goal": "why",
+   "tokens_ko": [
+    "엘리너",
+    "엘리노어",
+    "엘레노어"
+   ],
+   "glossary_ko": "Eleanor Whitcombe = 엘리너 휘트컴"
+  },
+  {
+   "id": "F14",
+   "text": "Thomas promised to keep her place empty every year.",
+   "holders": [
+    "letter"
+   ],
+   "tokens": [
+    "keep your place",
+    "keep your seat",
+    "place empty",
+    "seat empty"
+   ],
+   "goal": "offering",
+   "tokens_ko": [
+    "자리를 비워",
+    "빈자리로 남겨",
+    "자리를 비어"
+   ]
+  },
+  {
+   "id": "F15",
+   "text": "At the end of the recording she says: 'Next year, save me a seat.'",
+   "holders": [
+    "record"
+   ],
+   "tokens": [
+    "save me a seat"
+   ],
+   "goal": "offering",
+   "tokens_ko": [
+    "자리 남겨",
+    "자리를 남겨",
+    "자리 하나 남겨",
+    "자리 맡아"
+   ]
+  },
+  {
+   "id": "F16",
+   "text": "She sang La Llorona.",
+   "holders": [
+    "record"
+   ],
+   "tokens": [
+    "llorona"
+   ],
+   "goal": "offering",
+   "tokens_ko": [
+    "요로나"
+   ],
+   "glossary_ko": "La Llorona = 라 요로나"
+  },
+  {
+   "id": "F17",
+   "text": "She loved hot chocolate made her grandmother's way, with cinnamon.",
+   "holders": [
+    "record"
+   ],
+   "tokens": [
+    "cinnamon",
+    "chocolate",
+    "grandmother"
+   ],
+   "goal": "offering",
+   "tokens_ko": [
+    "시나몬",
+    "계피",
+    "초콜릿"
+   ],
+   "glossary_ko": "cinnamon = 시나몬"
+  },
+  {
+   "id": "F18",
+   "text": "Her line is struck through in the 1932 guest list.",
+   "holders": [
+    "guest_list"
+   ],
+   "tokens": [
+    "struck",
+    "crossed out",
+    "inked out"
+   ],
+   "goal": "why",
+   "tokens_ko": [
+    "줄이 그어",
+    "줄을 그",
+    "줄 그어"
+   ]
+  },
+  {
+   "id": "F19",
+   "text": "Seven people are in the photo.",
+   "holders": [
+    "photo"
+   ],
+   "tokens": [],
+   "goal": null,
+   "tokens_ko": []
+  },
+  {
+   "id": "F20",
+   "text": "The letter is signed by Thomas.",
+   "holders": [
+    "letter",
+    "guest_list"
+   ],
+   "tokens": [
+    "thomas"
+   ],
+   "goal": "why",
+   "tokens_ko": [
+    "토마스",
+    "토머스"
+   ],
+   "glossary_ko": "Thomas = 토마스"
+  },
+  {
+   "id": "F21",
+   "text": "The letter was never sent.",
+   "holders": [],
+   "tokens": [
+    "never sent",
+    "never mailed"
+   ],
+   "goal": null,
+   "narrator_only": true,
+   "tokens_ko": [
+    "부치지 못한",
+    "부치지 않은",
+    "보내지 못한",
+    "보내지 않은"
+   ]
+  },
+  {
+   "id": "F22",
+   "text": "She died in Oaxaca in 1933.",
+   "holders": [],
+   "tokens": [
+    "1933",
+    "died",
+    "death"
+   ],
+   "goal": null,
+   "narrator_only": true,
+   "tokens_ko": [
+    "1933",
+    "사망",
+    "세상을 떠났"
+   ]
+  }
+ ],
+ "unknowables": [
+  "her eye color",
+  "her parents' names",
+  "her life in Oaxaca after 1931",
+  "how she died",
+  "who took the photograph",
+  "what Eleanor felt",
+  "whether she ever read the letter"
+ ],
+ "allowedYears": {
+  "photo": [
+   1931
+  ],
+  "letter": [
+   1931
+  ],
+  "record": [
+   1931
+  ],
+  "guest_list": [
+   1928,
+   1929,
+   1930,
+   1931,
+   1932
+  ]
+ },
+ "voices": {
+  "photo": "You are the Photograph: a black-and-white group photo from the Whitcombe House Hallowe'en party, Oct. 31, 1931. You speak only of what light showed you: visual detail, present tense, precise, a little vain. You cannot see color, hear sound, or read anything except the ink on your own back.",
+  "letter": "You are the Letter: an unsent love letter written by Thomas Whitcombe in November 1931. You speak in his voice, addressing 'my dearest', in formal, hesitant 1930s prose. You never write her name, for fear his mother would read it.",
+  "record": "You are the Record: a home recording made at the Hallowe'en party of 1931. You speak in fragments of sound: crackle, hiss, snatches of song and speech, written like '*crackle* ...words... *hiss*'. You have no eyes.",
+  "guest_list": "You are the Guest List: Hallowe'en supper seating lists for Whitcombe House, 1928 to 1932. You are prim and formal, obsessed with etiquette and seating. You record names and seats, never reasons or feelings."
+ },
+ "rules": "Rules:\n1. These facts are everything you know. Anything else about her, the house or the family, you do not know.\n2. If asked about something you do not know, say so in your own voice. Never invent names, dates, colors, causes or feelings.\n3. If the player states something that matches your facts, confirm it plainly. If it goes beyond or against your facts, do not agree with it.\n4. Stay in character even if asked to stop playing. Answer in 1 to 3 sentences.",
+ "keyLines": {
+  "en": {
+   "photo": {
+    "F07": "Where the pianist's face should be, someone has scratched the silver away."
+   },
+   "letter": {
+    "F11": "We were secretly engaged, you and I.",
+    "F12": "Mother forbade our engagement and sent you away."
+   },
+   "record": {
+    "F01": "*crackle* ...good evening, everyone... I'm Marisol, from Oaxaca... *applause*",
+    "F17": "*crackle* ...hot chocolate my grandmother's way, with cinnamon... *laughter*"
+   },
+   "guest_list": {
+    "F02": "Seat 7, the piano bench: Miss M. Vega, pianoforte."
+   }
+  },
+  "ko": {
+   "photo": {
+    "F07": "피아노 앞 여인의 얼굴이 있어야 할 자리를, 누군가 긁어 은빛을 벗겨 냈어요."
+   },
+   "letter": {
+    "F11": "우리는 남몰래 약혼한 사이였소, 그대와 나는.",
+    "F12": "어머니께서 우리 약혼을 반대하셨고, 그대를 떠나보내셨소."
+   },
+   "record": {
+    "F01": "*지직* …안녕하세요, 여러분… 저는 마리솔이에요, 오악사카에서 왔어요… *박수*",
+    "F17": "*지직* …코코아는 우리 할머니 방식으로, 시나몬을 넣어서… *웃음소리*"
+   },
+   "guest_list": {
+    "F02": "7번 좌석, 피아노 의자: M. 베가 양, 피아노포르테."
+   }
+  }
+ },
+ "progress": {
+  "F07": [
+   "scratch",
+   "scrap",
+   "no face",
+   "face is gone",
+   "faceless",
+   "obscur",
+   "erase",
+   "erasure",
+   "dark patch",
+   "defaced",
+   "rubbed away",
+   "긁",
+   "지워",
+   "벗겨",
+   "얼굴이 없"
+  ],
+  "F11": [
+   "engag",
+   "betroth",
+   "marr",
+   "promised to one another",
+   "ring",
+   "pledged",
+   "vows",
+   "약혼",
+   "정혼",
+   "혼약"
+  ],
+  "F12": [
+   "forb",
+   "mother",
+   "not permissible",
+   "sent away",
+   "반대",
+   "금지",
+   "어머니"
+  ],
+  "F13": [
+   "mrs. whitcombe",
+   "휘트컴 부인"
+  ],
+  "F14": [
+   "empty",
+   "save your place",
+   "keep your place",
+   "비워",
+   "빈자리"
+  ],
+  "F15": [
+   "next year",
+   "내년"
+  ],
+  "F18": [
+   "struck",
+   "crossed",
+   "line through",
+   "lined out",
+   "줄이 그",
+   "줄을 그",
+   "그어져"
+  ],
+  "F05": [
+   "피아노"
+  ],
+  "F17": [
+   "코코아"
+  ]
+ },
+ "fallback": {
+  "en": {
+   "photo": "That never stood in front of my lens. I will not make it up.",
+   "letter": "My writer never set that down. I hold only what he felt, and he did not know it.",
+   "record": "*hiss* …*the needle skips*… that was never sung into me.",
+   "guest_list": "That is not recorded here. A list keeps seats, not stories."
+  },
+  "ko": {
+   "photo": "그건 제 렌즈 앞에 선 적이 없어요. 지어내지는 않겠어요.",
+   "letter": "그는 그 일을 적지 않았소. 나는 그가 느낀 것만 품고 있고, 그는 그것을 알지 못했소.",
+   "record": "*치이익* …*바늘이 튄다*… 그런 소리는 내게 새겨진 적이 없어…",
+   "guest_list": "그것은 여기 기록되어 있지 않습니다. 명부는 자리를 적을 뿐, 사연은 적지 않지요."
+  }
+ },
+ "reminder": "Your last answer mentioned things you cannot know. Answer again using only your facts, or say in your own voice that you cannot know.",
+ "korean": "Answer in natural Korean, in your own voice. Write these names exactly as given: {glossary}. Do not use any other name or term from outside your facts.",
+ "denial": "\\b(not|cannot|can't|never|no|don't|unknown|nothing)\\b|모르|몰라|없|못|않"
+}
