@@ -340,11 +340,14 @@ export function createWorld(canvas, opts) {
   // and uFade lets a ghost thin out and come back. Eyes are soft hollows, not cut-out circles.
   const ghostMaterial = ({ color = 0x6f7a90, emissive = 0x0c1222, emissiveIntensity = .6, rim = 0x7d98ff, opacity = .42 } = {}) => {
     const mat = new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity, roughness: .95, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: ENV });
-    const phase = { value: Math.random() * 10 }, rimColor = { value: new THREE.Color(rim) }, fade = { value: 1 };
-    mat.userData.fade = fade;
+    const phase = { value: Math.random() * 10 }, rimColor = { value: new THREE.Color(rim) }, fade = { value: 1 }, head = { value: 0 };
+    mat.userData.fade = fade; mat.userData.head = head;
     mat.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, { uTime: ghostTime, uPhase: phase, uRim: rimColor, uFade: fade });
-      sh.vertexShader = "uniform float uTime;\nuniform float uPhase;\nvarying vec3 vLocal;\n" + sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
+      Object.assign(sh.uniforms, { uTime: ghostTime, uPhase: phase, uRim: rimColor, uFade: fade, uHead: head });
+      sh.vertexShader = "uniform float uTime;\nuniform float uPhase;\nuniform float uHead;\nvarying vec3 vLocal;\n" + sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
+        // the head turns on its own, ahead of the body: vertices above the shoulders rotate about the vertical axis
+        float headK = smoothstep(1.02, 1.24, position.y), ha = uHead * headK, hc = cos(ha), hs = sin(ha);
+        transformed.xz = vec2(hc * transformed.x + hs * transformed.z, -hs * transformed.x + hc * transformed.z);
         float hemK = smoothstep(1.0, 0.3, position.y), ang = atan(position.z, position.x);
         transformed.xz += normalize(position.xz + 1e-5) * sin(uTime * 1.1 + uPhase + ang * 3.0 + position.y * 6.0) * 0.03 * hemK;
         transformed.y += sin(uTime * 1.5 + uPhase + ang * 5.0) * 0.02 * hemK * hemK;
@@ -380,7 +383,8 @@ export function createWorld(canvas, opts) {
   ];
   const ghosts = SEATS.map((s, i) => {
     chair(s.x, s.z, s.face);
-    const gh = ghost(); gh.userData = { base: Math.atan2(0 - s.x, -2 - s.z), phase: i * 1.3, fadeAt: 8 + i * 7 + Math.random() * 10, fadeT: -1 };
+    const gh = ghost(); gh.userData = { base: Math.atan2(0 - s.x, -2 - s.z), phase: i * 1.3, fadeAt: 8 + i * 7 + Math.random() * 10, fadeT: -1,
+      head: 0, notice: 0, delay: .15 + ((i * 7) % 6) * .22 }; // they notice you one after another, not all at once
     gh.scale.setScalar(.94 + (i % 3) * .04); gh.children[0].rotation.set(.12 + (i % 3) * .04, 0, i % 2 ? .05 : -.05); // heads bowed over their plates; not six copies
     // drawn in toward the table, so each sheet sits in front of its chair back rather than through it
     gh.rotation.y = gh.userData.base; return at(gh, s.x * .92, 0, -2 + (s.z + 2) * .82, gh.userData.base);
@@ -801,15 +805,21 @@ export function createWorld(canvas, opts) {
     chandelier.intensity = (24 + Math.sin(t * 7) * 1.2 + Math.sin(t * 17) * .8) * stutter;
     fire.intensity = 9 + Math.sin(t * 13) * 1.5 + Math.sin(t * 29) * 1;
     gust = Math.max(0, gust - dt * .6);
-    // ghosts sway and now and then thin out and come back; one that you walk close to turns its head toward you.
-    // After "face" they all turn to the bench.
+    // Ghosts sway and now and then thin out and come back. Come within 5 m and, one after another, each turns its
+    // head to look straight at you, then its body follows. After "face" they all turn to the bench instead.
     ghostTime.value = t; grade.uniforms.uTime.value = t; grade.uniforms.uDread.value = 1 - lit;
     ghosts.forEach((g) => {
       const u = g.userData, dx = player.x - g.position.x, dz = player.z - g.position.z, near = Math.hypot(dx, dz);
       const target = Math.atan2(SEAT7.x - g.position.x, SEAT7.z - g.position.z);
       let want = u.base + (target - u.base) * turn;
-      if (!turn && near < 2.4 && !cinematic) want = u.base + THREE.MathUtils.clamp(Math.atan2(dx, dz) - u.base, -1.2, 1.2) * (1 - near / 2.4) * .9;
-      g.rotation.y += (want - g.rotation.y) * Math.min(1, dt * (near < 2.4 ? .8 : 2));
+      const look = Math.atan2(dx, dz), wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+      u.notice = !turn && !cinematic && near < 5 ? u.notice + dt : Math.max(0, u.notice - dt * 2);
+      const watching = u.notice > u.delay;
+      if (watching) want = u.base + THREE.MathUtils.clamp(wrap(look - u.base), -1.5, 1.5);
+      g.rotation.y += (want - g.rotation.y) * Math.min(1, dt * (watching ? 1.1 : 1.6));
+      const headWant = watching ? THREE.MathUtils.clamp(wrap(look - g.rotation.y), -1.1, 1.1) : 0; // the head makes up the rest
+      u.head += (headWant - u.head) * Math.min(1, dt * (watching ? 3.5 : 1.5));
+      g.children[0].material.userData.head.value = u.head;
       g.position.y = .04 + Math.sin(t * .9 + u.phase) * .03; // they float, the hem never quite touches the floor
       if (t > u.fadeAt && u.fadeT < 0) u.fadeT = 0;
       if (u.fadeT >= 0) {
