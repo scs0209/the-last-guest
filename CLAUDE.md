@@ -30,8 +30,4 @@ python3 -m http.server 8770 --directory web  # static mode, same as the Render f
 - Render: a Blueprint was created from the earlier paid `pro plus` Docker config. `render.yaml` is now a free static site, but that change is on the work branch only. The paid service may need suspending or deleting in the dashboard.
 
 ## Next steps
-1. Finish the in-browser Gemma test: the worker now imports Transformers.js from jsDelivr's `+esm` build and loads `Gemma4ForCausalLM` (text only, ~3.1 GB). Loading started in the preview; generation is untested.
-2. Merge the work branch to main after the user confirms, then deploy the free static site; stop the paid Render service.
-3. Optional: .tech domain on the Render site.
-4. Write the DEV post (writing is weighted most). Include measured numbers only, the known limits, and why open models matter here.
-5. Before submitting: export the full session log, delete the Tinker key and personal emails from it, and push it to the private sessions repo.
+The full remaining plan, starting with the Render deploy (R1–R7), the schedule and the pre-submit checklist, is in [PLAN.md](PLAN.md). Work on the `wip/browser-gemma` branch until the user approves merging to main.
