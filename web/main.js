@@ -76,7 +76,7 @@ const world = createWorld($("scene"), {
     j.classList.remove("hidden"); j.style.left = start.x + "px"; j.style.top = start.y + "px";
     j.firstElementChild.style.transform = `translate(${x * 32}px, ${z * 32}px)`;
   },
-  isSpinning: () => state.current === "record" && state.waiting,
+  isSpinning: () => state.current === "record" && (state.waiting || audio.voicePlaying()),
 });
 world.setSensitivity(settings.sens);
 
@@ -94,6 +94,7 @@ function paintWorldTextures() {
 const state = {
   playing: false, over: false, current: null, waiting: false, restored: false,
   found: new Set(), visited: new Set(), asked: {}, history: {}, candles: 7, lastProgress: Date.now(), goalsDone: new Set(),
+  voiced: new Set(),
 };
 const OBJECTS = ["photo", "letter", "record", "guest_list"];
 const overlays = ["journal", "ofrenda", "pause", "settings", "about", "intro", "forgotten"];
@@ -228,7 +229,7 @@ function openTalk(key) {
   if (!world.isTouch) $("q").focus();
 }
 function closeTalk() {
-  state.current = null; $("talk").classList.add("hidden"); audio.crackle(false);
+  state.current = null; $("talk").classList.add("hidden"); audio.crackle(false); audio.stopVoice();
   if (!state.over) { world.setEnabled(true); world.lock(); }
 }
 $("closeTalk").addEventListener("click", closeTalk);
@@ -286,9 +287,17 @@ async function ask(q) {
   if (state.current !== key) return;
   if (r.busy) { addMsg(r.say, "narrator"); state.asked[key].delete(q); renderChips(); return; }
   const reveals = r.reveals || [];
-  const msg = addMsg(r.say, "them " + key + (reveals.includes("F18") ? " ink" : ""));
-  if (r.cached) { const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = "✦ " + t("ask.cachedNote"); msg.appendChild(tag); }
+  addMsg(r.say, "them " + key + (reveals.includes("F18") ? " ink" : ""));
+  if (key === "record") playVoice(reveals);
   reveals.forEach(learn);
+}
+
+// her recorded voice: when code finds one of these clues in the record's reply, that clip plays once per game
+const VOICE_CLIPS = { F01: "intro", F04: "intro", F15: "last", F16: "song", F17: "chocolate" };
+const voiceFile = (clip) => `audio/record/${clip === "song" ? "song" : settings.lang + "_" + clip}.mp3`;
+function playVoice(reveals) {
+  const clip = reveals.map((id) => VOICE_CLIPS[id]).find((c) => c && !state.voiced.has(c));
+  if (clip) { state.voiced.add(clip); audio.voice(voiceFile(clip)); }
 }
 
 // ---------------------------------------------------------------- memory: facts, goals, journal
@@ -362,6 +371,7 @@ function ending() {
     $("endLines").innerHTML = [...E.lines.map((l) => `<p class="line">${l}</p>`), `<p class="line said">${E.said}</p>`, `<p class="line">${E.after}</p>`,
       `<p class="line"><button class="btn marigold" onclick="location.reload()">${E.again}</button></p>`].join("");
     $("ending").classList.remove("hidden"); portraitOn = true;
+    setTimeout(() => audio.voice(voiceFile("last")), 1200); // the record's last words, once her tune on the piano has rung out
     requestAnimationFrame(() => $("ending").classList.add("show"));
     [...$("endLines").children].forEach((el, i) => setTimeout(() => el.classList.add("show"), 1400 + i * 1800));
   }, 5200);
@@ -384,7 +394,7 @@ function frame(ms) {
     if (state.playing) updateHUD(time);
     if (state.current) {
       OBJECT_ART[state.current](artCtx, 640, 640, time, state.current === "photo" ? state.restored : settings.lang);
-      if (state.current === "record") { drawWave(waveCtx, 600, 80, time, state.waiting); $("waveBar").style.width = `${(time * 4) % 100}%`; }
+      if (state.current === "record") { drawWave(waveCtx, 600, 80, time, state.waiting || audio.voicePlaying()); $("waveBar").style.width = `${(time * 4) % 100}%`; }
     }
     if (portraitOn) drawPortrait(portraitCtx, 640, 800, time);
   }

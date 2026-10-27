@@ -1,4 +1,5 @@
-// Procedural sound: wind in the house, record crackle, piano notes. No audio files.
+// Procedural sound: wind in the house, record crackle, piano notes. The only audio files are Marisol's voice
+// on the record (web/audio/record, made by make_voice.py).
 let ctx = null, master = null, crackleGain = null, enabled = true;
 
 function noiseBuffer(seconds, brown) {
@@ -42,6 +43,29 @@ export function crackle(on) {
   if (crackleGain) crackleGain.gain.setTargetAtTime(on ? .5 : 0, ctx.currentTime, .3);
 }
 
+// a clip of her voice, decoded once; a new clip or stopVoice() cuts the one playing
+const clips = {};
+let voiceSrc = null, voiceId = 0;
+export async function voice(url) {
+  if (!ctx || !enabled) return;
+  stopVoice();
+  const id = voiceId;
+  try {
+    clips[url] ||= fetch(url).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b));
+    const buffer = await clips[url];
+    if (id !== voiceId) return; // stopped while loading
+    const src = ctx.createBufferSource(); src.buffer = buffer;
+    src.connect(master); src.start();
+    voiceSrc = src; src.onended = () => { if (voiceSrc === src) voiceSrc = null; };
+  } catch (e) { delete clips[url]; console.warn("voice clip failed:", url, e); }
+}
+export function stopVoice() {
+  voiceId++;
+  try { voiceSrc?.stop(); } catch {}
+  voiceSrc = null;
+}
+export const voicePlaying = () => !!voiceSrc;
+
 // a soft piano-like note: a few sine partials with a quick attack and long decay
 export function note(freq, when = 0, dur = 2.4, vol = .25) {
   if (!ctx || !enabled) return;
@@ -61,6 +85,6 @@ export const sfx = {
   clue: () => { note(tone(12), 0, 1.6, .12); note(tone(19), .12, 1.8, .1); },
   goal: () => [0, 4, 7, 12].forEach((s, i) => note(tone(s + 3), i * .18, 2.6, .18)),
   snuff: () => note(tone(-12), 0, 1.4, .15),
-  // a short minor phrase for the ending, written for this game
-  ending: () => [[0, 0], [3, .5], [7, 1], [8, 1.5], [7, 2.1], [5, 2.6], [3, 3.2], [2, 3.8], [0, 4.6]].forEach(([s, w]) => note(tone(s), w, 3, .22)),
+  // her tune, written for this game; the record plays it on a music box (make_voice.py ENDING)
+  ending: () => [[0, 0], [7, .9], [6, 1.35], [3, 1.8], [5, 2.7], [1, 3.15], [0, 3.6], [-1, 4.5], [7, 5.4]].forEach(([s, w]) => note(tone(s), w, 3, .22)),
 };

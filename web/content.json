@@ -111,8 +111,7 @@
       "prompt": "What would you like to ask?",
       "placeholder": "Ask a question…",
       "send": "Ask",
-      "back": "Back",
-      "cachedNote": "Written in advance by Gemma 4 E4B through the same guardrails"
+      "back": "Back"
     },
     "objects": {
       "photo": {
@@ -651,8 +650,7 @@
       "prompt": "무엇을 묻고 싶으신가요?",
       "placeholder": "질문을 입력하세요…",
       "send": "묻기",
-      "back": "돌아가기",
-      "cachedNote": "Gemma 4 E4B가 같은 가드레일을 거쳐 미리 써 둔 답"
+      "back": "돌아가기"
     },
     "objects": {
       "photo": {

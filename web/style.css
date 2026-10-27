@@ -155,7 +155,6 @@ html[lang="en"] .msg { font-size: 17px; }
 .msg.record { color: #d6caff; }
 .msg.narrator { align-self: center; background: none; border: none; color: var(--gold); font-style: italic; text-align: center; font-size: 14px; }
 .msg.ink { animation: ink 2.4s ease-out; }
-.msg .tag { display: block; margin-top: 4px; font-family: var(--sans); font-size: 10px; color: var(--muted); }
 @keyframes ink { 0% { filter: blur(0); color: #000; } 40% { filter: blur(2px); } 100% { filter: blur(0); } }
 .gemma { margin: 0 18px 10px; padding: 10px 12px; border: 1px dashed var(--line-strong); border-radius: 10px; font-family: var(--sans); font-size: 12px; color: #cfd6ea; }
 .gemma p { margin: 0 0 8px; }
