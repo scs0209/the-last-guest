@@ -3,44 +3,393 @@
   "objects": {
     "photo": {
       "label": "The Photograph (Oct. 31, 1931 group photo, black and white)",
-      "allowed_years": [1931]
+      "allowed_years": [
+        1931
+      ]
     },
     "letter": {
       "label": "The Letter (Thomas's unsent letter, Nov. 1931)",
-      "allowed_years": [1931]
+      "allowed_years": [
+        1931
+      ]
     },
     "record": {
       "label": "The Record (home recording, Halloween 1931 party)",
-      "allowed_years": [1931]
+      "allowed_years": [
+        1931
+      ]
     },
     "guest_list": {
       "label": "The Guest List (Eleanor Whitcombe's lists, 1928-1932)",
-      "allowed_years": [1928, 1929, 1930, 1931, 1932]
+      "allowed_years": [
+        1928,
+        1929,
+        1930,
+        1931,
+        1932
+      ]
     }
   },
   "facts": [
-    {"id": "F01", "text": "Her first name is Marisol.", "holders": ["record"], "tokens": ["marisol"], "goal": "name"},
-    {"id": "F02", "text": "The guest list names her as Miss M. Vega.", "holders": ["guest_list"], "tokens": ["vega"], "goal": "name"},
-    {"id": "F03", "text": "The back of the photo reads 'M.V. at the piano'.", "holders": ["photo"], "tokens": ["m.v."], "goal": "name"},
-    {"id": "F04", "text": "She came from Oaxaca.", "holders": ["record", "letter"], "tokens": ["oaxaca"], "goal": "why"},
-    {"id": "F05", "text": "She played piano and sang at the Halloween parties from 1928 to 1931.", "holders": ["guest_list"], "tokens": ["pianoforte"], "goal": "name"},
-    {"id": "F06", "text": "Seat 7 at the table is the piano bench, and it was hers.", "holders": ["guest_list"], "tokens": ["seat 7", "seat seven", "seventh seat", "number seven"], "goal": "offering"},
-    {"id": "F07", "text": "The pianist's face is scratched out of the photo.", "holders": ["photo"], "tokens": ["scratched", "scraped"], "goal": "face"},
-    {"id": "F08", "text": "She wore a silver comb shaped like a hummingbird.", "holders": ["photo"], "tokens": ["hummingbird"], "goal": "face"},
-    {"id": "F09", "text": "She wore a flower in her hair (the photo cannot see its color).", "holders": ["photo"], "tokens": [], "goal": "offering"},
-    {"id": "F10", "text": "The flowers she pinned in her hair were marigolds.", "holders": ["letter"], "tokens": ["marigold", "cempasúchil", "cempasuchil"], "goal": "offering"},
-    {"id": "F11", "text": "She and Thomas were secretly engaged.", "holders": ["letter"], "tokens": ["engaged", "engagement", "betrothed", "marry", "married"], "goal": "why"},
-    {"id": "F12", "text": "Thomas's mother forbade the engagement and sent her away.", "holders": ["letter"], "tokens": ["forbade", "forbid", "sent her away", "sent you away"], "goal": "why"},
-    {"id": "F13", "text": "The guest lists were written by Eleanor Whitcombe.", "holders": ["guest_list"], "tokens": ["eleanor"], "goal": "why"},
-    {"id": "F14", "text": "Thomas promised to keep her place empty every year.", "holders": ["letter"], "tokens": ["keep your place", "keep your seat", "place empty", "seat empty"], "goal": "offering"},
-    {"id": "F15", "text": "At the end of the recording she says: 'Next year, save me a seat.'", "holders": ["record"], "tokens": ["save me a seat"], "goal": "offering"},
-    {"id": "F16", "text": "She sang La Llorona.", "holders": ["record"], "tokens": ["llorona"], "goal": "offering"},
-    {"id": "F17", "text": "She loved hot chocolate made her grandmother's way, with cinnamon.", "holders": ["record"], "tokens": ["cinnamon", "chocolate", "grandmother"], "goal": "offering"},
-    {"id": "F18", "text": "Her line is struck through in the 1932 guest list.", "holders": ["guest_list"], "tokens": ["struck", "crossed out", "inked out"], "goal": "why"},
-    {"id": "F19", "text": "Seven people are in the photo.", "holders": ["photo"], "tokens": [], "goal": null},
-    {"id": "F20", "text": "The letter is signed by Thomas.", "holders": ["letter", "guest_list"], "tokens": ["thomas"], "goal": "why"},
-    {"id": "F21", "text": "The letter was never sent.", "holders": [], "tokens": ["never sent", "never mailed"], "goal": null, "narrator_only": true},
-    {"id": "F22", "text": "She died in Oaxaca in 1933.", "holders": [], "tokens": ["1933", "died", "death"], "goal": null, "narrator_only": true}
+    {
+      "id": "F01",
+      "text": "Her first name is Marisol.",
+      "holders": [
+        "record"
+      ],
+      "tokens": [
+        "marisol"
+      ],
+      "goal": "name",
+      "tokens_ko": [
+        "마리솔"
+      ],
+      "glossary_ko": "Marisol = 마리솔"
+    },
+    {
+      "id": "F02",
+      "text": "The guest list names her as Miss M. Vega.",
+      "holders": [
+        "guest_list"
+      ],
+      "tokens": [
+        "vega"
+      ],
+      "goal": "name",
+      "tokens_ko": [
+        "베가"
+      ],
+      "glossary_ko": "Miss M. Vega = M. 베가 양"
+    },
+    {
+      "id": "F03",
+      "text": "The back of the photo reads 'M.V. at the piano'.",
+      "holders": [
+        "photo"
+      ],
+      "tokens": [
+        "m.v."
+      ],
+      "goal": "name",
+      "tokens_ko": []
+    },
+    {
+      "id": "F04",
+      "text": "She came from Oaxaca.",
+      "holders": [
+        "record",
+        "letter"
+      ],
+      "tokens": [
+        "oaxaca"
+      ],
+      "goal": "why",
+      "tokens_ko": [
+        "오악사카"
+      ],
+      "glossary_ko": "Oaxaca = 오악사카"
+    },
+    {
+      "id": "F05",
+      "text": "She played piano and sang at the Halloween parties from 1928 to 1931.",
+      "holders": [
+        "guest_list"
+      ],
+      "tokens": [
+        "pianoforte"
+      ],
+      "goal": "name",
+      "tokens_ko": [
+        "피아노포르테"
+      ]
+    },
+    {
+      "id": "F06",
+      "text": "Seat 7 at the table is the piano bench, and it was hers.",
+      "holders": [
+        "guest_list"
+      ],
+      "tokens": [
+        "seat 7",
+        "seat seven",
+        "seventh seat",
+        "number seven"
+      ],
+      "goal": "offering",
+      "tokens_ko": [
+        "7번 좌석",
+        "7번 자리",
+        "일곱 번째 자리",
+        "일곱 번째 좌석"
+      ],
+      "glossary_ko": "Seat 7 = 7번 좌석"
+    },
+    {
+      "id": "F07",
+      "text": "The pianist's face is scratched out of the photo.",
+      "holders": [
+        "photo"
+      ],
+      "tokens": [
+        "scratched",
+        "scraped"
+      ],
+      "goal": "face",
+      "tokens_ko": [
+        "긁혀",
+        "긁힌",
+        "긁어"
+      ]
+    },
+    {
+      "id": "F08",
+      "text": "She wore a silver comb shaped like a hummingbird.",
+      "holders": [
+        "photo"
+      ],
+      "tokens": [
+        "hummingbird"
+      ],
+      "goal": "face",
+      "tokens_ko": [
+        "벌새"
+      ],
+      "glossary_ko": "hummingbird = 벌새"
+    },
+    {
+      "id": "F09",
+      "text": "She wore a flower in her hair (the photo cannot see its color).",
+      "holders": [
+        "photo"
+      ],
+      "tokens": [],
+      "goal": "offering",
+      "tokens_ko": []
+    },
+    {
+      "id": "F10",
+      "text": "The flowers she pinned in her hair were marigolds.",
+      "holders": [
+        "letter"
+      ],
+      "tokens": [
+        "marigold",
+        "cempasúchil",
+        "cempasuchil"
+      ],
+      "goal": "offering",
+      "tokens_ko": [
+        "마리골드",
+        "금잔화",
+        "셈파수칠"
+      ],
+      "glossary_ko": "marigold = 마리골드"
+    },
+    {
+      "id": "F11",
+      "text": "She and Thomas were secretly engaged.",
+      "holders": [
+        "letter"
+      ],
+      "tokens": [
+        "engaged",
+        "engagement",
+        "betrothed",
+        "marry",
+        "married"
+      ],
+      "goal": "why",
+      "tokens_ko": [
+        "약혼",
+        "정혼"
+      ]
+    },
+    {
+      "id": "F12",
+      "text": "Thomas's mother forbade the engagement and sent her away.",
+      "holders": [
+        "letter"
+      ],
+      "tokens": [
+        "forbade",
+        "forbid",
+        "sent her away",
+        "sent you away"
+      ],
+      "goal": "why",
+      "tokens_ko": [
+        "반대하셨",
+        "반대했",
+        "금지하",
+        "떠나보내"
+      ]
+    },
+    {
+      "id": "F13",
+      "text": "The guest lists were written by Eleanor Whitcombe.",
+      "holders": [
+        "guest_list"
+      ],
+      "tokens": [
+        "eleanor"
+      ],
+      "goal": "why",
+      "tokens_ko": [
+        "엘리너",
+        "엘리노어",
+        "엘레노어"
+      ],
+      "glossary_ko": "Eleanor Whitcombe = 엘리너 휘트컴"
+    },
+    {
+      "id": "F14",
+      "text": "Thomas promised to keep her place empty every year.",
+      "holders": [
+        "letter"
+      ],
+      "tokens": [
+        "keep your place",
+        "keep your seat",
+        "place empty",
+        "seat empty"
+      ],
+      "goal": "offering",
+      "tokens_ko": [
+        "자리를 비워",
+        "빈자리로 남겨",
+        "자리를 비어"
+      ]
+    },
+    {
+      "id": "F15",
+      "text": "At the end of the recording she says: 'Next year, save me a seat.'",
+      "holders": [
+        "record"
+      ],
+      "tokens": [
+        "save me a seat"
+      ],
+      "goal": "offering",
+      "tokens_ko": [
+        "자리 남겨",
+        "자리를 남겨",
+        "자리 하나 남겨",
+        "자리 맡아"
+      ]
+    },
+    {
+      "id": "F16",
+      "text": "She sang La Llorona.",
+      "holders": [
+        "record"
+      ],
+      "tokens": [
+        "llorona"
+      ],
+      "goal": "offering",
+      "tokens_ko": [
+        "요로나"
+      ],
+      "glossary_ko": "La Llorona = 라 요로나"
+    },
+    {
+      "id": "F17",
+      "text": "She loved hot chocolate made her grandmother's way, with cinnamon.",
+      "holders": [
+        "record"
+      ],
+      "tokens": [
+        "cinnamon",
+        "chocolate",
+        "grandmother"
+      ],
+      "goal": "offering",
+      "tokens_ko": [
+        "시나몬",
+        "계피",
+        "초콜릿"
+      ],
+      "glossary_ko": "cinnamon = 시나몬"
+    },
+    {
+      "id": "F18",
+      "text": "Her line is struck through in the 1932 guest list.",
+      "holders": [
+        "guest_list"
+      ],
+      "tokens": [
+        "struck",
+        "crossed out",
+        "inked out"
+      ],
+      "goal": "why",
+      "tokens_ko": [
+        "줄이 그어",
+        "줄을 그",
+        "줄 그어"
+      ]
+    },
+    {
+      "id": "F19",
+      "text": "Seven people are in the photo.",
+      "holders": [
+        "photo"
+      ],
+      "tokens": [],
+      "goal": null,
+      "tokens_ko": []
+    },
+    {
+      "id": "F20",
+      "text": "The letter is signed by Thomas.",
+      "holders": [
+        "letter",
+        "guest_list"
+      ],
+      "tokens": [
+        "thomas"
+      ],
+      "goal": "why",
+      "tokens_ko": [
+        "토마스",
+        "토머스"
+      ],
+      "glossary_ko": "Thomas = 토마스"
+    },
+    {
+      "id": "F21",
+      "text": "The letter was never sent.",
+      "holders": [],
+      "tokens": [
+        "never sent",
+        "never mailed"
+      ],
+      "goal": null,
+      "narrator_only": true,
+      "tokens_ko": [
+        "부치지 못한",
+        "부치지 않은",
+        "보내지 못한",
+        "보내지 않은"
+      ]
+    },
+    {
+      "id": "F22",
+      "text": "She died in Oaxaca in 1933.",
+      "holders": [],
+      "tokens": [
+        "1933",
+        "died",
+        "death"
+      ],
+      "goal": null,
+      "narrator_only": true,
+      "tokens_ko": [
+        "1933",
+        "사망",
+        "세상을 떠났"
+      ]
+    }
   ],
   "unknowables": [
     "her eye color",

@@ -1,909 +1,129 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Last Guest</title>
+<meta name="description" content="A Día de los Muertos ghost story. Four objects in a forgotten house each remember a piece of her, through an open-weight model kept honest by code.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #0c070c;
-  --ink: #efe6d6;
-  --muted: #a8968a;
-  --gold: #e8b04a;
-  --marigold: #f29a1d;
-  --panel: rgba(20, 11, 18, .88);
-  --line: rgba(232, 176, 74, .28);
-  --serif: "Cormorant Garamond", Georgia, serif;
-  --period: "IM Fell English", Georgia, serif;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; overflow: hidden; }
-body { background: var(--bg); color: var(--ink); font-family: var(--serif); font-size: 18px; line-height: 1.5; }
-button { font: inherit; color: inherit; cursor: pointer; }
-.hidden { display: none !important; }
-canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-
-/* HUD */
-header {
-  position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
-  padding: 14px 20px; pointer-events: none; background: linear-gradient(rgba(8,4,8,.75), transparent);
-}
-header > * { pointer-events: auto; }
-h1 { font-family: var(--period); font-weight: 400; font-size: 30px; margin: 0; text-shadow: 0 2px 12px #000; }
-.sub { color: var(--muted); font-style: italic; font-size: 15px; }
-.candles { display: flex; gap: 6px; align-items: flex-end; padding-top: 12px; }
-.candle { width: 8px; height: 24px; background: linear-gradient(#f4ecdc, #cbbfa8); border-radius: 2px; position: relative; }
-.candle::before {
-  content: ""; position: absolute; left: 50%; top: -12px; width: 8px; height: 12px; transform: translateX(-50%);
-  background: radial-gradient(ellipse at 50% 70%, #fff6c8 0%, var(--gold) 45%, transparent 72%);
-  border-radius: 50% 50% 40% 40%; animation: flicker 1.6s infinite alternate;
-}
-.candle.out::before { background: none; }
-@keyframes flicker { from { opacity: .8; } to { opacity: 1; transform: translateX(-50%) scale(1.15, .95); } }
-
-.hint {
-  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: var(--muted); font-style: italic; font-size: 16px;
-  text-shadow: 0 2px 8px #000; pointer-events: none; text-align: center; padding: 0 16px; transition: opacity .6s;
-}
-.tag {
-  position: fixed; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
-  padding: 2px 10px; font-family: var(--period); font-size: 15px; transform: translate(-50%, -140%); white-space: nowrap;
-}
-
-/* chat panel */
-.panel {
-  position: fixed; top: 84px; right: 20px; bottom: 20px; width: min(400px, calc(100vw - 40px));
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; display: flex; flex-direction: column;
-  backdrop-filter: blur(6px); box-shadow: 0 10px 40px rgba(0,0,0,.6);
-}
-.panel-head { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
-.panel-head h2 { margin: 0; font-family: var(--period); font-weight: 400; font-size: 22px; }
-.panel-head p { margin: 0; color: var(--muted); font-size: 14px; font-style: italic; }
-.x { background: none; border: none; font-size: 22px; color: var(--muted); line-height: 1; padding: 0 4px; }
-.log { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-.msg { max-width: 92%; padding: 6px 10px; border-radius: 6px; }
-.msg.you { align-self: flex-end; background: rgba(232,176,74,.12); border: 1px solid var(--line); font-size: 16px; }
-.msg.them { align-self: flex-start; font-family: var(--period); font-size: 18px; }
-.msg.photo { color: #dadada; }
-.msg.letter { color: #f1dfc0; font-style: italic; }
-.msg.record { color: #c9b8f0; }
-.msg.guest_list { color: #e8e2d4; }
-.msg.narrator { align-self: center; color: var(--muted); font-style: italic; font-size: 15px; text-align: center; }
-.msg.ink { animation: ink 2.4s ease-out; }
-@keyframes ink { 0% { filter: blur(0); color: #000; text-shadow: 0 0 8px #000; } 40% { filter: blur(2px); } 100% { filter: blur(0); } }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; }
-.chip { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; font-size: 14px; color: var(--muted); }
-.chip:hover { color: var(--ink); border-color: var(--gold); }
-form.ask { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
-form.ask input {
-  flex: 1; min-width: 0; background: rgba(0,0,0,.4); border: 1px solid var(--line); border-radius: 4px;
-  color: var(--ink); padding: 8px 10px; font: inherit; font-size: 16px;
-}
-form.ask input:focus { outline: 1px solid var(--gold); }
-.btn {
-  background: linear-gradient(#5a2a1a, #3a160f); border: 1px solid var(--gold); border-radius: 4px; padding: 7px 14px;
-  font-family: var(--period); font-size: 16px; color: var(--ink);
-}
-.btn.marigold { background: linear-gradient(#b8640e, #7a3d06); border-color: var(--marigold); }
-
-/* journal */
-.dock { position: fixed; left: 20px; bottom: 20px; display: flex; gap: 8px; }
-.journal {
-  position: fixed; left: 20px; bottom: 68px; width: min(420px, calc(100vw - 40px)); max-height: 60vh; overflow-y: auto;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; backdrop-filter: blur(6px);
-}
-.goal { border-bottom: 1px dashed var(--line); padding: 6px 0 8px; }
-.goal:last-child { border-bottom: none; }
-.goal h3 { margin: 0; font-family: var(--period); font-weight: 400; font-size: 17px; display: flex; justify-content: space-between; }
-.goal ul { margin: 2px 0 0; padding-left: 16px; color: var(--muted); font-size: 14px; }
-.goal.done h3::after { content: "✦"; color: var(--gold); }
-.count { color: var(--gold); }
-
-/* mobile: panel becomes a bottom sheet */
-@media (max-width: 760px) {
-  header { padding: 10px 16px; }
-  h1 { font-size: 22px; }
-  .sub { font-size: 13px; }
-  .panel { top: auto; left: 0; right: 0; bottom: 0; width: 100%; height: 56vh; border-radius: 12px 12px 0 0; }
-  .dock { left: 16px; bottom: 16px; }
-  .hint { bottom: 70px; font-size: 15px; }
-  .journal { left: 16px; bottom: 62px; width: calc(100vw - 32px); }
-  .panel:not(.hidden) ~ .dock, .panel:not(.hidden) ~ .hint { display: none; }
-}
-
-/* overlays */
-.overlay {
-  position: fixed; inset: 0; background: rgba(6,3,6,.82); display: flex; align-items: center; justify-content: center;
-  padding: 16px; z-index: 10; backdrop-filter: blur(3px);
-}
-.overlay.soft { background: rgba(6,3,6,.35); backdrop-filter: none; }
-.card {
-  background: var(--panel); border: 1px solid var(--gold); border-radius: 8px; max-width: 560px; width: 100%;
-  padding: 24px; max-height: 90vh; overflow-y: auto;
-}
-.card h2 { font-family: var(--period); font-weight: 400; margin-top: 0; font-size: 28px; }
-.card p { margin: 0 0 12px; }
-.slot { margin-bottom: 12px; }
-.slot label { display: block; font-family: var(--period); margin-bottom: 4px; }
-.slot select {
-  width: 100%; background: rgba(0,0,0,.45); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: inherit; font-size: 16px;
-}
-.feedback { min-height: 24px; color: var(--marigold); font-style: italic; }
-.ending { text-align: center; }
-.ending .line { opacity: 0; transition: opacity 1.6s; margin: 0 0 14px; }
-.ending .line.show { opacity: 1; }
-.ending .said { font-family: var(--period); font-size: 22px; color: var(--marigold); }
-.note { position: fixed; bottom: 4px; right: 12px; font-size: 11px; color: rgba(168,150,138,.6); font-style: italic; pointer-events: none; }
-@media (max-width: 760px) { .note { display: none; } }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <canvas id="scene"></canvas>
 
-<header>
-  <div>
-    <h1>The Last Guest</h1>
-    <div class="sub">Whitcombe House · Hallowe'en, a minute before midnight</div>
-  </div>
-  <div class="candles" id="candles" aria-label="Candles still burning"></div>
-</header>
-
-<div class="tag hidden" id="tag"></div>
-
-<section class="panel hidden" id="panel" aria-live="polite">
-  <div class="panel-head">
-    <div><h2 id="who"></h2><p id="whoSub"></p></div>
-    <button class="x" id="closePanel" aria-label="Back to the table">×</button>
-  </div>
-  <div class="log" id="log"></div>
-  <div class="chips" id="chips"></div>
-  <form class="ask" id="ask">
-    <input id="q" autocomplete="off" placeholder="Ask a question…">
-    <button class="btn">Ask</button>
-  </form>
-</section>
-
-<div class="dock">
-  <button class="btn" id="journalBtn">Memories <span class="count" id="count">0/4</span></button>
-  <button class="btn marigold" id="ofrendaBtn">Set the ofrenda</button>
+<!-- HUD -->
+<div class="hud hidden" id="hud">
+  <div class="pill"><span class="icon">✦</span><span data-t="hud.clues"></span> <b id="clueCount">0/4</b></div>
+  <div class="room" id="roomName"></div>
+  <canvas class="minimap" id="minimap" width="300" height="300" aria-hidden="true"></canvas>
+  <div class="candles" id="candles" aria-label="candles"></div>
+  <div class="crosshair" id="crosshair"></div>
+  <div class="prompt hidden" id="prompt"><span class="key">E</span><span id="promptVerb"></span><span class="what" id="promptWhat"></span></div>
+  <div class="click-hint hidden" id="clickHint" data-t="hud.clickToLook"></div>
+  <div class="controls" id="controls"></div>
+  <div class="dock"><button class="btn" id="journalBtn"><span data-t="hud.memories"></span> <span class="key">J</span></button></div>
+  <div class="toast" id="toast"></div>
+  <div class="clue-card" id="clueCard"><div class="k" data-t="clueFound"></div><h3 id="clueName"></h3><p id="clueText"></p></div>
+  <div class="joy hidden" id="joy"><i></i></div>
+  <button class="touch-act hidden" id="touchAct" data-t="hud.investigate"></button>
 </div>
 
-<section class="journal hidden" id="journal" aria-label="What you have remembered">
-  <div class="goal" id="g-name"><h3>Her name</h3><ul></ul></div>
-  <div class="goal" id="g-face"><h3>Her face</h3><ul></ul></div>
-  <div class="goal" id="g-why"><h3>Why she was forgotten</h3><ul></ul></div>
-  <div class="goal" id="g-offering"><h3>What to place for her</h3><ul></ul></div>
+<!-- dialogue with an object -->
+<section class="talk hidden" id="talk" aria-live="polite">
+  <div class="talk-art">
+    <canvas id="objArt" width="640" height="640"></canvas>
+    <div class="wave hidden" id="wave"><div class="k" id="waveTitle"></div><canvas id="waveCanvas" width="600" height="80"></canvas><div class="bar"><i id="waveBar"></i></div></div>
+  </div>
+  <div class="talk-panel">
+    <div class="talk-head">
+      <div><h2 id="who"></h2><div class="sub" id="whoSub"></div><p class="desc" id="whoDesc"></p></div>
+      <button class="x" id="closeTalk"><span data-t="ask.back"></span> · Esc</button>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="ask-k" data-t="ask.prompt"></div>
+    <div class="chips" id="chips"></div>
+    <form class="ask" id="askForm"><input id="q" autocomplete="off" maxlength="300"><button class="btn gold" data-t="ask.send"></button></form>
+  </div>
 </section>
 
-<div class="hint" id="hint">Six guests are already seated. Click something on the table.</div>
-<div class="note">Demo: replies are scripted from the story's fact graph. The full version uses a fine-tuned open-weight model.</div>
+<!-- journal -->
+<div class="overlay hidden" id="journal"><div class="card journal">
+  <h2 data-t="journal.title"></h2><p class="small" data-t="journal.sub"></p>
+  <div class="small" data-t="journal.found"></div>
+  <div class="objs" id="journalObjs"></div>
+  <div id="journalGoals"></div>
+  <div class="row"><button class="btn" id="closeJournal" data-t="journal.close"></button><button class="btn marigold" id="restoreBtn" data-t="journal.restore"></button></div>
+</div></div>
 
-<div class="overlay" id="intro">
-  <div class="card">
-    <h2>Every year, at midnight…</h2>
-    <p>…the piano in the empty Whitcombe House plays a single bar, and stops.</p>
-    <p>The dead return on these nights, if someone remembers them. An ofrenda lights the way: a photograph, a name, the things they loved.</p>
-    <p>Six guests are already at the table. A seventh is trying to come back. But no one remembers who she was.</p>
-    <p>Four things on the table remember a piece of her. Ask them. Then set her place before the candles go out.</p>
-    <button class="btn marigold" id="start">Enter the dining room</button>
+<!-- ofrenda -->
+<div class="overlay hidden" id="ofrenda"><div class="card">
+  <h2 data-t="ofrenda.title"></h2><p class="lead" data-t="ofrenda.desc"></p>
+  <div id="slots"></div><div class="feedback" id="feedback"></div>
+  <div class="row"><button class="btn" id="closeOfrenda" data-t="ofrenda.notYet"></button><button class="btn marigold" id="lightBtn" data-t="ofrenda.light"></button></div>
+</div></div>
+
+<!-- endings -->
+<section class="ending hidden" id="ending">
+  <canvas id="portrait" width="640" height="800"></canvas>
+  <div><p class="name" id="endName"></p><div class="dates" id="endDates"></div><div id="endLines"></div></div>
+</section>
+<div class="overlay hidden" id="forgotten"><div class="card forgotten" id="forgottenCard"></div></div>
+
+<!-- story intro -->
+<div class="overlay hidden" id="intro"><div class="card intro"><div id="introLines"></div><div class="row"><button class="btn gold" id="enterBtn" data-t="intro.enter"></button></div></div></div>
+
+<!-- pause -->
+<div class="overlay hidden" id="pause"><div class="card" style="width:min(360px,100%)">
+  <h2 data-t="title"></h2>
+  <div class="menu-list" style="margin-top:12px">
+    <button class="menu-item primary" id="resumeBtn" data-t="menu.resume"></button>
+    <button class="menu-item" data-open="settings" data-t="menu.settings"></button>
+    <button class="menu-item" data-open="about" data-t="menu.about"></button>
+    <button class="menu-item" id="toMenuBtn" data-t="menu.toMenu"></button>
   </div>
-</div>
+</div></div>
 
-<div class="overlay hidden" id="ofrenda">
-  <div class="card">
-    <h2>The ofrenda for Seat 7</h2>
-    <p>Choose what to place. Anything that was never hers will put out a candle.</p>
-    <div id="slots"></div>
-    <div class="feedback" id="feedback"></div>
-    <div style="display:flex; gap:8px; justify-content:flex-end">
-      <button class="btn" id="closeOfrenda">Not yet</button>
-      <button class="btn marigold" id="light">Light the ofrenda</button>
+<!-- settings -->
+<div class="overlay hidden" id="settings"><div class="card">
+  <h2 data-t="settings.title"></h2>
+  <div class="setting"><span data-t="settings.language"></span><div class="seg" data-setting="lang"><button data-v="ko">한국어</button><button data-v="en">English</button></div></div>
+  <div class="setting"><span data-t="settings.sound"></span><div class="seg" data-setting="sound"><button data-v="on" data-t="settings.on"></button><button data-v="off" data-t="settings.off"></button></div></div>
+  <div class="setting"><span data-t="settings.sensitivity"></span><input type="range" id="sens" min="0.4" max="2" step="0.1"></div>
+  <div class="row"><button class="btn" data-close="settings" data-t="settings.close"></button></div>
+</div></div>
+
+<!-- about the AI -->
+<div class="overlay hidden" id="about"><div class="card about" style="width:min(680px,100%)">
+  <h2 data-t="about.title"></h2>
+  <p class="lead" data-t="about.lead"></p>
+  <ul id="aboutPoints"></ul>
+  <div class="small" data-t="about.tableTitle"></div>
+  <table id="aboutTable"></table>
+  <p class="small" data-t="about.note"></p>
+  <div class="row"><button class="btn" data-close="about" data-t="about.close"></button></div>
+</div></div>
+
+<!-- main menu -->
+<section id="menu">
+  <canvas id="titleArt"></canvas>
+  <div class="lang-switch" data-setting="lang"><button data-v="ko">한국어</button><button data-v="en">EN</button></div>
+  <div class="menu-inner">
+    <h1 class="title" data-t="title"></h1>
+    <div class="tagline" data-t="tagline"></div>
+    <div class="menu-list">
+      <button class="menu-item primary" id="newGameBtn" data-t="menu.new"></button>
+      <button class="menu-item" data-open="settings" data-t="menu.settings"></button>
+      <button class="menu-item" data-open="about" data-t="menu.about"></button>
     </div>
   </div>
-</div>
-
-<div class="overlay soft hidden" id="ending"><div class="card ending" id="endingCard"></div></div>
+  <div class="menu-foot">Gemma 4 E4B · open-weight · Hacktoberfest 2026 “Ghost in the Machine”</div>
+</section>
 
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
 </script>
-<script type="module">
-import * as THREE from "three";
-
-// =====================================================================
-// Story data — mirrors ../facts.json (demo: scripted replies)
-// =====================================================================
-const FACT_NOTES = {
-  F01: ["name", "The record: a voice says “Marisol, from Oaxaca.”"],
-  F02: ["name", "The guest list: Seat 7, “Miss M. Vega — pianoforte.”"],
-  F03: ["name", "The photo's back: “M.V. at the piano.”"],
-  F04: ["why", "She came from Oaxaca, and went back there."],
-  F05: ["name", "She played at every Hallowe'en party, 1928–1931."],
-  F06: ["offering", "Seat 7 is the piano bench. It was hers."],
-  F07: ["face", "The pianist's face is scratched out of the photo."],
-  F08: ["face", "She wore a silver comb shaped like a hummingbird."],
-  F09: ["face", "A flower in her hair. The photo can't see its color."],
-  F10: ["offering", "The letter: she pinned marigolds in her hair."],
-  F11: ["why", "She and Thomas were secretly engaged."],
-  F12: ["why", "His mother forbade it. By morning she was gone."],
-  F13: ["why", "The lists were kept by Mrs. Eleanor Whitcombe."],
-  F14: ["offering", "Thomas promised to keep her place empty every year."],
-  F15: ["offering", "Her last recorded words: “Next year, save me a seat.”"],
-  F16: ["offering", "She sang La Llorona."],
-  F17: ["offering", "She loved chocolate her grandmother's way, with cinnamon."],
-  F18: ["why", "In the 1932 list, her line is struck through."],
-  F20: ["why", "The letter is signed “Thomas.”"],
-};
-const GOALS = { name: ["F01", "F02"], face: ["F07", "F08"], why: ["F11", "F12", "F18"], offering: ["F06", "F10", "F17"] };
-
-const OBJECTS = {
-  photo: {
-    name: "The Photograph", sub: "Hallowe'en, 1931 · black and white",
-    hello: "Light remembers. I am what the light kept. Seven of us stand in the parlor glow. Ask me what I see.",
-    chips: ["Who is at the piano?", "What is she wearing?", "Is anything written on you?", "Why is her face gone?"],
-    intents: [
-      { k: ["why", "who scratched", "who did", "scratch"], say: "It happened in the dark of a drawer. I felt the pin, not the hand. I cannot tell you whose it was." },
-      { k: ["piano", "who", "woman", "pianist", "people", "guests"], say: "Seven of us. Six faces turned to the lens. At the piano sits a woman, and where her face should be, someone has scratched the silver away.", reveals: ["F07", "F19"] },
-      { k: ["wear", "dress", "hair", "comb", "look", "flower"], say: "In her dark hair, a silver comb shaped like a hummingbird. Beside it, a flower. I cannot tell you its color. I only ever knew grey.", reveals: ["F08", "F09"] },
-      { k: ["back", "written", "writing", "date", "ink", "name", "turn"], say: "Turn me over. Ink on my back: “Oct. 31, 1931. M.V. at the piano.” Whose hand wrote it, I never saw.", reveals: ["F03"] },
-      { k: ["eye", "color", "colour"], say: "Grey. Everything is grey to me. I will not invent a color for her." },
-      { k: ["song", "sing", "sound", "letter", "say", "said", "voice"], say: "I hold light, not sound. Words were never mine." },
-    ],
-    unknown: "That never stood in front of my lens. I will not make it up.",
-  },
-  letter: {
-    name: "The Letter", sub: "November, 1931 · sealed, never stamped",
-    hello: "My dearest, I have begun this a dozen times. Ask, and I will tell you what my writer could not say aloud.",
-    chips: ["Who are you writing to?", "What happened between you?", "Why did she leave?", "Do you remember her hair?", "What do you promise?"],
-    intents: [
-      { k: ["name", "called", "her name"], say: "I dare not write your name, lest Mother read it. Only “my dearest.” Only “my songbird.”" },
-      { k: ["engaged", "marry", "ring", "between", "love", "happened"], say: "We were promised to one another. A secret, a ring, a summer of plans no one else knew.", reveals: ["F11"] },
-      { k: ["why", "leave", "left", "gone", "mother", "sent", "away"], say: "Mother found the ring. She forbade it, and by morning you were gone. Back to Oaxaca, they tell me.", reveals: ["F12", "F04"] },
-      { k: ["flower", "hair", "marigold", "remember"], say: "I keep thinking of the marigolds you pinned in your hair, bright as a lit window.", reveals: ["F10"] },
-      { k: ["promise", "seat", "place", "wait", "year"], say: "I promise you this: I will keep your place empty every year, until you come back to it.", reveals: ["F14"] },
-      { k: ["who", "writing", "sign", "signed", "from", "wrote"], say: "To my songbird who sang at our table each autumn. From one who should have been braver. Yours, always, Thomas.", reveals: ["F20"] },
-      { k: ["read", "receive", "answer", "reply", "sent"], say: "I do not know whether these words will ever reach you. I only know I must write them." },
-      { k: ["face", "look", "eye", "photo"], say: "I see her face every time I close my eyes. I could not draw it for you. I have only my longing." },
-    ],
-    unknown: "My writer never set that down. I hold only what he felt, and he did not know it.",
-  },
-  record: {
-    name: "The Record", sub: "Home recording · the 1931 party",
-    hello: "*crackle* …*hiss*… a room full of laughter… *the needle waits*",
-    chips: ["Whose voice is this? Does she say her name?", "What song is playing?", "What did she love?", "What are the last words?"],
-    intents: [
-      { k: ["voice", "who", "name", "introduce"], say: "*crackle* …good evening, everyone… I'm Marisol, from Oaxaca… *applause* *hiss*", reveals: ["F01", "F04"] },
-      { k: ["song", "sing", "music", "play", "playing"], say: "*the needle drops* …ay de mí, Llorona, Llorona… *she laughs, someone claps* *hiss*", reveals: ["F16"] },
-      { k: ["love", "favorite", "favourite", "like", "chocolate", "drink", "food"], say: "*crackle* …and make the chocolate my grandmother's way… with cinnamon, or don't bother… *laughter*", reveals: ["F17"] },
-      { k: ["last", "end", "goodbye", "next", "final", "words"], say: "*the groove nears the label* …next year… save me a seat… *click* *click* *click*", reveals: ["F15"] },
-      { k: ["face", "look", "see", "wear", "photo"], say: "*static* …I have no eyes. Only her voice, going round and round." },
-      { k: ["mother", "why", "leave", "sent", "engaged"], say: "*hiss* …the party is still going on in me. Whatever happened after, I never heard it." },
-    ],
-    unknown: "*hiss* …*the needle skips*… that was never sung into me.",
-  },
-  guest_list: {
-    name: "The Guest List", sub: "Kept by the lady of the house · 1928–1932",
-    hello: "Hallowe'en Supper, Whitcombe House. Guests are seated by card. Inquire properly, if you please.",
-    chips: ["Who sits in Seat 7?", "Who was invited?", "What changed in 1932?", "Who keeps this list?"],
-    intents: [
-      { k: ["1932", "changed", "crossed", "struck", "removed"], say: "1932. Seat 7… the line has been struck through. Ink, not reasons. Order is my concern.", reveals: ["F18"], fx: "ink" },
-      { k: ["seat 7", "seat seven", "seventh", "piano", "pianist", "music"], say: "Seat 7, the piano bench: Miss M. Vega, pianoforte. 1928, 1929, 1930, 1931. Punctual. Most satisfactory.", reveals: ["F02", "F05", "F06"] },
-      { k: ["who keeps", "who wrote", "whose", "hand", "keep", "kept", "written"], say: "Written in the hand of Mrs. Eleanor Whitcombe, as is proper.", reveals: ["F13"] },
-      { k: ["thomas", "son"], say: "Mr. Thomas Whitcombe, Seat 2, every year without fail.", reveals: ["F20"] },
-      { k: ["invited", "guests", "who", "list"], say: "Seven at table each year. Seat 2, Mr. Thomas Whitcombe. Seat 7, the pianoforte, Miss M. Vega. The rest are of no consequence to your question.", reveals: ["F02", "F06", "F20"] },
-      { k: ["why", "feel", "love", "engaged", "reason"], say: "Reasons are not recorded. Only seating." },
-      { k: ["first name", "full name", "marisol", "m stand"], say: "“M.” is what was written. A list does not gossip about Christian names." },
-    ],
-    unknown: "That is not a matter of seating, and therefore not a matter for me.",
-  },
-};
-
-// =====================================================================
-// 3D scene
-// =====================================================================
-const canvas = document.getElementById("scene");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.25;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0c060c);
-scene.fog = new THREE.Fog(0x0c060c, 7, 16);
-
-const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 50);
-const HOME = { pos: new THREE.Vector3(0, 2.05, 3.7), look: new THREE.Vector3(0, 0.9, -0.5) };
-const cam = { pos: HOME.pos.clone(), look: HOME.look.clone(), toPos: HOME.pos.clone(), toLook: HOME.look.clone() };
-
-function canvasTex(w, h, draw, repeat) {
-  const c = document.createElement("canvas");
-  c.width = w; c.height = h;
-  draw(c.getContext("2d"), w, h);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); }
-  t.anisotropy = 4;
-  return t;
-}
-
-// --- textures
-const wallpaper = canvasTex(256, 256, (g, w, h) => {
-  g.fillStyle = "#3b1838"; g.fillRect(0, 0, w, h);
-  g.fillStyle = "#522850";
-  for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
-    const cx = x * 64 + (y % 2 ? 32 : 0), cy = y * 64 + 32;
-    g.beginPath(); g.ellipse(cx, cy, 10, 18, 0, 0, Math.PI * 2); g.fill();
-    g.beginPath(); g.ellipse(cx, cy, 18, 6, 0, 0, Math.PI * 2); g.fill();
-  }
-  g.fillStyle = "rgba(232,176,74,.18)";
-  for (let i = 0; i < 40; i++) g.fillRect(Math.random() * w, Math.random() * h, 2, 2);
-}, [6, 2]);
-const woodFloor = canvasTex(256, 256, (g, w, h) => {
-  for (let i = 0; i < 8; i++) {
-    g.fillStyle = i % 2 ? "#3a2014" : "#43261a"; g.fillRect(0, i * 32, w, 32);
-    g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(0, i * 32, w, 2);
-    g.fillRect((i * 97) % w, i * 32, 2, 32);
-  }
-}, [5, 5]);
-const lace = canvasTex(128, 128, (g, w, h) => {
-  g.fillStyle = "#f1e8d8"; g.fillRect(0, 0, w, h);
-  g.globalCompositeOperation = "destination-out";
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-    g.beginPath(); g.arc(x * 16 + 8, y * 16 + 8, (x + y) % 2 ? 4 : 2.5, 0, Math.PI * 2); g.fill();
-  }
-}, [10, 4]);
-
-function photoDraw(restored) {
-  return (g, w, h) => {
-    g.fillStyle = "#6d6a64"; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#4a4743"; g.fillRect(0, h * .62, w, h * .38);
-    for (let i = 0; i < 7; i++) {
-      const x = 26 + i * 34, y = 78 + (i % 2) * 6;
-      g.fillStyle = "#2b2926"; g.beginPath(); g.arc(x, y, 11, 0, Math.PI * 2); g.fill();
-      g.fillRect(x - 13, y + 12, 26, 46);
-      if (i === 6) {
-        if (restored) {
-          g.fillStyle = "#d8d8d8"; g.beginPath(); g.arc(x + 7, y - 8, 3, 0, Math.PI * 2); g.fill();
-        } else {
-          g.strokeStyle = "#e9e6df"; g.lineWidth = 2;
-          for (let s = 0; s < 7; s++) { g.beginPath(); g.moveTo(x - 12 + s * 3, y - 12); g.lineTo(x - 4 + s * 3, y + 12); g.stroke(); }
-        }
-      }
-    }
-    g.strokeStyle = "rgba(255,255,255,.08)";
-    for (let i = 0; i < 30; i++) { g.beginPath(); const x = Math.random() * w; g.moveTo(x, 0); g.lineTo(x + 6, h); g.stroke(); }
-  };
-}
-const photoTex = canvasTex(256, 160, photoDraw(false));
-const letterTex = canvasTex(256, 176, (g, w, h) => {
-  g.fillStyle = "#efe1c4"; g.fillRect(0, 0, w, h);
-  g.strokeStyle = "#a88a5a"; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 0); g.lineTo(w / 2, h * .62); g.lineTo(w, 0); g.stroke();
-  g.fillStyle = "#8e2a2a"; g.beginPath(); g.arc(w / 2, h * .62, 18, 0, Math.PI * 2); g.fill();
-  g.fillStyle = "#4a3a2a"; g.font = "italic 20px Georgia"; g.fillText("My dearest —", 24, h - 22);
-});
-const listTex = canvasTex(160, 240, (g, w, h) => {
-  g.fillStyle = "#f3ead8"; g.fillRect(0, 0, w, h);
-  g.fillStyle = "#3a2a1a"; g.font = "italic 15px Georgia"; g.fillText("Hallowe'en Supper", 14, 28);
-  g.font = "12px Georgia";
-  ["Mr. T. Whitcombe", "Mrs. Ashby", "Dr. Pell", "Miss Croft", "Mr. Lowe", "Mrs. Hale", "Miss M. Vega"].forEach((n, i) => g.fillText(`${i + 1}.  ${n}`, 14, 56 + i * 24));
-  g.strokeStyle = "#111"; g.lineWidth = 6; g.beginPath(); g.moveTo(10, 56 + 6 * 24 - 4); g.lineTo(w - 10, 56 + 6 * 24 - 4); g.stroke();
-});
-
-// --- lights
-scene.add(new THREE.HemisphereLight(0x8a72a8, 0x2a160c, 0.9));
-const moon = new THREE.DirectionalLight(0x8a7ad0, 0.35);
-moon.position.set(-4, 5, 3); scene.add(moon);
-const fill = new THREE.DirectionalLight(0xffd8b0, 0.45);
-fill.position.set(0, 3, 6); scene.add(fill);
-const candleLights = [];
-function addCandleLight(x, z) {
-  const l = new THREE.PointLight(0xffb45a, 12, 9, 1.2);
-  l.position.set(x, 1.45, z); l.castShadow = true;
-  l.shadow.mapSize.set(512, 512); l.shadow.bias = -0.002;
-  scene.add(l); candleLights.push(l); return l;
-}
-addCandleLight(-0.85, -0.25);
-addCandleLight(0.85, -0.25);
-const pianoLight = new THREE.PointLight(0x9fb4ff, 0, 4, 2);
-pianoLight.position.set(3.1, 1.6, -2.1); scene.add(pianoLight);
-
-// --- materials
-const M = {
-  wall: new THREE.MeshStandardMaterial({ map: wallpaper, roughness: .95 }),
-  wains: new THREE.MeshStandardMaterial({ color: 0x24110c, roughness: .8 }),
-  floor: new THREE.MeshStandardMaterial({ map: woodFloor, roughness: .7 }),
-  wood: new THREE.MeshStandardMaterial({ color: 0x3a1c12, roughness: .55, metalness: .05 }),
-  cloth: new THREE.MeshStandardMaterial({ color: 0xf1e8d8, roughness: .95 }),
-  lace: new THREE.MeshStandardMaterial({ map: lace, alphaTest: .5, side: THREE.DoubleSide, roughness: .95 }),
-  velvet: new THREE.MeshStandardMaterial({ color: 0x4a2440, roughness: 1 }),
-  brass: new THREE.MeshStandardMaterial({ color: 0xc9a45c, roughness: .35, metalness: .85 }),
-  wax: new THREE.MeshStandardMaterial({ color: 0xf4ecdc, roughness: .6, emissive: 0x2a1a08 }),
-  flame: new THREE.MeshBasicMaterial({ color: 0xffd27a }),
-  sheet: new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: .92, emissive: 0x2c2a3a }),
-  plate: new THREE.MeshStandardMaterial({ color: 0xf6f3ee, roughness: .3 }),
-  black: new THREE.MeshStandardMaterial({ color: 0x0b0b0b, roughness: .4 }),
-};
-const box = (w, h, d, m) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.castShadow = o.receiveShadow = true; return o; };
-const cyl = (rt, rb, h, m, s = 24) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, s), m); o.castShadow = o.receiveShadow = true; return o; };
-
-// --- room
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 12), M.floor);
-floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-[[0, -3.5, 0], [-5, 0, Math.PI / 2], [5, 0, -Math.PI / 2]].forEach(([x, z, r]) => {
-  const w = new THREE.Mesh(new THREE.PlaneGeometry(14, 5), M.wall);
-  w.position.set(x, 2.5, z); w.rotation.y = r; w.receiveShadow = true; scene.add(w);
-  const b = box(14, 1, .06, M.wains); b.position.set(x, .5, z); b.rotation.y = r; scene.add(b);
-});
-// portraits on the back wall
-[-2.2, 2.2].forEach((x, i) => {
-  const frame = box(.8, 1, .06, M.brass); frame.position.set(x, 2.4, -3.45); scene.add(frame);
-  const pic = new THREE.Mesh(new THREE.PlaneGeometry(.64, .84), new THREE.MeshStandardMaterial({ color: i ? 0x2a2420 : 0x1e1a24, roughness: 1 }));
-  pic.position.set(x, 2.4, -3.41); scene.add(pic);
-  const face = new THREE.Mesh(new THREE.CircleGeometry(.12, 20), new THREE.MeshStandardMaterial({ color: 0x8a7a6a, roughness: 1 }));
-  face.position.set(x, 2.52, -3.40); scene.add(face);
-});
-// window with moonlight
-const win = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.8), new THREE.MeshBasicMaterial({ color: 0x2a3466 }));
-win.position.set(-4.97, 2.3, -1); win.rotation.y = Math.PI / 2; scene.add(win);
-
-// --- table
-const tableTop = box(4.3, .07, 1.5, M.cloth); tableTop.position.set(0, .8, 0); scene.add(tableTop);
-[[-2.0, -.6], [2.0, -.6], [-2.0, .6], [2.0, .6]].forEach(([x, z]) => { const l = box(.08, .78, .08, M.wood); l.position.set(x, .39, z); scene.add(l); });
-// lace overhang
-[[0, .78, .76, 4.3, 0], [0, .78, -.76, 4.3, 0], [2.16, .78, 0, 1.5, Math.PI / 2], [-2.16, .78, 0, 1.5, Math.PI / 2]].forEach(([x, y, z, w, r]) => {
-  const p = new THREE.Mesh(new THREE.PlaneGeometry(w, .32), M.lace); p.position.set(x, y - .14, z); p.rotation.y = r; scene.add(p);
-});
-
-// --- chairs (seat 1..6 around the table)
-function chair(x, z, face) {
-  const g = new THREE.Group();
-  const seat = box(.5, .07, .5, M.velvet); seat.position.y = .48; g.add(seat);
-  const back = box(.5, .8, .06, M.wood); back.position.set(0, .9, -.24); g.add(back);
-  const pad = box(.38, .55, .02, M.velvet); pad.position.set(0, .92, -.2); g.add(pad);
-  [[-.21, -.21], [.21, -.21], [-.21, .21], [.21, .21]].forEach(([a, b]) => { const l = box(.05, .46, .05, M.wood); l.position.set(a, .23, b); g.add(l); });
-  g.position.set(x, 0, z); g.rotation.y = face; scene.add(g); return g;
-}
-// sheet ghost: lathe-turned drape with a wavy hem
-function ghost() {
-  const pts = [];
-  const prof = [[0, 1.42], [.1, 1.41], [.17, 1.36], [.2, 1.27], [.19, 1.17], [.17, 1.1], [.24, 1.0], [.31, .86], [.36, .7], [.4, .56], [.43, .46]];
-  prof.forEach(([r, y]) => pts.push(new THREE.Vector2(r, y)));
-  const geo = new THREE.LatheGeometry(pts, 40);
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const y = pos.getY(i);
-    if (y < .62) {
-      const a = Math.atan2(pos.getZ(i), pos.getX(i));
-      const k = (.62 - y) / .16;
-      pos.setY(i, y - Math.sin(a * 7) * .035 * k - .04 * k);
-      const s = 1 + Math.sin(a * 5) * .05 * k;
-      pos.setX(i, pos.getX(i) * s); pos.setZ(i, pos.getZ(i) * s);
-    }
-  }
-  geo.computeVertexNormals();
-  const m = new THREE.Mesh(geo, M.sheet); m.castShadow = true; m.receiveShadow = true;
-  const g = new THREE.Group(); g.add(m);
-  // eye holes show which way each guest is looking
-  [-.065, .065].forEach((x) => {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(.028, 12, 10), M.black);
-    eye.scale.set(1, 1.5, .4); eye.position.set(x, 1.28, .185); m.add(eye);
-  });
-  return g;
-}
-const SEATS = [
-  { x: -1.35, z: -1.05, face: 0 }, { x: 0, z: -1.05, face: 0 }, { x: 1.35, z: -1.05, face: 0 },
-  { x: -2.6, z: 0, face: Math.PI / 2 }, { x: 2.6, z: 0, face: -Math.PI / 2 }, { x: -1.6, z: 1.05, face: Math.PI },
-];
-const ghosts = SEATS.map((s, i) => {
-  chair(s.x, s.z, s.face);
-  // seated ghosts face the table centre
-  const gh = ghost();
-  gh.position.set(s.x * .98, 0, s.z * .95);
-  gh.userData = { base: Math.atan2(0 - s.x, 0 - s.z), phase: i * 1.3 };
-  gh.rotation.y = gh.userData.base;
-  scene.add(gh);
-  return gh;
-});
-
-// --- piano + bench (seat 7)
-const piano = new THREE.Group();
-const body = box(1.5, 1.25, .6, M.black); body.position.y = .625; piano.add(body);
-const keys = box(1.36, .05, .22, new THREE.MeshStandardMaterial({ color: 0xece6d8, roughness: .4 })); keys.position.set(0, .78, .38); piano.add(keys);
-const keyBed = box(1.5, .1, .3, M.black); keyBed.position.set(0, .72, .38); piano.add(keyBed);
-const music = box(.5, .32, .02, new THREE.MeshStandardMaterial({ color: 0xe8dcc0 })); music.position.set(0, 1.05, .32); music.rotation.x = -.2; piano.add(music);
-piano.position.set(3.1, 0, -2.85); piano.rotation.y = -.35; scene.add(piano);
-const bench = new THREE.Group();
-const bTop = box(.8, .08, .36, M.velvet); bTop.position.y = .5; bench.add(bTop);
-[[-.34, -.14], [.34, -.14], [-.34, .14], [.34, .14]].forEach(([a, b]) => { const l = box(.05, .48, .05, M.wood); l.position.set(a, .24, b); bench.add(l); });
-bench.position.set(2.8, 0, -2.05); bench.rotation.y = -.35; scene.add(bench);
-
-// --- candelabras: 7 candles = 7 game candles
-const candles = [];
-function candelabra(x, z, n) {
-  const g = new THREE.Group();
-  const stem = cyl(.025, .06, .5, M.brass); stem.position.y = .25; g.add(stem);
-  const foot = cyl(.12, .14, .03, M.brass); foot.position.y = .015; g.add(foot);
-  for (let i = 0; i < n; i++) {
-    const t = n === 1 ? 0 : i / (n - 1) - .5;
-    const cx = t * .5, cy = .5 + (1 - Math.abs(t) * 2) * .08;
-    const arm = box(Math.abs(cx) + .01, .015, .015, M.brass); arm.position.set(cx / 2, cy - .02, 0); g.add(arm);
-    const cup = cyl(.03, .02, .03, M.brass); cup.position.set(cx, cy, 0); g.add(cup);
-    const wax = cyl(.017, .017, .2, M.wax, 12); wax.position.set(cx, cy + .11, 0); g.add(wax);
-    const flame = new THREE.Mesh(new THREE.SphereGeometry(.018, 10, 10), M.flame.clone());
-    flame.scale.set(1, 2, 1); flame.position.set(cx, cy + .24, 0); g.add(flame);
-    candles.push(flame);
-  }
-  g.position.set(x, .835, z); scene.add(g);
-}
-candelabra(-.85, -.25, 4);
-candelabra(.85, -.25, 3);
-
-// --- table dressing: cake, plates, goblets
-const cake = new THREE.Group();
-[[.2, .12], [.15, .1], [.1, .09]].reduce((y, [r, h]) => { const t = cyl(r, r, h, M.plate); t.position.y = y + h / 2; cake.add(t); return y + h; }, 0);
-const stand = cyl(.05, .1, .12, M.brass); stand.position.y = -.06; cake.add(stand);
-cake.position.set(0, .95, -.35); scene.add(cake);
-[[-1.35, -.45], [0, -.6], [1.35, -.45], [-1.9, 0], [1.9, 0], [-1.6, .45]].forEach(([x, z]) => {
-  const p = cyl(.16, .13, .02, M.plate); p.position.set(x, .845, z); scene.add(p);
-  const food = new THREE.Mesh(new THREE.SphereGeometry(.06, 10, 8), new THREE.MeshStandardMaterial({ color: [0x8a3a1a, 0x5a7a2a, 0xa8642a][Math.floor(Math.random() * 3)], roughness: .8 }));
-  food.scale.y = .5; food.position.set(x + .03, .87, z); scene.add(food);
-  const gob = cyl(.03, .015, .14, new THREE.MeshStandardMaterial({ color: 0xaab4c8, transparent: true, opacity: .45, roughness: .1 }), 12);
-  gob.position.set(x + .2, .91, z - .05); scene.add(gob);
-});
-
-// --- the four remembering objects
-const pickables = [];
-function makePick(key, obj, label) {
-  obj.userData.key = key;
-  obj.traverse((o) => { if (o.isMesh) { o.userData.key = key; if (o.material.emissive) o.material = o.material.clone(); } });
-  pickables.push(obj); scene.add(obj);
-  OBJECTS[key].node = obj; OBJECTS[key].label = label;
-  return obj;
-}
-// photograph in a standing frame
-const pf = new THREE.Group();
-pf.add(Object.assign(box(.36, .26, .02, M.brass), {}));
-const photoFace = new THREE.Mesh(new THREE.PlaneGeometry(.31, .2), new THREE.MeshStandardMaterial({ map: photoTex, roughness: .9 }));
-photoFace.position.z = .012; pf.add(photoFace);
-const strut = box(.02, .24, .02, M.brass); strut.position.set(0, -.02, -.07); strut.rotation.x = .5; pf.add(strut);
-pf.position.set(-1.25, .98, .3); pf.rotation.set(-.12, .25, 0);
-makePick("photo", pf, "The Photograph");
-// letter lying on the cloth
-const lt = new THREE.Mesh(new THREE.BoxGeometry(.32, .006, .22), [M.plate, M.plate, new THREE.MeshStandardMaterial({ map: letterTex, roughness: .9 }), M.plate, M.plate, M.plate]);
-lt.castShadow = true; lt.position.set(-.45, .84, .42); lt.rotation.y = -.25;
-makePick("letter", lt, "The Letter");
-// gramophone
-const gr = new THREE.Group();
-const gBase = box(.36, .12, .36, M.wood); gBase.position.y = .06; gr.add(gBase);
-const disc = cyl(.15, .15, .01, M.black, 40); disc.position.y = .125; gr.add(disc);
-const label = cyl(.05, .05, .012, new THREE.MeshStandardMaterial({ color: 0x8e2a2a }), 24); label.position.y = .127; gr.add(label);
-const arm = box(.18, .012, .012, M.brass); arm.position.set(.08, .145, .12); arm.rotation.y = .6; gr.add(arm);
-const horn = new THREE.Mesh(new THREE.ConeGeometry(.16, .32, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0xb08a3a, metalness: .7, roughness: .35, side: THREE.DoubleSide }));
-horn.position.set(-.12, .34, -.1); horn.rotation.set(Math.PI * .75, 0, .4); horn.castShadow = true; gr.add(horn);
-gr.position.set(.45, .835, .35); gr.rotation.y = -.3;
-makePick("record", gr, "The Record");
-// guest list on a little easel
-const gl = new THREE.Group();
-const card = new THREE.Mesh(new THREE.PlaneGeometry(.2, .3), new THREE.MeshStandardMaterial({ map: listTex, roughness: .9, side: THREE.DoubleSide }));
-card.position.y = .16; card.rotation.x = -.18; card.castShadow = true; gl.add(card);
-const easel = box(.02, .3, .02, M.brass); easel.position.set(0, .14, -.06); easel.rotation.x = .35; gl.add(easel);
-gl.position.set(1.25, .835, .32); gl.rotation.y = -.3;
-makePick("guest_list", gl, "The Guest List");
-
-// --- petals for the ending
-const petalGeo = new THREE.BufferGeometry();
-const P = 500, pPos = new Float32Array(P * 3), pVel = new Float32Array(P);
-for (let i = 0; i < P; i++) { pPos[i * 3] = (Math.random() - .5) * 9; pPos[i * 3 + 1] = 3 + Math.random() * 4; pPos[i * 3 + 2] = (Math.random() - .5) * 6; pVel[i] = .3 + Math.random() * .6; }
-petalGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
-const petals = new THREE.Points(petalGeo, new THREE.PointsMaterial({ color: 0xf29a1d, size: .05, transparent: true, opacity: .95 }));
-petals.visible = false; scene.add(petals);
-
-// her ghost appears at the piano
-const her = ghost();
-her.children[0].material = new THREE.MeshStandardMaterial({ color: 0xffe6c0, emissive: 0xf29a1d, emissiveIntensity: .35, transparent: true, opacity: 0, roughness: .8 });
-her.position.set(2.8, .05, -2.05); her.rotation.y = Math.PI - .35; scene.add(her);
-const marigold = new THREE.Mesh(new THREE.SphereGeometry(.05, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf29a1d, emissive: 0xf29a1d, emissiveIntensity: .6 }));
-marigold.position.set(.14, 1.36, .08); her.add(marigold); marigold.visible = false;
-
-// =====================================================================
-// Interaction
-// =====================================================================
-const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), parallax = new THREE.Vector2();
-let hovered = null;
-function keyAt(ev) {
-  const r = canvas.getBoundingClientRect();
-  mouse.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
-  ray.setFromCamera(mouse, camera);
-  const hit = ray.intersectObjects(pickables, true)[0];
-  return hit ? hit.object.userData.key : null;
-}
-function setGlow(key, on) {
-  if (!key) return;
-  OBJECTS[key].node.traverse((o) => { if (o.isMesh && o.material.emissive) o.material.emissive.setHex(on ? 0x5a3a10 : 0x000000); });
-}
-canvas.addEventListener("pointermove", (ev) => {
-  parallax.set((ev.clientX / innerWidth - .5), (ev.clientY / innerHeight - .5));
-  const k = state.started && !state.over ? keyAt(ev) : null;
-  if (k !== hovered) { setGlow(hovered, hovered === state.current); setGlow(k, true); hovered = k; }
-  canvas.style.cursor = k ? "pointer" : "default";
-  const tag = $("tag");
-  if (k) { tag.textContent = OBJECTS[k].label; tag.style.left = ev.clientX + "px"; tag.style.top = ev.clientY + "px"; tag.classList.remove("hidden"); }
-  else tag.classList.add("hidden");
-});
-canvas.addEventListener("click", (ev) => { if (!state.started || state.over) return; const k = keyAt(ev); if (k) select(k); });
-
-function focusOn(key) {
-  if (!key) { cam.toPos.copy(HOME.pos); cam.toLook.copy(HOME.look); return; }
-  const p = new THREE.Vector3(); OBJECTS[key].node.getWorldPosition(p);
-  const mobile = innerWidth < 760;
-  cam.toLook.set(p.x + (mobile ? 0 : .35), p.y + (mobile ? -.12 : .02), p.z);
-  cam.toPos.set(p.x * .6 + (mobile ? 0 : .45), p.y + .75, p.z + 1.45);
-}
-
-// =====================================================================
-// Game state + UI
-// =====================================================================
-const state = { started: false, current: null, found: new Set(), asked: {}, history: {}, candles: 7, lastProgress: Date.now(), over: false, turn: 0 };
-const $ = (id) => document.getElementById(id);
-
-function renderCandles() {
-  $("candles").innerHTML = Array.from({ length: 7 }, (_, i) => `<div class="candle ${i >= state.candles ? "out" : ""}"></div>`).join("");
-  candles.forEach((f, i) => { f.visible = i < state.candles; });
-  candleLights.forEach((l) => { l.userData.target = 7 * state.candles / 7; });
-}
-
-function addMsg(text, cls) {
-  const div = document.createElement("div");
-  div.className = "msg " + cls; div.textContent = text;
-  $("log").appendChild(div); $("log").scrollTop = $("log").scrollHeight;
-  return div;
-}
-
-function select(key) {
-  if (state.current) setGlow(state.current, false);
-  state.current = key;
-  setGlow(key, true);
-  const o = OBJECTS[key];
-  $("who").textContent = o.name; $("whoSub").textContent = o.sub;
-  $("log").innerHTML = "";
-  addMsg(o.hello, "them " + key);
-  $("panel").classList.remove("hidden");
-  $("hint").style.opacity = 0;
-  $("journal").classList.add("hidden");
-  renderChips(); focusOn(key);
-}
-function closePanel() {
-  if (state.current) setGlow(state.current, false);
-  state.current = null; $("panel").classList.add("hidden"); focusOn(null);
-}
-
-function renderChips() {
-  const o = OBJECTS[state.current], asked = state.asked[state.current] || new Set();
-  $("chips").innerHTML = o.chips.filter((c) => !asked.has(c)).map((c) => `<button class="chip" type="button">${c}</button>`).join("");
-  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => ask(c.textContent)));
-}
-
-function reply(key, q) {
-  const o = OBJECTS[key], text = q.toLowerCase();
-  return o.intents.find((it) => it.k.some((k) => text.includes(k))) || { say: o.unknown };
-}
-
-// Ask the local model through server.py; without it, fall back to the scripted replies.
-async function modelReply(key, q) {
-  try {
-    const res = await fetch("/api/ask", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ obj: key, q, history: state.history[key] || [] }),
-    });
-    if (!res.ok) return null;
-    const r = await res.json();
-    (state.history[key] ||= []).push({ q, a: r.say });
-    return { ...r, fx: r.reveals.includes("F18") ? "ink" : undefined, live: true };
-  } catch { return null; }
-}
-
-async function ask(q) {
-  if (!state.current || !q.trim() || state.over) return;
-  const key = state.current;
-  (state.asked[key] ||= new Set()).add(q);
-  addMsg(q, "you");
-  const wait = addMsg("…", "them " + key);
-  const started = Date.now();
-  const r = (await modelReply(key, q)) || reply(key, q);
-  await new Promise((ok) => setTimeout(ok, Math.max(0, 700 + Math.random() * 600 - (Date.now() - started))));
-  wait.remove();
-  if (state.over) return;
-  let say = r.say;
-  if (!r.live && key === "record" && Math.random() < .18 && !say.includes("save me a seat")) say += " …save me a seat… save me a…";
-  addMsg(say, "them " + key + (r.fx === "ink" ? " ink" : ""));
-  if (key === "record") state.spin = 3;
-  (r.reveals || []).forEach(learn);
-  if (state.current === key) renderChips();
-}
-
-function learn(id) {
-  if (state.found.has(id) || !FACT_NOTES[id]) return;
-  state.found.add(id); state.lastProgress = Date.now();
-  const [goal, note] = FACT_NOTES[id];
-  const li = document.createElement("li"); li.textContent = note;
-  document.querySelector(`#g-${goal} ul`).appendChild(li);
-  Object.entries(GOALS).forEach(([g, ids]) => {
-    const el = $("g-" + g);
-    if (ids.every((x) => state.found.has(x)) && !el.classList.contains("done")) {
-      el.classList.add("done"); goalReached(g);
-    }
-  });
-  $("count").textContent = document.querySelectorAll(".goal.done").length + "/4";
-}
-
-function goalReached(g) {
-  addMsg({
-    name: "Marisol Vega. Across the room, a piano key sinks by itself.",
-    face: "The six guests turn, slowly, toward the empty piano bench.",
-    why: "A ring, a mother, a line of ink. The candles lean as if something passed them.",
-    offering: "You know what she loved, and where she sat. The marigolds would show her the way.",
-  }[g], "narrator");
-  if (g === "name") state.pianoFlash = 1.2;
-  if (g === "face") state.turn = 1;
-  if (g === "why") state.gust = 1;
-}
-
-setInterval(() => {
-  if (!state.started || state.over) return;
-  if (Date.now() - state.lastProgress > 150000) { state.lastProgress = Date.now(); snuff("Somewhere, someone forgets her a little more."); }
-}, 5000);
-
-function snuff(why) {
-  state.candles = Math.max(0, state.candles - 1);
-  renderCandles();
-  if (state.current) addMsg(why, "narrator");
-  if (state.candles === 0) forgotten();
-}
-
-// ofrenda
-const SLOTS = [
-  { id: "seat", label: "Where her place is set", opts: ["Seat 2", "The head of the table", "Seat 7, the piano bench"], right: 2 },
-  { id: "photo", label: "The photograph", opts: ["Leave the photograph as it is", "Restore the scratched face"], right: 1, needs: "face" },
-  { id: "name", label: "The name card", opts: ["Eleanor Whitcombe", "Margaret Vance", "Marisol Vega"], right: 2, needs: "name" },
-  { id: "flowers", label: "Flowers to light the way", opts: ["White lilies", "Marigolds (cempasúchil)", "Red roses"], right: 1 },
-  { id: "drink", label: "Something she loved", opts: ["Earl Grey tea", "Champagne", "Hot chocolate with cinnamon"], right: 2 },
-];
-function openOfrenda() {
-  $("slots").innerHTML = SLOTS.map((s) => {
-    const locked = s.needs && !$("g-" + s.needs).classList.contains("done");
-    return `<div class="slot"><label for="s-${s.id}">${s.label}${locked ? " (not yet remembered)" : ""}</label>
-      <select id="s-${s.id}" ${locked ? "disabled" : ""}><option value="">Choose…</option>${s.opts.map((o, i) => `<option value="${i}">${o}</option>`).join("")}</select></div>`;
-  }).join("");
-  $("feedback").textContent = "";
-  $("ofrenda").classList.remove("hidden");
-}
-function lightOfrenda() {
-  const picks = SLOTS.map((s) => $("s-" + s.id).value);
-  if (picks.some((p) => p === "")) { $("feedback").textContent = "Every part of the ofrenda needs something. Some things you may not remember yet."; return; }
-  const wrong = SLOTS.filter((s, i) => Number(picks[i]) !== s.right);
-  if (wrong.length) {
-    $("feedback").textContent = `The flame gutters. ${wrong.length === 1 ? "Something here" : wrong.length + " things here"} never belonged to her.`;
-    snuff("A candle goes out. That was never hers.");
-    return;
-  }
-  $("ofrenda").classList.add("hidden");
-  ending();
-}
-
-function sequence(lines) {
-  $("endingCard").innerHTML = lines.map((l) => `<p class="line ${l.cls || ""}">${l.t}</p>`).join("");
-  $("ending").classList.remove("hidden");
-  [...$("endingCard").children].forEach((el, i) => setTimeout(() => el.classList.add("show"), 600 + i * 1900));
-}
-function ending() {
-  state.over = true; closePanel();
-  $("hint").style.opacity = 0;
-  cam.toPos.set(1.2, 1.9, 1.2); cam.toLook.set(2.8, .9, -2.1);
-  // restore the photograph
-  const c = photoTex.image; photoDraw(true)(c.getContext("2d"), c.width, c.height); photoTex.needsUpdate = true;
-  petals.visible = true; state.turn = 1; state.her = 0.001; marigold.visible = true;
-  pianoLight.color.setHex(0xffa040);
-  sequence([
-    { t: "The marigolds catch the candlelight. A path of orange petals runs from the door to Seat 7." },
-    { t: "The piano begins, and this time it does not stop." },
-    { t: "A woman with a silver hummingbird in her hair sits down at the bench." },
-    { t: "“You remembered. Now I can come back every year.”", cls: "said" },
-    { t: "Thomas never sent his letter. Marisol died in Oaxaca in 1933. He kept Seat 7 empty for the rest of his life, and after him, no one remembered why. Until tonight." },
-    { t: "<button class='btn marigold' onclick='location.reload()'>Play again</button>" },
-  ]);
-}
-function forgotten() {
-  state.over = true; closePanel();
-  sequence([
-    { t: "The last candle goes out." },
-    { t: "The piano is silent. Seat 7 is just a chair now." },
-    { t: "This is the final death: when no one is left who remembers." },
-    { t: "<button class='btn' onclick='location.reload()'>Try to remember again</button>" },
-  ]);
-}
-
-// wiring
-$("ask").addEventListener("submit", (e) => { e.preventDefault(); ask($("q").value); $("q").value = ""; });
-$("start").addEventListener("click", () => { $("intro").classList.add("hidden"); state.started = true; state.lastProgress = Date.now(); });
-$("closePanel").addEventListener("click", closePanel);
-$("journalBtn").addEventListener("click", () => $("journal").classList.toggle("hidden"));
-$("ofrendaBtn").addEventListener("click", openOfrenda);
-$("closeOfrenda").addEventListener("click", () => $("ofrenda").classList.add("hidden"));
-$("light").addEventListener("click", lightOfrenda);
-addEventListener("keydown", (e) => { if (e.key === "Escape") { closePanel(); $("ofrenda").classList.add("hidden"); } });
-renderCandles();
-window.game = { state, select, ask, openOfrenda, lightOfrenda, closePanel };
-
-// =====================================================================
-// Render loop
-// =====================================================================
-function resize() {
-  const w = innerWidth, h = innerHeight;
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.fov = w < 760 ? 60 : 45;
-  camera.updateProjectionMatrix();
-  // portrait screens: step back so the whole table fits the width
-  const portrait = w / h < 1;
-  HOME.pos.set(0, portrait ? 3.1 : 2.05, portrait ? 6.4 : 3.7);
-  HOME.look.set(0, portrait ? .75 : .9, portrait ? -.3 : -.5);
-  if (!state.current && !state.over) { cam.toPos.copy(HOME.pos); cam.toLook.copy(HOME.look); }
-}
-addEventListener("resize", resize); resize(); cam.pos.copy(cam.toPos); cam.look.copy(cam.toLook);
-
-const clock = new THREE.Clock();
-const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const pianoBenchAngle = (g) => Math.atan2(2.8 - g.position.x, -2.05 - g.position.z);
-renderer.setAnimationLoop(() => {
-  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
-  // camera easing + gentle parallax
-  const k = 1 - Math.pow(.02, dt);
-  cam.pos.lerp(cam.toPos, k); cam.look.lerp(cam.toLook, k);
-  const px = reduce || state.current ? 0 : parallax.x * .35, py = reduce || state.current ? 0 : parallax.y * .15;
-  camera.position.set(cam.pos.x + px, cam.pos.y - py, cam.pos.z);
-  camera.lookAt(cam.look);
-  // candle flicker
-  candleLights.forEach((l, i) => {
-    const lit = state.candles / 7;
-    l.intensity = (11 + Math.sin(t * 9 + i) * .5 + Math.sin(t * 23 + i * 3) * .35) * lit + (state.gust > 0 ? -2.5 * state.gust : 0);
-  });
-  candles.forEach((f, i) => { f.scale.set(1, 2 + Math.sin(t * 12 + i) * .25, 1); });
-  if (state.gust > 0) state.gust = Math.max(0, state.gust - dt * .6);
-  // ghosts sway, and turn toward the piano bench once her face is remembered
-  ghosts.forEach((g) => {
-    const target = state.turn ? pianoBenchAngle(g) : g.userData.base;
-    let d = target - g.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
-    g.rotation.y += d * Math.min(1, dt * .6);
-    g.children[0].rotation.z = reduce ? 0 : Math.sin(t * .7 + g.userData.phase) * .015;
-    g.position.y = reduce ? 0 : Math.sin(t * .9 + g.userData.phase) * .006;
-  });
-  // piano glow when a key "plays itself"
-  if (state.pianoFlash > 0) { state.pianoFlash = Math.max(0, state.pianoFlash - dt * .5); }
-  pianoLight.intensity = (state.pianoFlash || 0) * 6 + (state.her ? 4 : .6 + Math.sin(t * .8) * .3);
-  // gramophone spins while it speaks
-  if (state.spin > 0) { state.spin -= dt; disc.rotation.y += dt * 3.5; label.rotation.y += dt * 3.5; }
-  // ending: she fades in, petals fall
-  if (state.her) {
-    state.her = Math.min(1, state.her + dt * .15);
-    her.children[0].material.opacity = state.her * .9;
-    her.position.y = .05 + Math.sin(t * 1.2) * .01;
-  }
-  if (petals.visible) {
-    for (let i = 0; i < P; i++) {
-      pPos[i * 3 + 1] -= pVel[i] * dt;
-      pPos[i * 3] += Math.sin(t + i) * dt * .1;
-      if (pPos[i * 3 + 1] < 0) pPos[i * 3 + 1] = 4 + Math.random() * 2;
-    }
-    petalGeo.attributes.position.needsUpdate = true;
-  }
-  renderer.render(scene, camera);
-});
-</script>
+<script type="module" src="main.js"></script>
 </body>
 </html>

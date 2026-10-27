@@ -1,0 +1,343 @@
+{
+  "goals": { "name": ["F01", "F02"], "face": ["F07", "F08"], "why": ["F11", "F12", "F18"], "offering": ["F06", "F10", "F17"] },
+  "factGoal": { "F01": "name", "F02": "name", "F03": "name", "F05": "name", "F07": "face", "F08": "face", "F09": "face",
+    "F04": "why", "F11": "why", "F12": "why", "F13": "why", "F18": "why", "F20": "why",
+    "F06": "offering", "F10": "offering", "F14": "offering", "F15": "offering", "F16": "offering", "F17": "offering" },
+  "slots": [
+    { "id": "seat", "right": 2 },
+    { "id": "photo", "right": 1, "needs": "face" },
+    { "id": "name", "right": 2, "needs": "name" },
+    { "id": "flowers", "right": 1 },
+    { "id": "drink", "right": 2 }
+  ],
+  "en": {
+    "title": "The Last Guest",
+    "tagline": "A forgotten story, waiting to be remembered.",
+    "menu": { "new": "New Game", "settings": "Settings", "about": "The AI behind it", "resume": "Resume", "toMenu": "Main menu" },
+    "settings": { "title": "Settings", "language": "Language", "sound": "Sound", "on": "On", "off": "Off", "sensitivity": "Mouse sensitivity", "close": "Close" },
+    "intro": {
+      "lines": [
+        "Every year at midnight, the piano in the empty Whitcombe House plays a single bar, and stops.",
+        "The dead come back on these nights, if someone remembers them. An ofrenda lights their way: a photograph, a name, the things they loved.",
+        "Six guests are already seated in the dining room. A seventh is trying to come back, but no one remembers who she was.",
+        "Four things in this house each remember a piece of her. Find them. Ask them. Set her place before the candles go out."
+      ],
+      "enter": "Enter the house"
+    },
+    "hud": {
+      "clues": "Clues", "investigate": "Investigate", "ofrenda": "Set the ofrenda", "memories": "Memories",
+      "controls": "WASD move · Mouse look · E investigate · J memories · Esc pause",
+      "touch": "Left: move · Right: look · Tap the button to investigate",
+      "clickToLook": "Click to look around",
+      "rooms": { "foyer": "Foyer", "dining": "Dining room", "study": "Study" }
+    },
+    "clueFound": "Clue found",
+    "ask": { "prompt": "What would you like to ask?", "placeholder": "Ask a question…", "send": "Ask", "back": "Back", "cachedNote": "Written in advance by Gemma 4 E4B through the same guardrails" },
+    "objects": {
+      "photo": {
+        "name": "The Photograph", "sub": "Hallowe'en, 1931 · black and white",
+        "card": "Seven people in the parlor glow. At the piano, a woman whose face has been scratched away.",
+        "hello": "Light remembers. I am what the light kept. Seven of us stand in the parlor glow. Ask me what I see.",
+        "chips": ["Who is at the piano?", "What is she wearing?", "Is anything written on you?", "Why is her face gone?"],
+        "unknown": "That never stood in front of my lens. I will not make it up.",
+        "intents": [
+          { "k": ["why", "who scratched", "who did", "scratch"], "say": "Where the pianist's face should be, someone has scratched the silver away. I felt the pin, not the hand.", "reveals": ["F07"] },
+          { "k": ["piano", "who", "woman", "pianist", "people", "guests"], "say": "Seven of us. Six faces turned to the lens. At the piano sits a woman, and where her face should be, someone has scratched the silver away.", "reveals": ["F07", "F19"] },
+          { "k": ["wear", "dress", "hair", "comb", "look", "flower"], "say": "In her dark hair, a silver comb shaped like a hummingbird. Beside it, a flower. I cannot tell you its color. I only ever knew grey.", "reveals": ["F08", "F09"] },
+          { "k": ["back", "written", "writing", "date", "ink", "name", "turn"], "say": "Turn me over. Ink on my back: “Oct. 31, 1931. M.V. at the piano.” Whose hand wrote it, I never saw.", "reveals": ["F03"] },
+          { "k": ["eye", "color", "colour"], "say": "Grey. Everything is grey to me. I will not invent a color for her." }
+        ]
+      },
+      "letter": {
+        "name": "The Letter", "sub": "November, 1931 · sealed, never stamped",
+        "card": "A love letter in a man's hand, addressed only to “my dearest.” It was sealed, but never stamped.",
+        "hello": "My dearest, I have begun this a dozen times. Ask, and I will tell you what my writer could not say aloud.",
+        "chips": ["Who are you writing to?", "What happened between you?", "Why did she leave?", "Do you remember her hair?", "What do you promise?"],
+        "unknown": "My writer never set that down. I hold only what he felt, and he did not know it.",
+        "intents": [
+          { "k": ["name", "called"], "say": "I dare not write your name, lest Mother read it. Only “my dearest.” Only “my songbird.”" },
+          { "k": ["engaged", "marry", "ring", "between", "love", "happened"], "say": "We were secretly engaged, you and I. A secret, a ring, a summer of plans no one else knew.", "reveals": ["F11"] },
+          { "k": ["why", "leave", "left", "gone", "mother", "sent", "away"], "say": "Mother forbade our engagement and sent you away. By morning you were gone. Back to Oaxaca, they tell me.", "reveals": ["F12", "F04"] },
+          { "k": ["flower", "hair", "marigold", "remember"], "say": "I keep thinking of the marigolds you pinned in your hair, bright as a lit window.", "reveals": ["F10"] },
+          { "k": ["promise", "seat", "place", "wait", "year"], "say": "I promise you this: I will keep your place empty every year, until you come back to it.", "reveals": ["F14"] },
+          { "k": ["who", "writing", "sign", "signed", "from", "wrote"], "say": "To my songbird who sang at our table each autumn. From one who should have been braver. Yours, always, Thomas.", "reveals": ["F20"] }
+        ]
+      },
+      "record": {
+        "name": "The Record", "sub": "Home recording · the 1931 party",
+        "card": "A home recording from the 1931 party. Under the hiss, a woman's voice, and a song.",
+        "hello": "*crackle* …*hiss*… a room full of laughter… *the needle waits*",
+        "chips": ["Whose voice is this? Does she say her name?", "What song is playing?", "What did she love?", "What are the last words?"],
+        "unknown": "*hiss* …*the needle skips*… that was never sung into me.",
+        "intents": [
+          { "k": ["voice", "who", "name", "introduce"], "say": "*crackle* …good evening, everyone… I'm Marisol, from Oaxaca… *applause* *hiss*", "reveals": ["F01", "F04"] },
+          { "k": ["song", "sing", "music", "play", "playing"], "say": "*the needle drops* …ay de mí, Llorona, Llorona… *she laughs, someone claps* *hiss*", "reveals": ["F16"] },
+          { "k": ["love", "favorite", "favourite", "like", "chocolate", "drink", "food"], "say": "*crackle* …and make the chocolate my grandmother's way… with cinnamon, or don't bother… *laughter*", "reveals": ["F17"] },
+          { "k": ["last", "end", "goodbye", "next", "final", "words"], "say": "*the groove nears the label* …next year… save me a seat… *click* *click* *click*", "reveals": ["F15"] }
+        ]
+      },
+      "guest_list": {
+        "name": "The Guest List", "sub": "Kept by the lady of the house · 1928–1932",
+        "card": "Hallowe'en supper seating, 1928 to 1932. In the last year, one line has been struck through.",
+        "hello": "Hallowe'en Supper, Whitcombe House. Guests are seated by card. Inquire properly, if you please.",
+        "chips": ["Who sits in Seat 7?", "Who was invited?", "What changed in 1932?", "Who keeps this list?"],
+        "unknown": "That is not recorded here. A list keeps seats, not stories.",
+        "intents": [
+          { "k": ["1932", "changed", "crossed", "struck", "removed"], "say": "1932. Seat 7… the line has been struck through. Ink, not reasons. Order is my concern.", "reveals": ["F18"] },
+          { "k": ["seat 7", "seat seven", "seventh", "piano", "pianist", "music"], "say": "Seat 7, the piano bench: Miss M. Vega, pianoforte. 1928, 1929, 1930, 1931. Punctual. Most satisfactory.", "reveals": ["F02", "F05", "F06"] },
+          { "k": ["who keeps", "who wrote", "whose", "hand", "keep", "kept", "written"], "say": "Written in the hand of Mrs. Eleanor Whitcombe, as is proper.", "reveals": ["F13"] },
+          { "k": ["thomas", "son"], "say": "Mr. Thomas Whitcombe, Seat 2, every year without fail.", "reveals": ["F20"] },
+          { "k": ["invited", "guests", "who", "list"], "say": "Seven at table each year. Seat 2, Mr. Thomas Whitcombe. Seat 7, the pianoforte, Miss M. Vega.", "reveals": ["F02", "F06", "F20"] }
+        ]
+      }
+    },
+    "facts": {
+      "F01": "The record: a voice says “I'm Marisol, from Oaxaca.”",
+      "F02": "The guest list: Seat 7, “Miss M. Vega, pianoforte.”",
+      "F03": "The photo's back: “M.V. at the piano.”",
+      "F04": "She came from Oaxaca.",
+      "F05": "She played at every Hallowe'en party, 1928 to 1931.",
+      "F06": "Seat 7 is the piano bench. It was hers.",
+      "F07": "The pianist's face is scratched out of the photo.",
+      "F08": "She wore a silver comb shaped like a hummingbird.",
+      "F09": "A flower in her hair. The photo can't see its color.",
+      "F10": "The letter: she pinned marigolds in her hair.",
+      "F11": "She and Thomas were secretly engaged.",
+      "F12": "His mother forbade it and sent her away.",
+      "F13": "The lists were kept by Mrs. Eleanor Whitcombe.",
+      "F14": "Thomas promised to keep her place empty every year.",
+      "F15": "Her last recorded words: “Next year, save me a seat.”",
+      "F16": "She sang La Llorona.",
+      "F17": "She loved chocolate her grandmother's way, with cinnamon.",
+      "F18": "In the 1932 list, her line is struck through.",
+      "F20": "The letter is signed “Thomas.”"
+    },
+    "goalNames": { "name": "Her name", "face": "Her face", "why": "Why she was forgotten", "offering": "What to place for her" },
+    "goalReached": {
+      "name": "Marisol Vega. Somewhere in the house, a piano key sinks by itself.",
+      "face": "In the dining room, six guests turn slowly toward the empty piano bench.",
+      "why": "A ring, a mother, a line of ink. Every candle leans, as if something passed them.",
+      "offering": "You know what she loved, and where she sat. Marigolds would show her the way."
+    },
+    "journal": { "title": "Restore her memory", "sub": "Gather what each thing remembers, then set her place.", "found": "Things that remember", "restore": "Restore her story", "close": "Close" },
+    "ofrenda": {
+      "title": "The ofrenda for Seat 7",
+      "desc": "Choose what to place. Anything that was never hers will put out a candle.",
+      "locked": "not yet remembered", "choose": "Choose…", "notYet": "Not yet", "light": "Light the ofrenda",
+      "missing": "Every part of the ofrenda needs something. Some things you may not remember yet.",
+      "wrongOne": "The flame gutters. Something here never belonged to her.",
+      "wrongMany": "The flame gutters. {n} things here never belonged to her.",
+      "slots": {
+        "seat": { "label": "Where her place is set", "opts": ["Seat 2", "The head of the table", "Seat 7, the piano bench"] },
+        "photo": { "label": "The photograph", "opts": ["Leave the photograph as it is", "Restore the scratched face"] },
+        "name": { "label": "The name card", "opts": ["Eleanor Whitcombe", "Margaret Vance", "Marisol Vega"] },
+        "flowers": { "label": "Flowers to light the way", "opts": ["White lilies", "Marigolds (cempasúchil)", "Red roses"] },
+        "drink": { "label": "Something she loved", "opts": ["Earl Grey tea", "Champagne", "Hot chocolate with cinnamon"] }
+      }
+    },
+    "narrator": {
+      "forget": "Somewhere, someone forgets her a little more.",
+      "wrong": "A candle goes out. That was never hers.",
+      "busyTitle": "The house is quiet"
+    },
+    "ending": {
+      "name": "Marisol Vega",
+      "dates": "1907 – 1933",
+      "lines": [
+        "The marigolds catch the candlelight. A path of orange petals runs from the door to Seat 7.",
+        "The piano begins, and this time it does not stop.",
+        "A woman with a silver hummingbird in her hair sits down at the bench."
+      ],
+      "said": "“You remembered. Now I can come back every year.”",
+      "after": "Thomas never sent his letter. Marisol died in Oaxaca in 1933. He kept Seat 7 empty for the rest of his life, and after him, no one remembered why. Until tonight.",
+      "again": "Play again"
+    },
+    "forgotten": {
+      "lines": ["The last candle goes out.", "The piano is silent. Seat 7 is just a chair now.", "This is the final death: when no one is left who remembers."],
+      "again": "Try to remember again"
+    },
+    "about": {
+      "title": "The AI behind it",
+      "lead": "Each object speaks through Gemma 4 E4B, an open-weight model that runs on a laptop with no internet. The model reads; code verifies.",
+      "points": [
+        "Fact graph: each object's prompt holds only the facts it owns. It cannot leak what it was never shown.",
+        "Guardrail: every reply is checked against the other objects' facts and impossible years. A failing reply is retried once, then replaced with the object's own “I cannot know.”",
+        "Progress: the game moves only on clues that code finds in the reply, never on the model's say-so."
+      ],
+      "tableTitle": "Measured on 478 test questions (one answer each)",
+      "cols": ["Setup", "Leaked another object's fact", "Clue recall"],
+      "rows": [
+        ["Qwen3.5-4B, prompt only", "49.0%", "95.9%"],
+        ["Gemma 4 E4B, prompt only", "8.6%", "92.8%"],
+        ["Gemma 4 E4B in this game's harness", "0 of 478 by code check", "74 of 97 by code check"]
+      ],
+      "note": "The first two rows were scored by a judge model plus a word check. The harness row is a word check only; paraphrased leaks are not counted there yet.",
+      "close": "Close"
+    }
+  },
+  "ko": {
+    "title": "The Last Guest",
+    "tagline": "잊혀진 이야기가, 기억되기를 기다린다.",
+    "menu": { "new": "새 게임", "settings": "설정", "about": "이 게임의 AI", "resume": "계속하기", "toMenu": "메인 화면" },
+    "settings": { "title": "설정", "language": "언어", "sound": "소리", "on": "켜기", "off": "끄기", "sensitivity": "마우스 감도", "close": "닫기" },
+    "intro": {
+      "lines": [
+        "해마다 자정이 되면, 아무도 살지 않는 휘트컴 저택의 피아노가 한 마디를 연주하고 멈춘다.",
+        "이런 밤이면 죽은 이들이 돌아온다. 누군가 그들을 기억한다면. 오프렌다가 그 길을 밝힌다. 사진 한 장, 이름 하나, 그들이 사랑했던 것들.",
+        "식당에는 이미 여섯 손님이 앉아 있다. 일곱 번째 손님이 돌아오려 하지만, 아무도 그녀가 누구였는지 기억하지 못한다.",
+        "이 저택의 물건 네 개가 그녀의 조각을 하나씩 기억하고 있다. 찾아내고, 물어보라. 촛불이 모두 꺼지기 전에 그녀의 자리를 차려야 한다."
+      ],
+      "enter": "저택으로 들어가기"
+    },
+    "hud": {
+      "clues": "단서 수집", "investigate": "조사하기", "ofrenda": "오프렌다 차리기", "memories": "기억",
+      "controls": "WASD 이동 · 마우스 시점 · E 조사 · J 기억 · Esc 일시정지",
+      "touch": "왼쪽: 이동 · 오른쪽: 시점 · 버튼을 눌러 조사",
+      "clickToLook": "클릭하면 둘러볼 수 있어요",
+      "rooms": { "foyer": "현관 홀", "dining": "식당", "study": "서재" }
+    },
+    "clueFound": "단서 발견",
+    "ask": { "prompt": "무엇을 묻고 싶으신가요?", "placeholder": "질문을 입력하세요…", "send": "묻기", "back": "돌아가기", "cachedNote": "Gemma 4 E4B가 같은 가드레일을 거쳐 미리 써 둔 답" },
+    "objects": {
+      "photo": {
+        "name": "사진", "sub": "1931년 핼러윈 · 흑백",
+        "card": "응접실 불빛 속 일곱 사람. 피아노 앞의 여인은 얼굴이 긁혀 지워져 있다.",
+        "hello": "빛은 기억해요. 저는 빛이 남겨 둔 것이에요. 응접실 불빛 속에 우리 일곱이 서 있죠. 제가 본 것을 물어보세요.",
+        "chips": ["피아노 앞에 누가 있나요?", "그녀는 무엇을 입고 있나요?", "뒷면에 뭐라고 적혀 있나요?", "왜 그녀의 얼굴이 없나요?"],
+        "unknown": "그건 제 렌즈 앞에 선 적이 없어요. 지어내지는 않겠어요.",
+        "intents": [
+          { "k": ["왜", "누가 긁", "긁", "얼굴"], "say": "피아노 앞 여인의 얼굴이 있어야 할 자리를, 누군가 긁어 은빛을 벗겨 냈어요. 저는 핀을 느꼈을 뿐, 손은 보지 못했어요.", "reveals": ["F07"] },
+          { "k": ["피아노", "누구", "여자", "여인", "사람", "손님"], "say": "우리는 일곱이에요. 여섯 얼굴이 렌즈를 향해 있죠. 피아노 앞에 한 여인이 앉아 있는데, 얼굴이 있어야 할 자리는 누군가 긁어 지워 버렸어요.", "reveals": ["F07", "F19"] },
+          { "k": ["입", "옷", "머리", "빗", "모습", "꽃"], "say": "검은 머리에 벌새 모양의 은빛 빗을 꽂았어요. 그 옆에 꽃이 한 송이. 꽃의 색은 말할 수 없어요. 저는 회색밖에 몰라요.", "reveals": ["F08", "F09"] },
+          { "k": ["뒷면", "적혀", "글씨", "날짜", "잉크", "이름", "뒤집"], "say": "저를 뒤집어 보세요. 뒷면에 잉크로 “1931년 10월 31일. 피아노 앞의 M.V.”라고 적혀 있어요. 누구 손글씨인지는 본 적이 없어요.", "reveals": ["F03"] },
+          { "k": ["눈", "색", "색깔"], "say": "회색이에요. 제게는 모든 게 회색이죠. 그녀에게 없는 색을 지어내지는 않겠어요." }
+        ]
+      },
+      "letter": {
+        "name": "편지", "sub": "1931년 11월 · 봉했지만 우표는 없음",
+        "card": "한 남자의 필체로 쓴 연애편지. 받는 이는 “나의 그대”뿐이다. 봉투는 봉했지만 우표는 붙지 않았다.",
+        "hello": "나의 그대, 이 편지를 열두 번도 넘게 다시 썼소. 물어보시오. 나를 쓴 이가 소리 내어 말하지 못한 것을 들려주겠소.",
+        "chips": ["누구에게 쓰는 편지인가요?", "두 사람 사이에 무슨 일이 있었나요?", "그녀는 왜 떠났나요?", "그녀의 머리 모양을 기억하나요?", "무엇을 약속하나요?"],
+        "unknown": "그는 그 일을 적지 않았소. 나는 그가 느낀 것만 품고 있고, 그는 그것을 알지 못했소.",
+        "intents": [
+          { "k": ["이름", "불러"], "say": "어머니께서 읽으실까 두려워 그대의 이름을 쓰지 못하오. 그저 “나의 그대”, “나의 노래새”라고만." },
+          { "k": ["약혼", "결혼", "반지", "사이", "사랑", "무슨 일"], "say": "우리는 남몰래 약혼한 사이였소, 그대와 나는. 비밀 하나, 반지 하나, 아무도 몰랐던 한여름의 계획들.", "reveals": ["F11"] },
+          { "k": ["왜", "떠나", "떠났", "어머니", "보냈"], "say": "어머니께서 우리 약혼을 반대하셨고, 그대를 떠나보내셨소. 아침이 되자 그대는 없었지. 오악사카로 돌아갔다고들 하더군.", "reveals": ["F12", "F04"] },
+          { "k": ["꽃", "머리", "마리골드", "기억"], "say": "그대가 머리에 꽂던 마리골드가 자꾸 떠오르오. 불 켜진 창문처럼 환했지.", "reveals": ["F10"] },
+          { "k": ["약속", "자리", "기다", "해마다", "매년"], "say": "이것만은 약속하오. 그대가 돌아올 때까지, 해마다 그대의 자리를 비워 두겠소.", "reveals": ["F14"] },
+          { "k": ["누가", "서명", "보낸", "썼"], "say": "가을마다 우리 식탁에서 노래하던 나의 노래새에게. 더 용감했어야 할 사람이. 언제나 그대의, 토마스.", "reveals": ["F20"] }
+        ]
+      },
+      "record": {
+        "name": "레코드", "sub": "가정 녹음 · 1931년 파티",
+        "card": "1931년 파티를 녹음한 레코드. 지직거리는 소리 아래로 한 여인의 목소리와 노래가 들린다.",
+        "hello": "*지직* …*치이익*… 웃음소리로 가득한 방… *바늘이 기다린다*",
+        "chips": ["누구 목소리인가요? 이름을 말하나요?", "무슨 노래가 나오나요?", "그녀는 무엇을 좋아했나요?", "마지막 말은 무엇인가요?"],
+        "unknown": "*치이익* …*바늘이 튄다*… 그런 소리는 내게 새겨진 적이 없어…",
+        "intents": [
+          { "k": ["목소리", "누구", "이름", "소개"], "say": "*지직* …안녕하세요, 여러분… 저는 마리솔이에요, 오악사카에서 왔어요… *박수* *치이익*", "reveals": ["F01", "F04"] },
+          { "k": ["노래", "음악", "연주", "부르"], "say": "*바늘이 내려앉는다* …아이 데 미, 요로나, 요로나… *그녀가 웃고, 누군가 박수를 친다* *치이익*", "reveals": ["F16"] },
+          { "k": ["좋아", "사랑", "음료", "초콜릿", "코코아", "음식", "마시"], "say": "*지직* …코코아는 우리 할머니 방식으로, 시나몬을 넣어서… 아니면 만들지도 마세요… *웃음소리*", "reveals": ["F17"] },
+          { "k": ["마지막", "끝", "작별", "내년", "말"], "say": "*홈이 라벨 쪽으로 다가간다* …내년에도… 내 자리 하나 남겨 줘요… *틱* *틱* *틱*", "reveals": ["F15"] }
+        ]
+      },
+      "guest_list": {
+        "name": "손님 명부", "sub": "안주인이 기록함 · 1928–1932",
+        "card": "1928년부터 1932년까지의 핼러윈 만찬 좌석표. 마지막 해에 한 줄이 그어져 있다.",
+        "hello": "휘트컴 저택 핼러윈 만찬. 손님은 자리 카드에 따라 앉으십니다. 격식을 갖추어 물어 주시지요.",
+        "chips": ["7번 좌석에는 누가 앉나요?", "누가 초대받았나요?", "1932년에 무엇이 바뀌었나요?", "이 명부는 누가 적나요?"],
+        "unknown": "그것은 여기 기록되어 있지 않습니다. 명부는 자리를 적을 뿐, 사연은 적지 않지요.",
+        "intents": [
+          { "k": ["1932", "바뀌", "그어", "지워", "빠졌"], "say": "1932년. 7번 좌석… 그 줄에는 줄이 그어져 있습니다. 잉크일 뿐, 이유는 없습니다. 제 관심사는 질서이지요.", "reveals": ["F18"] },
+          { "k": ["7번", "일곱", "피아노", "연주자", "음악"], "say": "7번 좌석, 피아노 의자: M. 베가 양, 피아노포르테. 1928, 1929, 1930, 1931년. 시간을 잘 지킴. 매우 만족스러움.", "reveals": ["F02", "F05", "F06"] },
+          { "k": ["누가 적", "누가 썼", "누구 글씨", "적어", "기록", "글씨"], "say": "엘리너 휘트컴 부인의 손으로 적혔습니다. 마땅히 그래야 하듯이.", "reveals": ["F13"] },
+          { "k": ["토마스", "아들"], "say": "토마스 휘트컴 씨, 2번 좌석. 해마다 빠짐없이.", "reveals": ["F20"] },
+          { "k": ["초대", "손님", "누구", "명단"], "say": "해마다 식탁에는 일곱 분. 2번 좌석, 토마스 휘트컴 씨. 7번 좌석, 피아노포르테, M. 베가 양.", "reveals": ["F02", "F06", "F20"] }
+        ]
+      }
+    },
+    "facts": {
+      "F01": "레코드: “저는 마리솔이에요, 오악사카에서 왔어요.”라는 목소리.",
+      "F02": "손님 명부: 7번 좌석, “M. 베가 양, 피아노포르테.”",
+      "F03": "사진 뒷면: “피아노 앞의 M.V.”",
+      "F04": "그녀는 오악사카에서 왔다.",
+      "F05": "1928년부터 1931년까지, 핼러윈 파티마다 피아노를 쳤다.",
+      "F06": "7번 좌석은 피아노 의자. 그녀의 자리였다.",
+      "F07": "사진 속 피아노 연주자의 얼굴은 긁혀 지워져 있다.",
+      "F08": "그녀는 벌새 모양의 은빛 빗을 꽂았다.",
+      "F09": "머리에 꽂은 꽃 한 송이. 사진은 그 색을 볼 수 없다.",
+      "F10": "편지: 그녀는 머리에 마리골드를 꽂았다.",
+      "F11": "그녀와 토마스는 남몰래 약혼한 사이였다.",
+      "F12": "그의 어머니가 약혼을 반대하고 그녀를 떠나보냈다.",
+      "F13": "명부는 엘리너 휘트컴 부인이 적었다.",
+      "F14": "토마스는 해마다 그녀의 자리를 비워 두겠다고 약속했다.",
+      "F15": "녹음 속 그녀의 마지막 말: “내년에도 내 자리 하나 남겨 줘요.”",
+      "F16": "그녀는 「라 요로나」를 불렀다.",
+      "F17": "그녀는 할머니 방식대로 시나몬을 넣은 코코아를 좋아했다.",
+      "F18": "1932년 명부에서 그녀의 줄에 줄이 그어져 있다.",
+      "F20": "편지에는 “토마스”라고 서명되어 있다."
+    },
+    "goalNames": { "name": "그녀의 이름", "face": "그녀의 얼굴", "why": "그녀가 잊힌 이유", "offering": "그녀에게 바칠 것" },
+    "goalReached": {
+      "name": "마리솔 베가. 저택 어딘가에서 피아노 건반 하나가 저절로 내려앉는다.",
+      "face": "식당의 여섯 손님이 천천히 빈 피아노 의자 쪽으로 고개를 돌린다.",
+      "why": "반지 하나, 어머니 한 사람, 잉크 한 줄. 무언가 지나간 듯 모든 촛불이 기울어진다.",
+      "offering": "이제 그녀가 무엇을 사랑했고 어디에 앉았는지 안다. 마리골드가 그녀에게 길을 밝혀 줄 것이다."
+    },
+    "journal": { "title": "기억을 복원하세요", "sub": "물건들이 기억하는 조각을 모아, 그녀의 자리를 차리세요.", "found": "기억하는 물건들", "restore": "이야기 복원하기", "close": "닫기" },
+    "ofrenda": {
+      "title": "7번 좌석의 오프렌다",
+      "desc": "놓을 것을 고르세요. 그녀의 것이 아니었던 것을 놓으면 촛불이 하나 꺼집니다.",
+      "locked": "아직 기억나지 않음", "choose": "고르세요…", "notYet": "아직 아니야", "light": "오프렌다에 불 밝히기",
+      "missing": "오프렌다의 모든 자리에 무언가를 놓아야 해요. 아직 기억나지 않은 것도 있을 거예요.",
+      "wrongOne": "불꽃이 흔들린다. 여기 놓인 것 하나는 그녀의 것이 아니었다.",
+      "wrongMany": "불꽃이 흔들린다. 여기 놓인 것 {n}개는 그녀의 것이 아니었다.",
+      "slots": {
+        "seat": { "label": "그녀의 자리", "opts": ["2번 좌석", "식탁 상석", "7번 좌석, 피아노 의자"] },
+        "photo": { "label": "사진", "opts": ["사진을 그대로 둔다", "긁힌 얼굴을 되살린다"] },
+        "name": { "label": "이름표", "opts": ["엘리너 휘트컴", "마거릿 밴스", "마리솔 베가"] },
+        "flowers": { "label": "길을 밝힐 꽃", "opts": ["흰 백합", "마리골드 (셈파수칠)", "붉은 장미"] },
+        "drink": { "label": "그녀가 사랑한 것", "opts": ["얼그레이 홍차", "샴페인", "시나몬을 넣은 코코아"] }
+      }
+    },
+    "narrator": {
+      "forget": "어딘가에서, 누군가 그녀를 조금 더 잊는다.",
+      "wrong": "촛불 하나가 꺼진다. 그건 그녀의 것이 아니었다.",
+      "busyTitle": "저택이 조용하다"
+    },
+    "ending": {
+      "name": "마리솔 베가",
+      "dates": "1907 – 1933",
+      "lines": [
+        "마리골드가 촛불을 받아 빛난다. 주황빛 꽃잎 길이 문에서 7번 좌석까지 이어진다.",
+        "피아노가 다시 울린다. 이번에는 멈추지 않는다.",
+        "벌새 모양의 은빛 빗을 꽂은 한 여인이 피아노 의자에 앉는다."
+      ],
+      "said": "“기억해 줬군요. 이제 해마다 돌아올 수 있어요.”",
+      "after": "토마스는 끝내 편지를 부치지 못했다. 마리솔은 1933년 오악사카에서 세상을 떠났다. 그는 평생 7번 좌석을 비워 두었고, 그가 떠난 뒤로는 아무도 그 이유를 기억하지 못했다. 오늘 밤까지는.",
+      "again": "다시 하기"
+    },
+    "forgotten": {
+      "lines": ["마지막 촛불이 꺼진다.", "피아노는 침묵한다. 7번 좌석은 이제 그저 의자일 뿐이다.", "이것이 마지막 죽음이다. 기억해 줄 사람이 아무도 남지 않는 것."],
+      "again": "다시 기억해 보기"
+    },
+    "about": {
+      "title": "이 게임의 AI",
+      "lead": "물건들은 오픈 웨이트 모델 Gemma 4 E4B로 말합니다. 인터넷 없이 노트북에서도 돌아가는 모델이에요. 모델은 읽고, 검증은 코드가 합니다.",
+      "points": [
+        "사실 그래프: 각 물건의 프롬프트에는 그 물건이 가진 사실만 들어갑니다. 보지 못한 것은 누설할 수도 없어요.",
+        "가드레일: 모든 답을 다른 물건의 사실과 있을 수 없는 연도에 대해 검사합니다. 걸리면 한 번 다시 묻고, 그래도 걸리면 그 물건의 “알 수 없어요”로 바꿉니다.",
+        "진행: 게임은 코드가 답에서 찾아낸 단서로만 진행됩니다. 모델이 “알려줬다”고 주장해도 인정하지 않아요."
+      ],
+      "tableTitle": "테스트 질문 478개로 측정 (질문당 답 1개)",
+      "cols": ["설정", "다른 물건의 사실을 누설", "단서 회수"],
+      "rows": [
+        ["Qwen3.5-4B, 프롬프트만", "49.0%", "95.9%"],
+        ["Gemma 4 E4B, 프롬프트만", "8.6%", "92.8%"],
+        ["Gemma 4 E4B + 이 게임의 하네스", "478개 중 0개 (코드 검사)", "97개 중 74개 (코드 검사)"]
+      ],
+      "note": "위 두 줄은 판정 모델과 단어 검사로 채점했습니다. 하네스 줄은 단어 검사만 한 값이라, 바꿔 말한 누설은 아직 세지 않았습니다.",
+      "close": "닫기"
+    }
+  }
+}

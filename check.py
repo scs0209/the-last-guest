@@ -11,13 +11,18 @@ from pathlib import Path
 FACTS = json.loads((Path(__file__).parent / "facts.json").read_text())
 
 
+def tokens(fact):
+    # English and Korean words that state this fact
+    return fact["tokens"] + fact.get("tokens_ko", [])
+
+
 def check(obj, reply):
     text = reply.lower()
     leaks = []
     for fact in FACTS["facts"]:
         if obj in fact["holders"]:
             continue
-        hit = next((t for t in fact["tokens"] if t in text), None)
+        hit = next((t for t in tokens(fact) if t in text), None)
         if hit:
             leaks.append({"fact": fact["id"], "token": hit})
     allowed = set(FACTS["objects"][obj]["allowed_years"])
@@ -30,7 +35,7 @@ def revealed(obj, reply):
     """Facts this object owns that the reply actually conveys (for clue recall)."""
     text = reply.lower()
     return [f["id"] for f in FACTS["facts"]
-            if obj in f["holders"] and any(t in text for t in f["tokens"])]
+            if obj in f["holders"] and any(t in text for t in tokens(f))]
 
 
 if __name__ == "__main__":

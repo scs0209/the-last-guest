@@ -6,3 +6,4 @@ agent-session/
 .env.*
 !.env.example
 adapters/
+results/docker_build.log

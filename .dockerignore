@@ -1,0 +1,9 @@
+# Only what the Dockerfile copies goes in; never secrets or session logs.
+*
+!server.py
+!cards.py
+!check.py
+!facts.json
+!start.sh
+!data/answer_cache.json
+!web/
