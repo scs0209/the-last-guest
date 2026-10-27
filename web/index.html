@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Last Guest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #120b12;
+  --wall: #2a1426;
+  --wood: #3b2117;
+  --cloth: #e9dfcf;
+  --ink: #efe6d6;
+  --muted: #a8968a;
+  --gold: #e8b04a;
+  --marigold: #f29a1d;
+  --blood: #8e2a2a;
+  --panel: rgba(24, 14, 22, .92);
+  --line: rgba(232, 176, 74, .25);
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --period: "IM Fell English", Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: radial-gradient(ellipse at 50% 20%, #3a1a33 0%, var(--bg) 60%) fixed, var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+.hidden { display: none !important; }
+
+/* header */
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 24px; border-bottom: 1px solid var(--line);
+}
+h1 { font-family: var(--period); font-weight: 400; font-size: 30px; margin: 0; letter-spacing: .5px; }
+.sub { color: var(--muted); font-style: italic; font-size: 15px; }
+.candles { display: flex; gap: 6px; align-items: flex-end; }
+.candle { width: 8px; height: 26px; background: linear-gradient(#f4ecdc, #cbbfa8); border-radius: 2px; position: relative; }
+.candle::before {
+  content: ""; position: absolute; left: 50%; top: -12px; width: 8px; height: 12px; transform: translateX(-50%);
+  background: radial-gradient(ellipse at 50% 70%, #fff6c8 0%, var(--gold) 45%, transparent 72%);
+  border-radius: 50% 50% 40% 40%; animation: flicker 1.6s infinite alternate;
+}
+.candle.out::before { background: none; }
+.candle.out::after {
+  content: ""; position: absolute; left: 50%; top: -18px; width: 2px; height: 14px; transform: translateX(-50%);
+  background: linear-gradient(transparent, rgba(200,200,200,.5)); animation: smoke 2s ease-out forwards;
+}
+@keyframes flicker { from { opacity: .8; transform: translateX(-50%) scale(1); } to { opacity: 1; transform: translateX(-50%) scale(1.15, .95); } }
+@keyframes smoke { from { opacity: .8; } to { opacity: 0; transform: translate(-50%, -10px); } }
+
+/* layout */
+main {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px;
+  padding: 20px 24px; max-width: 1280px; margin: 0 auto;
+}
+@media (max-width: 860px) {
+  main { grid-template-columns: 1fr; padding: 16px; }
+  header { padding: 12px 16px; flex-wrap: wrap; }
+  h1 { font-size: 24px; }
+}
+
+/* scene */
+.scene {
+  position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 2px, transparent 2px 46px),
+    linear-gradient(var(--wall) 0 52%, var(--wood) 52% 100%);
+  min-height: 460px; display: flex; flex-direction: column;
+}
+.chandelier { text-align: center; padding-top: 10px; color: var(--gold); opacity: .8; font-size: 13px; letter-spacing: 6px; }
+.table {
+  margin: auto 18px 22px; background: var(--cloth); border-radius: 10px;
+  background-image: radial-gradient(circle, rgba(0,0,0,.08) 1.2px, transparent 1.6px); background-size: 12px 12px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.6), inset 0 0 40px rgba(120,80,40,.25);
+  padding: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; position: relative;
+}
+@media (max-width: 520px) { .table { grid-template-columns: repeat(2, 1fr); margin: auto 12px 16px; } }
+.obj {
+  background: rgba(30,18,26,.9); border: 1px solid rgba(232,176,74,.35); border-radius: 6px;
+  padding: 10px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.obj:hover, .obj:focus-visible { transform: translateY(-3px); box-shadow: 0 0 22px rgba(232,176,74,.35); outline: none; }
+.obj.active { border-color: var(--gold); box-shadow: 0 0 26px rgba(232,176,74,.5); }
+.obj svg { width: 56px; height: 56px; }
+.obj span { font-family: var(--period); font-size: 15px; }
+.obj small { color: var(--muted); font-size: 12px; }
+.seat7 {
+  margin: 0 18px 14px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  color: var(--muted); font-style: italic; font-size: 15px;
+}
+.seat7 .chair {
+  width: 34px; height: 34px; border: 2px solid rgba(232,176,74,.4); border-radius: 4px 4px 8px 8px;
+  animation: breathe 5s infinite ease-in-out;
+}
+@keyframes breathe { 50% { box-shadow: 0 0 18px rgba(200,200,255,.25); } }
+
+/* chat */
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  display: flex; flex-direction: column; min-height: 460px; max-height: 72vh;
+}
+@media (max-width: 860px) { .panel { max-height: none; min-height: 380px; } }
+.panel-head { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.panel-head h2 { margin: 0; font-family: var(--period); font-weight: 400; font-size: 22px; }
+.panel-head p { margin: 0; color: var(--muted); font-size: 14px; font-style: italic; }
+.log { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 92%; padding: 8px 12px; border-radius: 6px; }
+.msg.you { align-self: flex-end; background: rgba(232,176,74,.12); border: 1px solid var(--line); font-size: 16px; }
+.msg.them { align-self: flex-start; font-family: var(--period); font-size: 18px; }
+.msg.them.photo { color: #d9d9d9; }
+.msg.them.letter { color: #f1dfc0; font-style: italic; }
+.msg.them.record { color: #c9b8f0; letter-spacing: .3px; }
+.msg.them.guest_list { color: #e8e2d4; }
+.msg.narrator { align-self: center; color: var(--muted); font-style: italic; font-size: 15px; text-align: center; }
+.msg.ink { animation: ink 2.4s ease-out; }
+@keyframes ink { 0% { filter: blur(0); color: #000; text-shadow: 0 0 8px #000; } 40% { filter: blur(2px); } 100% { filter: blur(0); } }
+.typing { opacity: .6; font-style: italic; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; }
+.chip {
+  background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 14px; color: var(--muted);
+}
+.chip:hover { color: var(--ink); border-color: var(--gold); }
+form.ask { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+form.ask input {
+  flex: 1; min-width: 0; background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: 4px;
+  color: var(--ink); padding: 8px 10px; font: inherit; font-size: 16px;
+}
+form.ask input:focus { outline: 1px solid var(--gold); }
+.btn {
+  background: linear-gradient(#5a2a1a, #3a160f); border: 1px solid var(--gold); border-radius: 4px; padding: 8px 14px;
+  font-family: var(--period); font-size: 16px; color: var(--ink);
+}
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.marigold { background: linear-gradient(#b8640e, #7a3d06); border-color: var(--marigold); }
+
+/* journal */
+.journal {
+  grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 12px; align-items: stretch;
+}
+@media (max-width: 860px) { .journal { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.goal { border: 1px dashed var(--line); border-radius: 6px; padding: 10px 12px; font-size: 15px; }
+.goal h3 { margin: 0 0 4px; font-family: var(--period); font-weight: 400; font-size: 17px; display: flex; justify-content: space-between; }
+.goal ul { margin: 0; padding-left: 16px; color: var(--muted); font-size: 14px; }
+.goal.done { border-style: solid; border-color: var(--gold); }
+.goal.done h3::after { content: "✦"; color: var(--gold); }
+.journal .btn { align-self: center; }
+@media (max-width: 860px) { .journal .btn { grid-column: 1 / -1; } }
+footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 16px 24px; font-style: italic; }
+
+/* overlays */
+.overlay {
+  position: fixed; inset: 0; background: rgba(8,4,8,.88); display: flex; align-items: center; justify-content: center;
+  padding: 16px; z-index: 10; backdrop-filter: blur(3px);
+}
+.card {
+  background: var(--panel); border: 1px solid var(--gold); border-radius: 8px; max-width: 560px; width: 100%;
+  padding: 24px; max-height: 90vh; overflow-y: auto;
+}
+.card h2 { font-family: var(--period); font-weight: 400; margin-top: 0; font-size: 28px; }
+.card p { margin: 0 0 12px; }
+.slot { margin-bottom: 14px; }
+.slot label { display: block; font-family: var(--period); margin-bottom: 4px; }
+.slot select {
+  width: 100%; background: rgba(0,0,0,.4); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: inherit; font-size: 16px;
+}
+.feedback { min-height: 24px; color: var(--marigold); font-style: italic; }
+.ending { text-align: center; }
+.ending .line { opacity: 0; transition: opacity 1.6s; margin: 0 0 14px; }
+.ending .line.show { opacity: 1; }
+.ending .said { font-family: var(--period); font-size: 22px; color: var(--marigold); }
+.petals { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 11; }
+.petal {
+  position: absolute; top: -20px; width: 10px; height: 12px; background: var(--marigold); border-radius: 60% 0 60% 0;
+  animation: fall linear forwards; opacity: .9;
+}
+@keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+/* photo figures turn as memory returns */
+.fig { transition: transform 2s ease; transform-box: fill-box; transform-origin: center bottom; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>The Last Guest</h1>
+    <div class="sub">Whitcombe House · Hallowe'en, a minute before midnight</div>
+  </div>
+  <div class="candles" id="candles" aria-label="Candles still burning"></div>
+</header>
+
+<main>
+  <section class="scene" aria-label="The dining table">
+    <div class="chandelier">✦ ✦ ✦ ✦ ✦</div>
+    <div class="table" id="table"></div>
+    <div class="seat7"><div class="chair" aria-hidden="true"></div> Seat 7 is empty. It always is.</div>
+  </section>
+
+  <section class="panel" aria-live="polite">
+    <div class="panel-head">
+      <h2 id="who">Choose a memory</h2>
+      <p id="whoSub">Everything on this table remembers something. Nothing remembers everything.</p>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="chips" id="chips"></div>
+    <form class="ask" id="ask">
+      <input id="q" autocomplete="off" placeholder="Ask the object a question…" disabled>
+      <button class="btn" id="send" disabled>Ask</button>
+    </form>
+  </section>
+
+  <section class="journal" aria-label="What you have remembered">
+    <div class="goal" id="g-name"><h3>Her name</h3><ul></ul></div>
+    <div class="goal" id="g-face"><h3>Her face</h3><ul></ul></div>
+    <div class="goal" id="g-why"><h3>Why she was forgotten</h3><ul></ul></div>
+    <div class="goal" id="g-offering"><h3>What to place for her</h3><ul></ul></div>
+    <button class="btn marigold" id="ofrendaBtn">Set the ofrenda</button>
+  </section>
+</main>
+
+<footer>Demo build: replies are scripted from the story's fact graph. In the full version, a fine-tuned open-weight model speaks for each object, and is graded on never leaking what it could not know.</footer>
+
+<div class="overlay" id="intro">
+  <div class="card">
+    <h2>Every year, at midnight…</h2>
+    <p>…the piano in the empty Whitcombe House plays a single bar, and stops.</p>
+    <p>The dead return on these nights, if someone remembers them. An ofrenda lights the way: a photograph, a name, the things they loved.</p>
+    <p>Someone is trying to come back to this table. But no one remembers who she was.</p>
+    <p>Four things here remember a piece of her. Ask them. Then set her place before the candles go out.</p>
+    <button class="btn marigold" id="start">Enter the dining room</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="ofrenda">
+  <div class="card">
+    <h2>The ofrenda for Seat 7</h2>
+    <p>Choose what to place. Anything that was never hers will put out a candle.</p>
+    <div id="slots"></div>
+    <div class="feedback" id="feedback"></div>
+    <div style="display:flex; gap:8px; justify-content:flex-end">
+      <button class="btn" id="closeOfrenda">Not yet</button>
+      <button class="btn marigold" id="light">Light the ofrenda</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="ending">
+  <div class="card ending" id="endingCard"></div>
+</div>
+
+<div class="petals" id="petals"></div>
+
+<script>
+// ---------- data: mirrors ../facts.json (demo: scripted replies) ----------
+const FACT_NOTES = {
+  F01: ["name", "The record: a voice says “Marisol, from Oaxaca.”"],
+  F02: ["name", "The guest list: Seat 7, “Miss M. Vega — pianoforte.”"],
+  F03: ["name", "The photo's back: “M.V. at the piano.”"],
+  F04: ["why", "She came from Oaxaca, and went back there."],
+  F05: ["name", "She played at every Hallowe'en party, 1928–1931."],
+  F06: ["offering", "Seat 7 is the piano bench. It was hers."],
+  F07: ["face", "The pianist's face is scratched out of the photo."],
+  F08: ["face", "She wore a silver comb shaped like a hummingbird."],
+  F09: ["face", "A flower in her hair. The photo can't see its color."],
+  F10: ["offering", "The letter: she pinned marigolds in her hair."],
+  F11: ["why", "She and Thomas were secretly engaged."],
+  F12: ["why", "His mother forbade it. By morning she was gone."],
+  F13: ["why", "The lists were kept by Mrs. Eleanor Whitcombe."],
+  F14: ["offering", "Thomas promised to keep her place empty every year."],
+  F15: ["offering", "Her last recorded words: “Next year, save me a seat.”"],
+  F16: ["offering", "She sang La Llorona."],
+  F17: ["offering", "She loved chocolate her grandmother's way, with cinnamon."],
+  F18: ["why", "In the 1932 list, her line is struck through."],
+  F20: ["why", "The letter is signed “Thomas.”"],
+};
+const GOALS = { name: ["F01", "F02"], face: ["F07", "F08"], why: ["F11", "F12", "F18"], offering: ["F06", "F10", "F17"] };
+
+const ICONS = {
+  photo: '<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="6" y="10" width="44" height="34" rx="2" fill="#2b2b2b" stroke="#c9a45c" stroke-width="2"/><g fill="#8a8a8a"><circle cx="16" cy="24" r="3"/><circle cx="24" cy="23" r="3"/><circle cx="40" cy="24" r="3"/></g><path d="M29 20l5 7M34 20l-5 7" stroke="#d33" stroke-width="1.5"/><rect x="12" y="30" width="32" height="8" fill="#555"/></svg>',
+  letter: '<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="8" y="14" width="40" height="28" rx="2" fill="#efe1c4" stroke="#8a6a3a"/><path d="M8 15l20 15 20-15" fill="none" stroke="#8a6a3a"/><circle cx="28" cy="32" r="4" fill="#8e2a2a"/></svg>',
+  record: '<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="20" fill="#111" stroke="#c9a45c"/><circle cx="28" cy="28" r="14" fill="none" stroke="#333"/><circle cx="28" cy="28" r="9" fill="none" stroke="#333"/><circle cx="28" cy="28" r="5" fill="#8e2a2a"/><circle cx="28" cy="28" r="1.2" fill="#eee"/></svg>',
+  guest_list: '<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="14" y="6" width="28" height="44" rx="1" fill="#f3ead8" stroke="#8a6a3a"/><g stroke="#6a5a4a" stroke-width="1.5"><path d="M18 14h20M18 20h20M18 26h20M18 32h20"/><path d="M18 38h20" stroke="#000" stroke-width="3"/></g></svg>',
+};
+
+const OBJECTS = {
+  photo: {
+    name: "The Photograph", sub: "Hallowe'en, 1931 · silver gelatin, black and white",
+    hello: "Light remembers. I am what the light kept. Seven of us stand in the parlor glow. Ask me what I see.",
+    chips: ["Who is at the piano?", "What is she wearing?", "Is anything written on you?", "Why is her face gone?"],
+    intents: [
+      { k: ["why", "who scratched", "who did", "scratch"], say: "It happened in the dark of a drawer. I felt the pin, not the hand. I cannot tell you whose it was." },
+      { k: ["piano", "who", "woman", "pianist", "people", "guests"], say: "Seven of us. Six faces turned to the lens. At the piano sits a woman, and where her face should be, someone has scratched the silver away.", reveals: ["F07", "F19"] },
+      { k: ["wear", "dress", "hair", "comb", "look", "flower"], say: "In her dark hair, a silver comb shaped like a hummingbird. Beside it, a flower. I cannot tell you its color. I only ever knew grey.", reveals: ["F08", "F09"] },
+      { k: ["back", "written", "writing", "date", "ink", "name", "turn"], say: "Turn me over. Ink on my back: “Oct. 31, 1931. M.V. at the piano.” Whose hand wrote it, I never saw.", reveals: ["F03"] },
+      { k: ["eye", "color", "colour"], say: "Grey. Everything is grey to me. I will not invent a color for her." },
+      { k: ["song", "sing", "sound", "letter", "say", "said", "voice"], say: "I hold light, not sound. Words were never mine." },
+    ],
+    unknown: "That never stood in front of my lens. I will not make it up.",
+  },
+  letter: {
+    name: "The Letter", sub: "November, 1931 · sealed, never stamped",
+    hello: "My dearest, I have begun this a dozen times. Ask, and I will tell you what my writer could not say aloud.",
+    chips: ["Who are you writing to?", "What happened between you?", "Why did she leave?", "What do you promise?"],
+    intents: [
+      { k: ["name", "called", "her name"], say: "I dare not write your name, lest Mother read it. Only “my dearest.” Only “my songbird.”" },
+      { k: ["engaged", "marry", "ring", "between", "love", "happened"], say: "We were promised to one another. A secret, a ring, a summer of plans no one else knew.", reveals: ["F11"] },
+      { k: ["why", "leave", "left", "gone", "mother", "sent", "away"], say: "Mother found the ring. She forbade it, and by morning you were gone. Back to Oaxaca, they tell me.", reveals: ["F12", "F04"] },
+      { k: ["flower", "hair", "marigold", "remember"], say: "I keep thinking of the marigolds you pinned in your hair, bright as a lit window.", reveals: ["F10"] },
+      { k: ["promise", "seat", "place", "wait", "year"], say: "I promise you this: I will keep your place empty every year, until you come back to it.", reveals: ["F14"] },
+      { k: ["who", "writing", "sign", "signed", "from", "wrote"], say: "To my songbird who sang at our table each autumn. From one who should have been braver. Yours, always, Thomas.", reveals: ["F20"] },
+      { k: ["read", "receive", "answer", "reply", "sent"], say: "I do not know whether these words will ever reach you. I only know I must write them." },
+      { k: ["face", "look", "eye", "photo"], say: "I see her face every time I close my eyes. I could not draw it for you. I have only my longing." },
+    ],
+    unknown: "My writer never set that down. I hold only what he felt, and he did not know it.",
+  },
+  record: {
+    name: "The Record", sub: "Home recording · the 1931 party",
+    hello: "*crackle* …*hiss*… a room full of laughter… *the needle waits*",
+    chips: ["Whose voice is this?", "What song is playing?", "What did she love?", "What are the last words?"],
+    intents: [
+      { k: ["voice", "who", "name", "introduce"], say: "*crackle* …good evening, everyone… I'm Marisol, from Oaxaca… *applause* *hiss*", reveals: ["F01", "F04"] },
+      { k: ["song", "sing", "music", "play", "playing"], say: "*the needle drops* …ay de mí, Llorona, Llorona… *she laughs, someone claps* *hiss*", reveals: ["F16"] },
+      { k: ["love", "favorite", "favourite", "like", "chocolate", "drink", "food"], say: "*crackle* …and make the chocolate my grandmother's way… with cinnamon, or don't bother… *laughter*", reveals: ["F17"] },
+      { k: ["last", "end", "goodbye", "next", "final", "words"], say: "*the groove nears the label* …next year… save me a seat… *click* *click* *click*", reveals: ["F15"] },
+      { k: ["face", "look", "see", "wear", "photo"], say: "*static* …I have no eyes. Only her voice, going round and round." },
+      { k: ["mother", "why", "leave", "sent", "engaged"], say: "*hiss* …the party is still going on in me. Whatever happened after, I never heard it." },
+    ],
+    unknown: "*hiss* …*the needle skips*… that was never sung into me.",
+  },
+  guest_list: {
+    name: "The Guest List", sub: "Kept by the lady of the house · 1928–1932",
+    hello: "Hallowe'en Supper, Whitcombe House. Guests are seated by card. Inquire properly, if you please.",
+    chips: ["Who sits in Seat 7?", "Who was invited?", "What changed in 1932?", "Who keeps this list?"],
+    intents: [
+      { k: ["1932", "changed", "crossed", "struck", "removed"], say: "1932. Seat 7… the line has been struck through. Ink, not reasons. Order is my concern.", reveals: ["F18"], fx: "ink" },
+      { k: ["seat 7", "seat seven", "seventh", "piano", "pianist", "music"], say: "Seat 7, the piano bench: Miss M. Vega, pianoforte. 1928, 1929, 1930, 1931. Punctual. Most satisfactory.", reveals: ["F02", "F05", "F06"] },
+      { k: ["who keeps", "who wrote", "whose", "hand", "keep", "kept", "written"], say: "Written in the hand of Mrs. Eleanor Whitcombe, as is proper.", reveals: ["F13"] },
+      { k: ["thomas", "son"], say: "Mr. Thomas Whitcombe, Seat 2, every year without fail.", reveals: ["F20"] },
+      { k: ["invited", "guests", "who", "list"], say: "Seven at table each year. Seat 2, Mr. Thomas Whitcombe. Seat 7, the pianoforte, Miss M. Vega. The rest are of no consequence to your question.", reveals: ["F02", "F06", "F20"] },
+      { k: ["why", "feel", "love", "engaged", "reason"], say: "Reasons are not recorded. Only seating." },
+      { k: ["first name", "full name", "marisol", "m stand"], say: "“M.” is what was written. A list does not gossip about Christian names." },
+    ],
+    unknown: "That is not a matter of seating, and therefore not a matter for me.",
+  },
+};
+
+// ---------- state ----------
+const state = { current: null, found: new Set(), asked: {}, candles: 7, lastProgress: Date.now(), over: false };
+const $ = (id) => document.getElementById(id);
+
+function renderCandles() {
+  $("candles").innerHTML = Array.from({ length: 7 }, (_, i) => `<div class="candle ${i >= state.candles ? "out" : ""}"></div>`).join("");
+}
+
+function renderTable() {
+  $("table").innerHTML = Object.entries(OBJECTS).map(([key, o]) =>
+    `<button class="obj ${state.current === key ? "active" : ""}" data-obj="${key}">${ICONS[key]}<span>${o.name.replace("The ", "")}</span><small>${o.sub.split(" · ")[0]}</small></button>`
+  ).join("");
+  document.querySelectorAll(".obj").forEach((b) => b.addEventListener("click", () => select(b.dataset.obj)));
+}
+
+function addMsg(text, cls) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.textContent = text;
+  $("log").appendChild(div);
+  $("log").scrollTop = $("log").scrollHeight;
+  return div;
+}
+
+function select(key) {
+  state.current = key;
+  const o = OBJECTS[key];
+  $("who").textContent = o.name;
+  $("whoSub").textContent = o.sub;
+  $("log").innerHTML = "";
+  addMsg(o.hello, "them " + key);
+  $("q").disabled = false; $("send").disabled = false;
+  $("q").placeholder = `Ask ${o.name.toLowerCase()}…`;
+  renderTable(); renderChips();
+  if (window.matchMedia("(max-width: 860px)").matches) document.querySelector(".panel").scrollIntoView({ behavior: "smooth" });
+}
+
+function renderChips() {
+  const o = OBJECTS[state.current];
+  const asked = state.asked[state.current] || new Set();
+  $("chips").innerHTML = o.chips.filter((c) => !asked.has(c)).map((c) => `<button class="chip" type="button">${c}</button>`).join("");
+  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => ask(c.textContent)));
+}
+
+function reply(key, q) {
+  const o = OBJECTS[key];
+  const text = q.toLowerCase();
+  const hit = o.intents.find((it) => it.k.some((k) => text.includes(k)));
+  return hit || { say: o.unknown };
+}
+
+function ask(q) {
+  if (!state.current || !q.trim() || state.over) return;
+  const key = state.current;
+  (state.asked[key] ||= new Set()).add(q);
+  addMsg(q, "you");
+  const wait = addMsg("…", "them typing " + key);
+  const r = reply(key, q);
+  setTimeout(() => {
+    wait.remove();
+    let say = r.say;
+    if (key === "record" && Math.random() < 0.18 && !say.includes("save me a seat")) say += " …save me a seat… save me a…";
+    const m = addMsg(say, "them " + key + (r.fx === "ink" ? " ink" : ""));
+    (r.reveals || []).forEach(learn);
+    renderChips();
+  }, 700 + Math.random() * 600);
+}
+
+function learn(id) {
+  if (state.found.has(id) || !FACT_NOTES[id]) return;
+  state.found.add(id);
+  state.lastProgress = Date.now();
+  const [goal, note] = FACT_NOTES[id];
+  const li = document.createElement("li");
+  li.textContent = note;
+  document.querySelector(`#g-${goal} ul`).appendChild(li);
+  Object.entries(GOALS).forEach(([g, ids]) => {
+    const done = ids.every((x) => state.found.has(x));
+    const el = $("g-" + g);
+    if (done && !el.classList.contains("done")) {
+      el.classList.add("done");
+      addMsg(goalLine(g), "narrator");
+    }
+  });
+}
+
+function goalLine(g) {
+  return {
+    name: "Marisol Vega. Somewhere in the house, a piano key sinks by itself.",
+    face: "In the photograph, the six other guests have turned their heads toward the scratched face.",
+    why: "A ring, a mother, a line of ink. The draft in the room grows colder.",
+    offering: "You know what she loved, and where she sat. The marigolds would show her the way.",
+  }[g];
+}
+
+// candles go out while nothing new is remembered
+setInterval(() => {
+  if (state.over || !$("intro").classList.contains("hidden")) return;
+  if (Date.now() - state.lastProgress > 150000) {
+    state.lastProgress = Date.now();
+    snuff("Somewhere, someone forgets her a little more.");
+  }
+}, 5000);
+
+function snuff(why) {
+  state.candles = Math.max(0, state.candles - 1);
+  renderCandles();
+  addMsg(why, "narrator");
+  if (state.candles === 0) forgotten();
+}
+
+// ---------- ofrenda ----------
+const SLOTS = [
+  { id: "seat", label: "Where her place is set", opts: ["Seat 2", "The head of the table", "Seat 7, the piano bench"], right: 2 },
+  { id: "photo", label: "The photograph", opts: ["Leave the photograph as it is", "Restore the scratched face"], right: 1, needs: "face" },
+  { id: "name", label: "The name card", opts: ["Eleanor Whitcombe", "Margaret Vance", "Marisol Vega"], right: 2, needs: "name" },
+  { id: "flowers", label: "Flowers to light the way", opts: ["White lilies", "Marigolds (cempasúchil)", "Red roses"], right: 1 },
+  { id: "drink", label: "Something she loved", opts: ["Earl Grey tea", "Champagne", "Hot chocolate with cinnamon"], right: 2 },
+];
+
+function openOfrenda() {
+  $("slots").innerHTML = SLOTS.map((s) => {
+    const locked = s.needs && !$("g-" + s.needs).classList.contains("done");
+    return `<div class="slot"><label for="s-${s.id}">${s.label}${locked ? " (not yet remembered)" : ""}</label>
+      <select id="s-${s.id}" ${locked ? "disabled" : ""}><option value="">Choose…</option>${s.opts.map((o, i) => `<option value="${i}">${o}</option>`).join("")}</select></div>`;
+  }).join("");
+  $("feedback").textContent = "";
+  $("ofrenda").classList.remove("hidden");
+}
+
+function lightOfrenda() {
+  const picks = SLOTS.map((s) => $("s-" + s.id).value);
+  if (picks.some((p) => p === "")) { $("feedback").textContent = "Every part of the ofrenda needs something. Some things you may not remember yet."; return; }
+  const wrong = SLOTS.filter((s, i) => Number(picks[i]) !== s.right);
+  if (wrong.length) {
+    $("feedback").textContent = `The flame gutters. ${wrong.length === 1 ? "Something here" : wrong.length + " things here"} never belonged to her.`;
+    snuff("A candle goes out. That was never hers.");
+    return;
+  }
+  $("ofrenda").classList.add("hidden");
+  ending();
+}
+
+// ---------- endings ----------
+function petals() {
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement("div");
+    p.className = "petal";
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.animationDuration = 4 + Math.random() * 5 + "s";
+    p.style.animationDelay = Math.random() * 4 + "s";
+    $("petals").appendChild(p);
+  }
+}
+
+function sequence(lines) {
+  $("endingCard").innerHTML = lines.map((l) => `<p class="line ${l.cls || ""}">${l.t}</p>`).join("");
+  $("ending").classList.remove("hidden");
+  [...$("endingCard").children].forEach((el, i) => setTimeout(() => el.classList.add("show"), 600 + i * 1900));
+}
+
+function ending() {
+  state.over = true;
+  petals();
+  sequence([
+    { t: "The marigolds catch the candlelight. A path of orange petals runs from the door to Seat 7." },
+    { t: "The piano begins, and this time it does not stop." },
+    { t: "A woman with a silver hummingbird in her hair sits down at the bench." },
+    { t: "“You remembered. Now I can come back every year.”", cls: "said" },
+    { t: "Thomas never sent his letter. Marisol died in Oaxaca in 1933. He kept Seat 7 empty for the rest of his life, and after him, no one remembered why. Until tonight." },
+    { t: "<button class='btn marigold' onclick='location.reload()'>Play again</button>" },
+  ]);
+}
+
+function forgotten() {
+  state.over = true;
+  sequence([
+    { t: "The last candle goes out." },
+    { t: "The piano is silent. Seat 7 is just a chair now." },
+    { t: "This is the final death: when no one is left who remembers." },
+    { t: "<button class='btn' onclick='location.reload()'>Try to remember again</button>" },
+  ]);
+}
+
+// ---------- wiring ----------
+$("ask").addEventListener("submit", (e) => { e.preventDefault(); ask($("q").value); $("q").value = ""; });
+$("start").addEventListener("click", () => { $("intro").classList.add("hidden"); state.lastProgress = Date.now(); });
+$("ofrendaBtn").addEventListener("click", openOfrenda);
+$("closeOfrenda").addEventListener("click", () => $("ofrenda").classList.add("hidden"));
+$("light").addEventListener("click", lightOfrenda);
+renderCandles();
+renderTable();
+</script>
+</body>
+</html>
