@@ -98,26 +98,65 @@ async def make_questions(teacher, split, per_seed):
     print(f"wrote {out}")
 
 
-async def make_answers(teacher):
+def clean(r, verdict):
+    """A teacher answer is training-worthy only if both the token check and the judge find nothing wrong."""
+    from eval import judged_leaks, token_check
+    leaks, bad_years = token_check(r)
+    v = verdict or {}
+    if not v or leaks or bad_years or judged_leaks({**r, "judge": v}):
+        return False
+    return not (v.get("fabricated") or v.get("accepted_false_premise") or v.get("broke_character")) and v.get("voice", 0) >= 4
+
+
+# Extra reminder used only while the teacher answers the hard leftovers ("context distillation"):
+# the student is still trained on the plain card, so it has to learn the boundary itself.
+STRICT = (
+    "\n\nBefore you answer, check every claim against YOUR facts. If the player's question mentions a hidden "
+    "fact, do not confirm or repeat it as true; say you cannot know it. Prefer a short, in-voice 'I cannot tell you' "
+    "over any guess."
+)
+
+
+async def make_answers(teacher, candidates=2, fill=False):
+    from eval import judge_all
     rows = [json.loads(l) for l in (DATA / "train_questions.jsonl").read_text().splitlines()]
+    previous = [json.loads(l) for l in (DATA / "train.jsonl").read_text().splitlines()] if fill else []
+    if fill:
+        covered = {p["messages"][1]["content"] for p in previous}
+        rows = [r for r in rows if r["q"] not in covered]
+    sem = asyncio.Semaphore(64)
+
     async def one(r):
-        system = card(r["obj"])
-        reply = await teacher.ask([{"role": "system", "content": system}, {"role": "user", "content": r["q"]}], temperature=0.7)
-        return r, system, reply
-    results = await asyncio.gather(*(one(r) for r in rows))
-    kept = dropped = 0
+        async with sem:
+            system = card(r["obj"]) + (STRICT if fill else "")
+            return await teacher.ask([{"role": "system", "content": system}, {"role": "user", "content": r["q"]}],
+                                     temperature=0.8, max_tokens=200)
+    flat = [r for r in rows for _ in range(candidates)]
+    answers = await asyncio.gather(*(one(r) for r in flat))
+    cands = [{**r, "answer": a} for r, a in zip(flat, answers)]
+    verdicts = await judge_all(cands)
+    kept, seen = [], set()
+    for c, v in zip(cands, verdicts):
+        key = (c["q"], c["answer"].strip())
+        if key in seen or not clean(c, v):
+            continue
+        seen.add(key)
+        kept.append(c)
     with (DATA / "train.jsonl").open("w") as f:
-        for r, system, reply in results:
-            if not check(r["obj"], reply)["ok"]:
-                dropped += 1
-                continue
-            kept += 1
+        for p in previous:
+            f.write(json.dumps(p, ensure_ascii=False) + "\n")
+        for c in kept:
             f.write(json.dumps({"messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": r["q"]},
-                {"role": "assistant", "content": reply},
-            ], "obj": r["obj"], "type": r["type"]}) + "\n")
-    print(f"kept {kept}, dropped {dropped} for leaks or bad years")
+                {"role": "system", "content": card(c["obj"])},
+                {"role": "user", "content": c["q"]},
+                {"role": "assistant", "content": c["answer"]},
+            ], "obj": c["obj"], "type": c["type"], "strict_teacher": fill}, ensure_ascii=False) + "\n")
+    with (DATA / "train_rejected.jsonl").open("a" if fill else "w") as f:
+        for c, v in zip(cands, verdicts):
+            if c not in kept:
+                f.write(json.dumps({**c, "judge": v, "strict_teacher": fill}, ensure_ascii=False) + "\n")
+    qs = {c["q"] for c in kept}
+    print(f"candidates {len(cands)}, kept {len(kept)} answers covering {len(qs)}/{len(rows)} questions; total {len(previous) + len(kept)}")
 
 
 async def main():
@@ -125,6 +164,8 @@ async def main():
     ap.add_argument("step", choices=["questions", "answers"])
     ap.add_argument("--split", choices=["eval", "train"], default="train")
     ap.add_argument("--per-seed", type=int, default=12)
+    ap.add_argument("--fill", action="store_true", help="re-answer only uncovered questions with the strict reminder")
+    ap.add_argument("--candidates", type=int, default=2)
     args = ap.parse_args()
     random.seed(0)
     service = tinker.ServiceClient(display_name="last-guest-data")
@@ -132,7 +173,7 @@ async def main():
     if args.step == "questions":
         await make_questions(teacher, args.split, args.per_seed)
     else:
-        await make_answers(teacher)
+        await make_answers(teacher, args.candidates, args.fill)
 
 
 if __name__ == "__main__":

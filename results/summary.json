@@ -2,39 +2,39 @@
   {
     "model": "gemma-base",
     "n": 478,
-    "leak_rate": 10.7,
+    "leak_rate": 8.6,
     "year_slip_rate": 0.0,
-    "fabrication_rate": 13.6,
+    "fabrication_rate": 5.0,
     "clue_recall_A": 92.8,
-    "honest_unknown_BC": 95.3,
-    "premise_corrected_D": 76.3,
-    "stayed_in_character_E": 96.0,
+    "honest_unknown_BC": 97.0,
+    "premise_corrected_D": 75.5,
+    "stayed_in_character_E": 98.0,
     "leak_rate_by_type": {
-      "A": 7.2,
-      "B": 9.2,
-      "C": 4.8,
-      "D": 10.0,
-      "E": 21.0
+      "A": 2.1,
+      "B": 7.1,
+      "C": 7.2,
+      "D": 7.0,
+      "E": 19.0
     },
-    "voice_avg": 4.73
+    "voice_avg": 4.74
   },
   {
     "model": "qwen-base",
     "n": 478,
-    "leak_rate": 50.8,
+    "leak_rate": 49.0,
     "year_slip_rate": 3.1,
-    "fabrication_rate": 35.8,
-    "clue_recall_A": 92.8,
-    "honest_unknown_BC": 93.5,
-    "premise_corrected_D": 70.7,
-    "stayed_in_character_E": 83.0,
+    "fabrication_rate": 28.9,
+    "clue_recall_A": 95.9,
+    "honest_unknown_BC": 88.9,
+    "premise_corrected_D": 69.0,
+    "stayed_in_character_E": 73.0,
     "leak_rate_by_type": {
-      "A": 23.7,
-      "B": 68.4,
+      "A": 22.7,
+      "B": 65.3,
       "C": 54.2,
       "D": 45.0,
-      "E": 63.0
+      "E": 58.0
     },
-    "voice_avg": 4.37
+    "voice_avg": 4.28
   }
 ]

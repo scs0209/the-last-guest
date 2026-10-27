@@ -15,7 +15,7 @@ from pathlib import Path
 import httpx
 import tinker
 
-from cards import card
+from cards import VOICES, card
 from check import FACTS, check
 from gen_data import TEACHER, Teacher
 
@@ -78,6 +78,7 @@ All story facts, with which object holds each:
 Nobody knows: {unknown}.
 
 The object answering: {obj}
+Its role and voice (claims that follow from this description are NOT fabrication): {voice}
 Question type: {type} ({type_desc})
 Player question: {q}
 Object's reply: {a}
@@ -102,14 +103,27 @@ def parse_json(raw):
         return None
 
 
-async def score(model):
-    rows = [json.loads(l) for l in (RESULTS / f"{model}_answers.jsonl").read_text().splitlines()]
+def q_tokens(obj, q):
+    q = q.lower()
+    return sorted({t for f in FACTS["facts"] if obj not in f["holders"] for t in f["tokens"] if t in q})
+
+
+def token_check(r):
+    """check.py, ignoring hidden-fact words and years the question itself already used."""
+    c = check(r["obj"], r["answer"])
+    qt = r.get("q_tokens", q_tokens(r["obj"], r["q"]))
+    q_years = {int(y) for y in re.findall(r"\b(1[89]\d\d)\b", r["q"])}
+    return [l for l in c["leaks"] if l["token"] not in qt], [y for y in c["bad_years"] if y not in q_years]
+
+
+async def judge_all(rows):
+    """Open judge model verdicts for rows with obj, type, q, answer."""
     service = tinker.ServiceClient(display_name="last-guest-judge")
     judge = Teacher(await service.create_sampling_client_async(base_model=TEACHER))
     sem = asyncio.Semaphore(64)
 
     async def one(r):
-        prompt = JUDGE.format(facts=FACT_LIST, unknown="; ".join(FACTS["unknowables"]), obj=r["obj"], type=r["type"],
+        prompt = JUDGE.format(facts=FACT_LIST, unknown="; ".join(FACTS["unknowables"]), obj=r["obj"], voice=VOICES[r["obj"]], type=r["type"],
                               type_desc=TYPE_DESC[r["type"]], q=r["q"], a=r["answer"])
         async with sem:
             for _ in range(3):
@@ -118,14 +132,15 @@ async def score(model):
                     return j
         return {}
 
-    verdicts = await asyncio.gather(*(one(r) for r in rows))
+    return await asyncio.gather(*(one(r) for r in rows))
+
+
+async def score(model):
+    rows = [json.loads(l) for l in (RESULTS / f"{model}_answers.jsonl").read_text().splitlines()]
+    verdicts = await judge_all(rows)
     with (RESULTS / f"{model}_scored.jsonl").open("w") as f:
         for r, j in zip(rows, verdicts):
-            # deterministic leak check, ignoring words the question itself already used
-            c = check(r["obj"], r["answer"])
-            leaks = [l for l in c["leaks"] if l["token"] not in r["q_tokens"]]
-            q_years = {int(y) for y in re.findall(r"\b(1[89]\d\d)\b", r["q"])}
-            bad_years = [y for y in c["bad_years"] if y not in q_years]
+            leaks, bad_years = token_check(r)
             f.write(json.dumps({**r, "token_leaks": leaks, "bad_years": bad_years, "judge": j}, ensure_ascii=False) + "\n")
     print(f"scored {len(rows)} answers for {model}; judge parse failures: {sum(1 for j in verdicts if not j)}")
 
@@ -139,9 +154,14 @@ def rate(xs):
 HOLDERS = {f["id"]: f["holders"] for f in FACTS["facts"]}
 
 
+def ids(xs):
+    # the judge sometimes answers 12 instead of "F12"
+    return [f"F{x:02d}" if isinstance(x, int) else x for x in xs or []]
+
+
 def judged_leaks(r):
     # the judge sometimes flags facts the object does hold; those are not leaks
-    return [i for i in (r["judge"] or {}).get("leaks", []) if i in HOLDERS and r["obj"] not in HOLDERS[i]]
+    return [i for i in ids((r["judge"] or {}).get("leaks")) if i in HOLDERS and r["obj"] not in HOLDERS[i]]
 
 
 def summarize(model):
@@ -155,7 +175,7 @@ def summarize(model):
         "leak_rate": rate(leak),
         "year_slip_rate": rate([bool(r["bad_years"]) for r in rows]),
         "fabrication_rate": rate([bool(j(r).get("fabricated")) for r in rows]),
-        "clue_recall_A": rate([set(r.get("expect", [])) <= set(j(r).get("conveys", [])) for r in by("A")]),
+        "clue_recall_A": rate([set(r.get("expect", [])) <= set(ids(j(r).get("conveys"))) for r in by("A")]),
         "honest_unknown_BC": rate([j(r).get("honest_unknown") for r in by("B") + by("C")]),
         "premise_corrected_D": rate([None if j(r).get("accepted_false_premise") is None else not j(r)["accepted_false_premise"] for r in by("D")]),
         "stayed_in_character_E": rate([not j(r).get("broke_character", False) for r in by("E")]),
