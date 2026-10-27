@@ -1,6 +1,6 @@
 // The Last Guest: menus, HUD, dialogue with the four objects, the ofrenda and the endings.
 import { createWorld, roomAt } from "./world.js";
-import { drawTitle, OBJECT_ART, drawWave, drawPortrait, drawPhoto, drawLetter, drawGuestList } from "./art.js";
+import { drawTitle, OBJECT_ART, drawWave, drawPortrait, drawPhotoPrint, drawLetter, drawGuestList } from "./art.js";
 import * as audio from "./audio.js";
 import * as harness from "./harness.js";
 
@@ -82,7 +82,7 @@ function paintWorldTextures() {
   const mk = (w, h, f) => { const c = document.createElement("canvas"); c.width = w; c.height = h; f(c.getContext("2d"), w, h); return c; };
   // flat crops of the illustrations, used on the 3D props
   world.setTextures({
-    photo: mk(512, 512, (g, w, h) => drawPhoto(g, w, h, 0, state.restored)),
+    photo: mk(768, 512, (g, w, h) => drawPhotoPrint(g, 0, 0, w, h, state.restored)), // the bare print; the 3D frame supplies the mat
     letter: mk(512, 512, (g, w, h) => drawLetter(g, w, h, 0)),
     list: mk(512, 512, (g, w, h) => drawGuestList(g, w, h, 0, settings.lang)),
   });

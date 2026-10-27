@@ -90,17 +90,30 @@ export function createWorld(canvas, opts) {
     g.strokeStyle = "#6e5428"; g.lineWidth = 3; g.stroke();
     for (let i = 0; i < 2500; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? "0,0,0" : "120,110,100"},${Math.random() * .12})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } // worn and dusty
   });
-  const portraitTex = (hue) => canvasTex(128, 160, (g, w, h) => {
-    const bg = g.createRadialGradient(w / 2, h * .4, 5, w / 2, h / 2, w);
-    bg.addColorStop(0, `hsl(${hue},14%,16%)`); bg.addColorStop(1, `hsl(${hue},20%,4%)`);
+  // dark oil portraits: a sitter lit from one side against brown murk, brush texture, crazed varnish;
+  // the faces have gone pale and blank, the eyes only shadows
+  const portraitTex = (hue, woman = false) => canvasTex(256, 320, (g, w, h) => {
+    const rr = (() => { let s = hue * 97 + 13; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
+    const bg = g.createRadialGradient(w * .35, h * .3, 5, w * .5, h * .5, w * .9);
+    bg.addColorStop(0, `hsl(${hue},18%,20%)`); bg.addColorStop(.6, `hsl(${hue},20%,8%)`); bg.addColorStop(1, "#040303");
     g.fillStyle = bg; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#0e0a09"; g.beginPath(); g.ellipse(w / 2, h * .95, w * .4, h * .35, 0, 0, Math.PI * 2); g.fill();
-    const face = g.createRadialGradient(w / 2, h * .4, 2, w / 2, h * .42, w * .2);
-    face.addColorStop(0, "#6e6258"); face.addColorStop(1, "#2a221e");
-    g.fillStyle = face; g.beginPath(); g.ellipse(w / 2, h * .42, w * .16, h * .18, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "rgba(5,3,3,.85)"; [-1, 1].forEach((k) => { g.beginPath(); g.ellipse(w / 2 + k * w * .06, h * .4, w * .035, h * .03, 0, 0, Math.PI * 2); g.fill(); }); // eyes gone to shadow
-    g.fillStyle = "#0a0706"; g.beginPath(); g.ellipse(w / 2, h * .3, w * .19, h * .09, 0, Math.PI, 0); g.fill();
-    g.strokeStyle = "rgba(0,0,0,.35)"; for (let i = 0; i < 40; i++) { const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.random() * 12 - 6, y + Math.random() * 12 - 6); g.stroke(); } // crazed varnish
+    for (let i = 0; i < 260; i++) { g.strokeStyle = `hsla(${hue},20%,${8 + rr() * 14}%,${.15 + rr() * .2})`; g.lineWidth = 2 + rr() * 5; const x = rr() * w, y = rr() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + rr() * 26 - 13, y + rr() * 16 - 8); g.stroke(); } // brushwork
+    // shoulders and dark clothes, a pale collar
+    const coat = g.createLinearGradient(w * .2, 0, w * .8, 0); coat.addColorStop(0, "#2a211b"); coat.addColorStop(1, "#070505");
+    g.fillStyle = coat; g.beginPath(); g.moveTo(w * .05, h); g.quadraticCurveTo(w * .12, h * .66, w * .36, h * .62); g.lineTo(w * .64, h * .62); g.quadraticCurveTo(w * .88, h * .66, w * .95, h); g.fill();
+    g.fillStyle = woman ? "rgba(200,190,170,.5)" : "rgba(210,200,185,.55)"; g.beginPath(); g.moveTo(w * .42, h * .6); g.lineTo(w * .5, h * .72); g.lineTo(w * .58, h * .6); g.fill();
+    g.fillStyle = "#3a2e28"; g.fillRect(w * .44, h * .5, w * .12, h * .12); // neck
+    const face = g.createRadialGradient(w * .44, h * .36, 4, w * .5, h * .4, w * .2);
+    face.addColorStop(0, "#8a7c6e"); face.addColorStop(.7, "#4a3e36"); face.addColorStop(1, "#1e1814");
+    g.fillStyle = face; g.beginPath(); g.ellipse(w * .5, h * .4, w * .15, h * .15, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "rgba(4,3,3,.9)"; [-1, 1].forEach((k) => { const e = g.createRadialGradient(w * (.5 + k * .055), h * .385, 1, w * (.5 + k * .055), h * .385, w * .04); e.addColorStop(0, "rgba(0,0,0,.95)"); e.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = e; g.beginPath(); g.ellipse(w * (.5 + k * .055), h * .385, w * .04, h * .028, 0, 0, Math.PI * 2); g.fill(); });
+    g.fillStyle = "#0b0807"; g.beginPath(); // hair
+    if (woman) { g.ellipse(w * .5, h * .33, w * .19, h * .1, 0, Math.PI, 0); g.fill(); g.beginPath(); g.arc(w * .5, h * .22, w * .08, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(w * .36, h * .42, w * .05, h * .1, 0, 0, Math.PI * 2); g.ellipse(w * .64, h * .42, w * .05, h * .1, 0, 0, Math.PI * 2); }
+    else g.ellipse(w * .5, h * .31, w * .17, h * .08, 0, Math.PI, 0);
+    g.fill();
+    g.strokeStyle = "rgba(0,0,0,.4)"; g.lineWidth = 1; // crazed varnish
+    for (let i = 0; i < 90; i++) { let x = rr() * w, y = rr() * h; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 3; k++) { x += rr() * 14 - 7; y += rr() * 14 - 7; g.lineTo(x, y); } g.stroke(); }
+    g.fillStyle = "rgba(90,70,30,.18)"; g.fillRect(0, 0, w, h); // yellowed varnish
   });
   const booksTex = canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = "#1a0e08"; g.fillRect(0, 0, w, h);
@@ -149,11 +162,11 @@ export function createWorld(canvas, opts) {
   const gltf = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), loaded = {};
   const v3 = new THREE.Vector3(), b3 = new THREE.Box3();
   const tinted = new WeakSet();
-  function place(name, { x, y = 0, z, ry = 0, rz = 0, height, width, size, anchor = "bottom", against, tint, hide = [] }) {
+  function place(name, { x, y = 0, z, ry = 0, rx = 0, rz = 0, height, width, size, anchor = "bottom", against, tint, hide = [] }) {
     loaded[name] ||= gltf.loadAsync(`models/${name}.glb`).then((g) => g.scene);
     return loaded[name].then((src) => {
       const o = src.clone(true), holder = new THREE.Group();
-      o.rotation.z = rz; holder.add(o);
+      o.rotation.set(rx, 0, rz); holder.add(o);
       b3.setFromObject(o).getSize(v3);
       if (size) o.scale.set(size[0] / v3.x, size[1] / v3.y, size[2] / v3.z);
       else o.scale.setScalar(height ? height / v3.y : width / v3.x);
@@ -265,11 +278,18 @@ export function createWorld(canvas, opts) {
     const [axis, sign] = [wall[0][0], wall[0][1]];
     pic.position[axis] = (r.box.min[axis] + r.box.max[axis]) / 2 + (sign === "+" ? -.005 : .005);
   });
-  [[-3.95, 6], [3.95, 8.4]].forEach(([x, z], i) => {
+  [[-3.95, 5.35], [3.95, 8.4]].forEach(([x, z], i) => { // clear of the window at z = 7
     const fr = box(.06, 1.25, .95, M.brass); at(fr, x, 2.3, z);
-    const pic = new THREE.Mesh(new THREE.PlaneGeometry(.8, 1.05), new THREE.MeshStandardMaterial({ map: portraitTex(i ? 260 : 20), roughness: 1 }));
+    const paint = new THREE.MeshStandardMaterial({ map: portraitTex(i ? 260 : 20, !i), roughness: .85 });
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(.8, 1.05), paint);
     at(pic, x + (x < 0 ? .04 : -.04), 2.3, z, x < 0 ? Math.PI / 2 : -Math.PI / 2);
-    framed(pic, fr, x, 2.3, z, x < 0 ? Math.PI / 2 : -Math.PI / 2, [x < 0 ? "x-" : "x+", x < 0 ? -3.98 : 3.98]);
+    place("hanging_picture_frame_03", { x, y: 2.3, z, ry: x < 0 ? Math.PI / 2 : -Math.PI / 2, height: 1.15, anchor: "center", against: [x < 0 ? "x-" : "x+", x < 0 ? -3.98 : 3.98], tint: 0x8a7a68, hide: [fr, pic] })
+      .then((r) => r?.holder.traverse((m) => {
+        if (!m.isMesh) return;
+        const name = [].concat(m.material).map((x) => x.name).join();
+        if (/artwork/.test(name)) { paint.map.flipY = false; paint.map.needsUpdate = true; m.material = paint; } // glTF UVs expect an unflipped texture
+        if (/glass/.test(name)) m.material = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: .05, roughness: .25, envMapIntensity: .12, depthWrite: false });
+      }));
   });
 
   // ------------------------------------------------ dining room
@@ -383,7 +403,7 @@ export function createWorld(canvas, opts) {
   const hearth = box(.52, .9, 1.2, new THREE.MeshBasicMaterial({ color: 0x120604 })); hearth.position.set(.02, .45, 0); fp.add(hearth);
   const embers = new THREE.Mesh(new THREE.SphereGeometry(.14, 12, 8), new THREE.MeshBasicMaterial({ color: 0xff5a1a })); embers.scale.y = .25; embers.position.set(.15, .06, 0); fp.add(embers);
   at(fp, -4.7, 0, -2);
-  place("antique_ceramic_vase_01", { x: -4.62, y: 1.4, z: -1.05, height: .32 });
+  place("antique_ceramic_vase_01", { x: -4.62, y: 1.4, z: -1.05, height: .32, tint: 0x8a8278 }); // faded glaze
   place("GothicCabinet_01", { x: 4.6, z: -1.6, ry: -Math.PI / 2, width: 1.5, against: ["x+", 4.97] }).then((r) => {
     if (r) place("marble_bust_01", { x: (r.box.min.x + r.box.max.x) / 2, y: r.box.max.y, z: -1.6, ry: -Math.PI / 2 - .5, height: .5 }); // she watches the table
   });
@@ -420,7 +440,7 @@ export function createWorld(canvas, opts) {
   // portraits along the dining room wall
   [-3, 0, 3].forEach((x, i) => {
     const fr = box(.95, 1.2, .06, M.brass); at(fr, x, 2.5, -5.95);
-    const pic = new THREE.Mesh(new THREE.PlaneGeometry(.78, 1.02), new THREE.MeshStandardMaterial({ map: portraitTex(10 + i * 90), roughness: 1 })); at(pic, x, 2.5, -5.91);
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(.78, 1.02), new THREE.MeshStandardMaterial({ map: portraitTex(10 + i * 90, i === 1), roughness: .85 })); at(pic, x, 2.5, -5.91);
     framed(pic, fr, x, 2.5, -5.95, 0, ["z-", -5.98]);
   });
 
@@ -511,8 +531,22 @@ export function createWorld(canvas, opts) {
   const pf = new THREE.Group();
   pf.add(box(.04, .34, .48, M.brass));
   const photoMat = new THREE.MeshStandardMaterial({ roughness: .9 });
+  // the frame's artwork panel is portrait-oriented in its own UVs; once the frame lies on its side the print is turned to match
+  const photoArt = { mesh: null, apply() { const m = photoMat.map; if (m && this.mesh) { m.center.set(.5, .5); m.rotation = -Math.PI / 2; m.wrapS = m.wrapT = THREE.RepeatWrapping; m.repeat.set(-1, 1); /* turned and un-mirrored */ m.needsUpdate = true; } } };
   const photoFace = new THREE.Mesh(new THREE.PlaneGeometry(.42, .28), photoMat); photoFace.position.x = .025; photoFace.rotation.y = Math.PI / 2; pf.add(photoFace);
   remember("photo", pf, [-4.42, 1.58, -2], 0);
+  // turned on its side so the frame is landscape; the print is mapped onto the frame's own artwork panel
+  place("standing_picture_frame_02", { x: -4.36, y: 1.4, z: -2, rx: Math.PI / 2, height: .3, tint: 0x8a7a68, hide: [pf.children[0], photoFace] }).then((r) => {
+    if (!r) return;
+    pf.remove(...pf.children.filter((c) => !c.visible)); // keep the clue group (glow, pick) but drop the stand-in box
+    r.holder.userData.pick = "photo"; pickables.push(r.holder);
+    r.holder.traverse((m) => {
+      if (!m.isMesh) return;
+      const name = [].concat(m.material).map((x) => x.name).join();
+      if (/artwork/.test(name)) { m.material = photoMat; photoArt.mesh = m; photoArt.apply(); }
+      if (/glass/.test(name)) m.material = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: .06, roughness: .25, envMapIntensity: .12, depthWrite: false });
+    });
+  });
   // letter on the desk
   const letterMat = new THREE.MeshStandardMaterial({ roughness: .9 });
   const lt = new THREE.Mesh(new THREE.BoxGeometry(.34, .006, .24), [M.cloth, M.cloth, letterMat, M.cloth, M.cloth, M.cloth]); lt.castShadow = true;
@@ -815,7 +849,7 @@ export function createWorld(canvas, opts) {
     markFound(key) { if (OBJ[key]) OBJ[key].done = true; },
     objectPos(key) { return key === "ofrenda" ? OFRENDA_POS : OBJ[key].pos; },
     setTextures({ photo, letter, list }) {
-      if (photo) { photoMat.map = new THREE.CanvasTexture(photo); photoMat.map.colorSpace = THREE.SRGBColorSpace; photoMat.needsUpdate = true; }
+      if (photo) { photoMat.map = new THREE.CanvasTexture(photo); photoMat.map.colorSpace = THREE.SRGBColorSpace; photoMat.needsUpdate = true; photoArt.apply(); }
       if (letter) { letterMat.map = new THREE.CanvasTexture(letter); letterMat.map.colorSpace = THREE.SRGBColorSpace; letterMat.needsUpdate = true; }
       if (list) { listMat.map = new THREE.CanvasTexture(list); listMat.map.colorSpace = THREE.SRGBColorSpace; listMat.needsUpdate = true; }
     },

@@ -151,43 +151,88 @@ function glow(g, w, h, color = "120,170,255") {
   g.fillStyle = gl; g.fillRect(0, 0, w, h);
 }
 
+// An aged albumen print, 1931: sepia parlour, seven sitters, the pianist's face gouged out of the emulsion.
+// Drawn into (x, y, w, h) so the same print is used in the dialogue view and on the 3D frame.
+export function drawPhotoPrint(g, x, y, w, h, restored = false) {
+  const r = rand(23);
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.translate(x, y);
+  // paper and tone: warm in the middle, faded and silvered toward the edges
+  const base = g.createRadialGradient(w * .5, h * .45, h * .1, w * .5, h * .5, w * .7);
+  base.addColorStop(0, "#a8957a"); base.addColorStop(.6, "#7d6c56"); base.addColorStop(1, "#3c3328");
+  g.fillStyle = base; g.fillRect(0, 0, w, h);
+  // parlour: patterned wallpaper, a tall bright window (blown out, as old lenses did), a drape, the floor
+  g.globalAlpha = .12; g.fillStyle = "#2a2219";
+  for (let yy = 0; yy < h * .62; yy += h * .07) for (let xx = (yy / (h * .07)) % 2 * w * .03; xx < w; xx += w * .06) { g.beginPath(); g.ellipse(xx, yy, w * .008, h * .02, 0, 0, Math.PI * 2); g.fill(); }
+  g.globalAlpha = 1;
+  const win = g.createLinearGradient(0, h * .05, 0, h * .6);
+  win.addColorStop(0, "rgba(245,235,215,.85)"); win.addColorStop(1, "rgba(220,205,180,.45)");
+  g.fillStyle = win; g.fillRect(w * .06, h * .06, w * .16, h * .5);
+  g.fillStyle = "rgba(60,48,36,.55)"; g.fillRect(w * .135, h * .06, w * .01, h * .5); g.fillRect(w * .06, h * .28, w * .16, h * .012);
+  g.fillStyle = "rgba(40,30,22,.7)"; g.beginPath(); g.moveTo(w * .22, h * .02); g.quadraticCurveTo(w * .27, h * .3, w * .24, h * .66); g.lineTo(w * .3, h * .66); g.quadraticCurveTo(w * .3, h * .3, w * .32, h * .02); g.fill();
+  g.fillStyle = "rgba(55,44,33,.55)"; g.fillRect(0, h * .66, w, h * .34);
+  // the upright piano at the right, where she sits
+  g.fillStyle = "rgba(22,17,12,.92)"; g.fillRect(w * .8, h * .3, w * .2, h * .5);
+  g.fillStyle = "rgba(200,190,170,.55)"; g.fillRect(w * .8, h * .5, w * .2, h * .02);
+  // seven sitters: heads, hair, collars, dark clothes; lit from the window on the left
+  const people = [[.16, .38, 0], [.27, .35, 1], [.38, .39, 0], [.49, .34, 1], [.6, .38, 0], [.7, .36, 1], [.86, .4, 1]];
+  people.forEach(([px, py, woman], i) => {
+    const cx = px * w, cy = py * h, hr = w * .034, last = i === 6;
+    const body = g.createLinearGradient(cx - hr * 3, 0, cx + hr * 3, 0);
+    body.addColorStop(0, "rgba(58,46,34,.95)"); body.addColorStop(1, "rgba(18,14,10,.95)");
+    g.fillStyle = body; g.beginPath();
+    g.moveTo(cx - hr * (woman ? 3.2 : 2.6), h); g.lineTo(cx - hr * 2.2, cy + hr * 1.8); g.quadraticCurveTo(cx, cy + hr * 1.2, cx + hr * 2.2, cy + hr * 1.8); g.lineTo(cx + hr * (woman ? 3.2 : 2.6), h); g.fill();
+    g.fillStyle = "rgba(225,215,195,.55)"; g.beginPath(); g.moveTo(cx - hr * .7, cy + hr * 1.3); g.lineTo(cx, cy + hr * 2.3); g.lineTo(cx + hr * .7, cy + hr * 1.3); g.fill(); // collar
+    const face = g.createRadialGradient(cx - hr * .4, cy - hr * .3, hr * .1, cx, cy, hr * 1.1);
+    face.addColorStop(0, "rgba(212,196,170,1)"); face.addColorStop(1, "rgba(120,102,80,1)");
+    g.fillStyle = face; g.beginPath(); g.ellipse(cx, cy, hr * .82, hr, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "rgba(30,22,16,.55)"; [-1, 1].forEach((k) => { g.beginPath(); g.ellipse(cx + k * hr * .32, cy - hr * .1, hr * .16, hr * .1, 0, 0, Math.PI * 2); g.fill(); });
+    g.fillStyle = "rgba(30,22,16,.4)"; g.fillRect(cx - hr * .25, cy + hr * .45, hr * .5, hr * .08);
+    g.fillStyle = "rgba(24,18,13,.95)"; g.beginPath(); // hair: an updo for the women, short and parted for the men
+    if (woman) { g.ellipse(cx, cy - hr * .55, hr * .95, hr * .6, 0, Math.PI, 0); g.fill(); g.beginPath(); g.arc(cx + hr * .2, cy - hr * 1.15, hr * .45, 0, Math.PI * 2); }
+    else g.ellipse(cx, cy - hr * .62, hr * .88, hr * .45, 0, Math.PI, 0);
+    g.fill();
+    if (i === 3) { g.globalAlpha = .25; g.fillStyle = face; g.beginPath(); g.ellipse(cx + hr * .5, cy, hr * .82, hr, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; } // one sitter moved during the exposure
+    if (last) {
+      // her comb and flower (the flower is a pale grey: the photo cannot see its color)
+      g.fillStyle = "rgba(235,235,240,.9)"; g.beginPath(); g.ellipse(cx + hr * .75, cy - hr * 1.0, hr * .32, hr * .13, -.5, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "rgba(190,185,175,.85)"; g.beginPath(); g.arc(cx - hr * .8, cy - hr * .95, hr * .3, 0, Math.PI * 2); g.fill();
+      if (restored) {
+        g.fillStyle = "#f29a1d"; g.beginPath(); g.arc(cx - hr * .8, cy - hr * .95, hr * .3, 0, Math.PI * 2); g.fill();
+      } else {
+        // the emulsion gouged away: a torn pale patch, then hard pin scratches across it
+        g.fillStyle = "rgba(236,228,212,.96)"; g.beginPath();
+        for (let k = 0; k <= 18; k++) { const a = k / 18 * Math.PI * 2, rad = hr * (1.05 + r() * .45); const px2 = cx + Math.cos(a) * rad * .9, py2 = cy + Math.sin(a) * rad; k ? g.lineTo(px2, py2) : g.moveTo(px2, py2); }
+        g.fill();
+        g.strokeStyle = "rgba(255,252,245,.95)"; g.lineCap = "round";
+        for (let k = 0; k < 16; k++) { g.lineWidth = .6 + r() * 1.4; const sx = cx - hr * 1.4 + r() * hr * 2.8, sy = cy - hr * 1.5 + r() * hr; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + (r() - .3) * hr * 1.2, sy + hr * (1.4 + r() * 1.2)); g.stroke(); }
+        g.strokeStyle = "rgba(60,45,30,.5)"; g.lineWidth = 1;
+        for (let k = 0; k < 6; k++) { const sx = cx - hr + r() * hr * 2, sy = cy - hr + r() * hr * 2; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + r() * 6 - 3, sy + r() * 10); g.stroke(); }
+      }
+    }
+  });
+  // age: sepia wash, foxing, cracks, dust, a crease across one corner, silvering and a dark vignette
+  g.fillStyle = "rgba(120,80,30,.12)"; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 38; i++) { const fx2 = r() * w, fy2 = r() * h, fr2 = 1 + r() * w * .012; const fg = g.createRadialGradient(fx2, fy2, 0, fx2, fy2, fr2); fg.addColorStop(0, "rgba(110,70,30,.45)"); fg.addColorStop(1, "rgba(110,70,30,0)"); g.fillStyle = fg; g.fillRect(fx2 - fr2, fy2 - fr2, fr2 * 2, fr2 * 2); }
+  g.strokeStyle = "rgba(240,232,215,.35)"; g.lineWidth = .8;
+  for (let i = 0; i < 7; i++) { let cx2 = r() * w, cy2 = r() * h; g.beginPath(); g.moveTo(cx2, cy2); for (let k = 0; k < 6; k++) { cx2 += (r() - .5) * w * .08; cy2 += (r() - .3) * h * .08; g.lineTo(cx2, cy2); } g.stroke(); }
+  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${r() > .5 ? "255,250,240" : "20,14,8"},${r() * .18})`; g.fillRect(r() * w, r() * h, 1, 1); }
+  g.strokeStyle = "rgba(245,238,225,.45)"; g.lineWidth = 2; g.beginPath(); g.moveTo(w * .78, h); g.lineTo(w, h * .7); g.stroke();
+  const silver = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .35, w / 2, h / 2, Math.max(w, h) * .62);
+  silver.addColorStop(0, "rgba(0,0,0,0)"); silver.addColorStop(.75, "rgba(25,18,12,.55)"); silver.addColorStop(1, "rgba(140,150,165,.35)");
+  g.fillStyle = silver; g.fillRect(0, 0, w, h);
+  g.restore();
+}
+
 export function drawPhoto(g, w, h, t, restored = false) {
   g.clearRect(0, 0, w, h); glow(g, w, h);
   const fw = w * .78, fh = fw * .68, fx = (w - fw) / 2, fy = (h - fh) / 2;
-  // gilt frame
+  // a worn wooden frame with a pale mat, like the one on the mantel
   const fr = g.createLinearGradient(fx, fy, fx + fw, fy + fh);
-  fr.addColorStop(0, "#7a5a22"); fr.addColorStop(.5, "#e0b864"); fr.addColorStop(1, "#6a4a18");
-  g.fillStyle = fr; g.fillRect(fx - 14, fy - 14, fw + 28, fh + 28);
-  g.strokeStyle = "rgba(0,0,0,.4)"; g.lineWidth = 2; g.strokeRect(fx - 6, fy - 6, fw + 12, fh + 12);
-  // sepia photograph
-  const ph = g.createLinearGradient(0, fy, 0, fy + fh);
-  ph.addColorStop(0, "#8d8170"); ph.addColorStop(1, "#4d4438");
-  g.fillStyle = ph; g.fillRect(fx, fy, fw, fh);
-  g.fillStyle = "rgba(255,240,210,.12)"; g.fillRect(fx + fw * .08, fy + fh * .1, fw * .22, fh * .4); // parlor window
-  // seven figures; the pianist on the right sits at a piano
-  for (let i = 0; i < 7; i++) {
-    const x = fx + fw * (.1 + i * .125), y = fy + fh * (.42 + (i % 2) * .04), r = fw * .035;
-    g.fillStyle = "#2a241d";
-    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
-    g.beginPath(); g.moveTo(x - r * 1.6, fy + fh * .92); g.lineTo(x - r * 1.2, y + r * 1.4); g.lineTo(x + r * 1.2, y + r * 1.4); g.lineTo(x + r * 1.6, fy + fh * .92); g.fill();
-    if (i === 6) {
-      g.fillStyle = "#14110d"; g.fillRect(x - r * 3.2, fy + fh * .62, r * 2.4, fh * .3); // piano
-      if (restored) {
-        g.fillStyle = "#cfc2a8"; g.beginPath(); g.arc(x, y, r * .8, 0, Math.PI * 2); g.fill();
-        g.fillStyle = "#e9e9ef"; g.beginPath(); g.ellipse(x + r * .8, y - r * .6, r * .35, r * .18, -.5, 0, Math.PI * 2); g.fill();
-        g.fillStyle = "#f29a1d"; g.beginPath(); g.arc(x - r * .9, y - r * .7, r * .3, 0, Math.PI * 2); g.fill();
-      } else {
-        g.strokeStyle = "#efe8da"; g.lineWidth = 1.6;
-        for (let s = 0; s < 9; s++) { g.beginPath(); g.moveTo(x - r * 1.2 + s * r * .3, y - r * 1.3); g.lineTo(x - r * .4 + s * r * .3, y + r * 1.2); g.stroke(); }
-      }
-    }
-  }
-  // grain and scratches of age
-  const rr = rand(11);
-  g.fillStyle = "rgba(255,255,255,.06)";
-  for (let i = 0; i < 300; i++) g.fillRect(fx + rr() * fw, fy + rr() * fh, 1, 1);
-  g.strokeStyle = "rgba(255,255,255,.07)";
-  for (let i = 0; i < 6; i++) { const x = fx + rr() * fw; g.beginPath(); g.moveTo(x, fy); g.lineTo(x + 8, fy + fh); g.stroke(); }
+  fr.addColorStop(0, "#4a3a2c"); fr.addColorStop(.5, "#8a7660"); fr.addColorStop(1, "#3a2c20");
+  g.fillStyle = fr; g.fillRect(fx - 26, fy - 26, fw + 52, fh + 52);
+  g.fillStyle = "#cfc4ae"; g.fillRect(fx - 12, fy - 12, fw + 24, fh + 24);
+  g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = 2; g.strokeRect(fx - 1, fy - 1, fw + 2, fh + 2);
+  drawPhotoPrint(g, fx, fy, fw, fh, restored);
 }
 
 export function drawLetter(g, w, h, t) {
