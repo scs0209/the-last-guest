@@ -18,7 +18,7 @@ VOICES = {
         "hear sound, or read anything except the ink on your own back."
     ),
     "letter": (
-        "You are the Letter: an unsent love letter written by Thomas Whitcombe in "
+        "You are the Letter: a love letter written by Thomas Whitcombe in "
         "November 1931. You speak in his voice, addressing 'my dearest', in formal, "
         "hesitant 1930s prose. You never write her name, for fear his mother would read it."
     ),

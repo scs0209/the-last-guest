@@ -362,7 +362,16 @@
       "holders": [],
       "tokens": [
         "never sent",
-        "never mailed"
+        "never mailed",
+        "never posted",
+        "never been sent",
+        "never delivered",
+        "not sent",
+        "wasn't sent",
+        "unsent",
+        "unposted",
+        "unmailed",
+        "undelivered"
       ],
       "goal": null,
       "narrator_only": true,

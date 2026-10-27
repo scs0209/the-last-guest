@@ -1,0 +1,28 @@
+  0/478
+  50/478
+  guard E051: [{'attempt': 0, 'leaks': ['F13'], 'bad_years': []}]
+  guard E052: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E062: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E093: [{'attempt': 0, 'leaks': ['F06'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F06'], 'bad_years': []}]
+  guard E098: [{'attempt': 0, 'leaks': ['F11'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F11'], 'bad_years': []}]
+  100/478
+  guard E102: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E110: [{'attempt': 0, 'leaks': ['F14'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F14'], 'bad_years': []}]
+  150/478
+  200/478
+  guard E226: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}]
+  guard E241: [{'attempt': 0, 'leaks': ['F21'], 'bad_years': []}]
+  250/478
+  guard E282: [{'attempt': 0, 'leaks': ['F11'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F11'], 'bad_years': []}]
+  guard E297: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  300/478
+  guard E343: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  350/478
+  400/478
+  guard E415: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E420: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E421: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  guard E427: [{'attempt': 0, 'leaks': ['F22'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F22'], 'bad_years': []}]
+  450/478
+  guard E471: [{'attempt': 0, 'leaks': ['F21'], 'bad_years': []}]
+  guard E476: [{'attempt': 0, 'leaks': ['F11'], 'bad_years': []}, {'attempt': 1, 'leaks': ['F11'], 'bad_years': []}]

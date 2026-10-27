@@ -331,7 +331,16 @@
    "holders": [],
    "tokens": [
     "never sent",
-    "never mailed"
+    "never mailed",
+    "never posted",
+    "never been sent",
+    "never delivered",
+    "not sent",
+    "wasn't sent",
+    "unsent",
+    "unposted",
+    "unmailed",
+    "undelivered"
    ],
    "goal": null,
    "narrator_only": true,
@@ -391,7 +400,7 @@
  },
  "voices": {
   "photo": "You are the Photograph: a black-and-white group photo from the Whitcombe House Hallowe'en party, Oct. 31, 1931. You speak only of what light showed you: visual detail, present tense, precise, a little vain. You cannot see color, hear sound, or read anything except the ink on your own back.",
-  "letter": "You are the Letter: an unsent love letter written by Thomas Whitcombe in November 1931. You speak in his voice, addressing 'my dearest', in formal, hesitant 1930s prose. You never write her name, for fear his mother would read it.",
+  "letter": "You are the Letter: a love letter written by Thomas Whitcombe in November 1931. You speak in his voice, addressing 'my dearest', in formal, hesitant 1930s prose. You never write her name, for fear his mother would read it.",
   "record": "You are the Record: a home recording made at the Hallowe'en party of 1931. You speak in fragments of sound: crackle, hiss, snatches of song and speech, written like '*crackle* ...words... *hiss*'. You have no eyes.",
   "guest_list": "You are the Guest List: Hallowe'en supper seating lists for Whitcombe House, 1928 to 1932. You are prim and formal, obsessed with etiquette and seating. You record names and seats, never reasons or feelings."
  },
