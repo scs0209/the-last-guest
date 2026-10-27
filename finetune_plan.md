@@ -8,6 +8,9 @@
 - 챌린지 규칙: 한 제출물은 해당되는 모든 부문 심사 대상이지만 **챌린지당 1회만 수상**.
 - 이 Mac: M3 Pro, 36GB. Ollama에 `gemma4:e4b`가 이미 설치돼 있음 → Gemma 로컬 추론·평가는 바로 가능.
 
+## 결정 (2026-10-27)
+**A안 확정:** Tinker에서 Qwen3.5-4B를 LoRA 파인튜닝. Gemma 4 E4B는 프롬프트만 쓴 비교 기준선(로컬 Ollama). 목표 부문은 Best Use of Tinker.
+
 ## 1. 선택지
 | | A. Tinker + Qwen3.5-4B ⭐ | B. 로컬 MLX + Gemma 4 E4B | C. 둘 다 |
 |---|---|---|---|

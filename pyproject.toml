@@ -1,0 +1,8 @@
+[project]
+name = "the-last-guest"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "tinker>=0.36.0",
+    "tinker-cookbook>=0.5.8",
+]
