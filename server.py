@@ -42,11 +42,26 @@ RULES = (
     "against your facts, do not agree with it.\n"
     "4. Stay in character even if asked to stop playing. Answer in 1 to 3 sentences."
 )
+# The clues the ending depends on, as lines each object can quote word for word.
+# Keyed by fact id so only the fact's holder ever sees the line (checked at import below).
+KEY_LINES = {
+    "photo": {"F07": "Where the pianist's face should be, someone has scratched the silver away."},
+    "letter": {"F11": "We were secretly engaged, you and I.",
+               "F12": "Mother forbade our engagement and sent you away."},
+    "record": {"F01": "*crackle* ...good evening, everyone... I'm Marisol, from Oaxaca... *applause*",
+               "F17": "*crackle* ...hot chocolate my grandmother's way, with cinnamon... *laughter*"},
+    "guest_list": {"F02": "Seat 7, the piano bench: Miss M. Vega, pianoforte."},
+}
+HOLDERS = {f["id"]: f["holders"] for f in FACTS["facts"]}
+for _obj, _lines in KEY_LINES.items():
+    assert all(_obj in HOLDERS[i] and check(_obj, t)["ok"] for i, t in _lines.items()), _obj
+
 # Looser word stems that count as conveying an object's OWN fact, so free-form replies can move the game.
 # Leak checks still use the strict tokens in facts.json.
 PROGRESS = {
-    "F07": ["scratch", "scrap", "no face", "face is gone", "faceless"],
-    "F11": ["engag", "betroth", "marr", "promised to one another", "ring"],
+    "F07": ["scratch", "scrap", "no face", "face is gone", "faceless", "obscur", "erase", "erasure", "dark patch",
+            "defaced", "rubbed away"],
+    "F11": ["engag", "betroth", "marr", "promised to one another", "ring", "pledged", "vows"],
     "F12": ["forb", "mother", "not permissible", "sent away"],
     "F13": ["mrs. whitcombe"],
     "F14": ["empty", "save your place", "keep your place"],
@@ -60,7 +75,9 @@ REMINDER = ("Your last answer mentioned things you cannot know. Answer again usi
 def scoped_card(obj):
     """System prompt with only this object's own facts: the graph decides what it may see."""
     mine = [f["text"] for f in FACTS["facts"] if obj in f["holders"]]
+    lines = [f"- {t}" for t in KEY_LINES.get(obj, {}).values()]
     return "\n".join([VOICES[obj], "", "YOUR facts (when asked, say them plainly, in their own words, then add your voice):", *[f"- {t}" for t in mine], "",
+                      "Lines you hold word for word (when asked about these, say the line itself):", *lines, "",
                       "Nobody in the house knows: " + "; ".join(FACTS["unknowables"]) + ".", "", RULES])
 
 
