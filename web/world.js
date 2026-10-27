@@ -4,6 +4,11 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 // ---------------------------------------------------------------- layout (metres; y is up)
 export const ROOMS = {
@@ -28,6 +33,8 @@ const BLOCKS = [ // furniture the player cannot walk through
   { x: [1.9, 3.3], z: [9.3, 10] },          // console by the front door
   { x: [4.1, 5], z: [-2.4, -0.8] },         // dining room cabinet
   { x: [5.5, 7.2], z: [7.6, 8.6] },         // armchair and its little table
+  { x: [4, 5.4], z: [7.7, 9] },             // gothic statue in the study corner
+  { x: [8.05, 9], z: [3, 4.35] },           // rocking chair
 ];
 const SEAT7 = new THREE.Vector3(3.2, 0, -4.1);
 const SHELF_LEVELS = [.04, .3, .56, .8]; // board heights of the Shelf_01 bookcase, as fractions of its height
@@ -54,11 +61,11 @@ export function createWorld(canvas, opts) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x07040a);
-  scene.fog = new THREE.FogExp2(0x0b0710, .085);
+  scene.background = new THREE.Color(0x030308);
+  scene.fog = new THREE.FogExp2(0x07070f, .11); // the far end of every room dissolves into dark
   const camera = new THREE.PerspectiveCamera(70, 1, .05, 60);
   // a faint room reflection so brass, glass and varnish read as such; kept low so the house stays dark
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -76,19 +83,24 @@ export function createWorld(canvas, opts) {
   const pbr = (name, extra) => new THREE.MeshStandardMaterial({ map: tex(`${name}_diff`, true), normalMap: tex(`${name}_nor`), roughnessMap: tex(`${name}_rough`), envMapIntensity: ENV, ...extra });
   const tileUV = (geo, u, v) => { const a = geo.attributes.uv; for (let i = 0; i < a.count; i++) a.setXY(i, a.getX(i) * u, a.getY(i) * v); return geo; };
   const rug = canvasTex(256, 384, (g, w, h) => {
-    g.fillStyle = "#4a0f14"; g.fillRect(0, 0, w, h);
-    g.strokeStyle = "#c9953e"; g.lineWidth = 6; g.strokeRect(14, 14, w - 28, h - 28);
-    g.strokeStyle = "#1c2a4a"; g.lineWidth = 10; g.strokeRect(30, 30, w - 60, h - 60);
-    g.fillStyle = "#7a1c22"; g.beginPath(); g.ellipse(w / 2, h / 2, w * .28, h * .3, 0, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = "#c9953e"; g.lineWidth = 3; g.stroke();
+    g.fillStyle = "#2a0a0d"; g.fillRect(0, 0, w, h);
+    g.strokeStyle = "#6e5428"; g.lineWidth = 6; g.strokeRect(14, 14, w - 28, h - 28);
+    g.strokeStyle = "#141a2a"; g.lineWidth = 10; g.strokeRect(30, 30, w - 60, h - 60);
+    g.fillStyle = "#3e1014"; g.beginPath(); g.ellipse(w / 2, h / 2, w * .28, h * .3, 0, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = "#6e5428"; g.lineWidth = 3; g.stroke();
+    for (let i = 0; i < 2500; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? "0,0,0" : "120,110,100"},${Math.random() * .12})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } // worn and dusty
   });
   const portraitTex = (hue) => canvasTex(128, 160, (g, w, h) => {
     const bg = g.createRadialGradient(w / 2, h * .4, 5, w / 2, h / 2, w);
-    bg.addColorStop(0, `hsl(${hue},25%,28%)`); bg.addColorStop(1, `hsl(${hue},30%,8%)`);
+    bg.addColorStop(0, `hsl(${hue},14%,16%)`); bg.addColorStop(1, `hsl(${hue},20%,4%)`);
     g.fillStyle = bg; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#1a120e"; g.beginPath(); g.ellipse(w / 2, h * .95, w * .4, h * .35, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#8a6a55"; g.beginPath(); g.ellipse(w / 2, h * .42, w * .17, h * .17, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#120c0a"; g.beginPath(); g.ellipse(w / 2, h * .32, w * .2, h * .1, 0, Math.PI, 0); g.fill();
+    g.fillStyle = "#0e0a09"; g.beginPath(); g.ellipse(w / 2, h * .95, w * .4, h * .35, 0, 0, Math.PI * 2); g.fill();
+    const face = g.createRadialGradient(w / 2, h * .4, 2, w / 2, h * .42, w * .2);
+    face.addColorStop(0, "#6e6258"); face.addColorStop(1, "#2a221e");
+    g.fillStyle = face; g.beginPath(); g.ellipse(w / 2, h * .42, w * .16, h * .18, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "rgba(5,3,3,.85)"; [-1, 1].forEach((k) => { g.beginPath(); g.ellipse(w / 2 + k * w * .06, h * .4, w * .035, h * .03, 0, 0, Math.PI * 2); g.fill(); }); // eyes gone to shadow
+    g.fillStyle = "#0a0706"; g.beginPath(); g.ellipse(w / 2, h * .3, w * .19, h * .09, 0, Math.PI, 0); g.fill();
+    g.strokeStyle = "rgba(0,0,0,.35)"; for (let i = 0; i < 40; i++) { const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.random() * 12 - 6, y + Math.random() * 12 - 6); g.stroke(); } // crazed varnish
   });
   const booksTex = canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = "#1a0e08"; g.fillRect(0, 0, w, h);
@@ -107,22 +119,22 @@ export function createWorld(canvas, opts) {
 
   // ------------------------------------------------ materials
   const M = {
-    wall: pbr("decrepit_wallpaper", { color: 0x9a7c9e, side: THREE.DoubleSide }),
+    wall: pbr("decrepit_wallpaper", { color: 0x6a6070, side: THREE.DoubleSide }),
     wains: pbr("dark_paneled_wood", { color: 0x8a6a5a }),
-    floor: pbr("herringbone_parquet", { color: 0xa08070 }),
-    ceil: new THREE.MeshStandardMaterial({ color: 0x140b0c, roughness: 1, side: THREE.DoubleSide }),
+    floor: pbr("herringbone_parquet", { color: 0x7a6658 }),
+    ceil: new THREE.MeshStandardMaterial({ color: 0x08060a, roughness: 1, side: THREE.DoubleSide }),
     wood: new THREE.MeshStandardMaterial({ color: 0x34180e, roughness: .5 }),
     darkwood: new THREE.MeshStandardMaterial({ color: 0x1d0d07, roughness: .45 }),
-    cloth: new THREE.MeshStandardMaterial({ color: 0xece2d0, roughness: .95 }),
+    cloth: new THREE.MeshStandardMaterial({ color: 0x7e7668, roughness: .97 }), // linen gone grey with dust
     velvet: new THREE.MeshStandardMaterial({ color: 0x47203e, roughness: 1 }),
     brass: new THREE.MeshStandardMaterial({ color: 0xc9a45c, roughness: .3, metalness: .85 }),
-    wax: new THREE.MeshStandardMaterial({ color: 0xf4ecdc, roughness: .6, emissive: 0x2a1a08 }),
+    wax: new THREE.MeshStandardMaterial({ color: 0xbdb3a0, roughness: .7, emissive: 0x120a04 }),
     flame: new THREE.MeshBasicMaterial({ color: 0xffd27a }),
     black: new THREE.MeshStandardMaterial({ color: 0x090909, roughness: .25 }),
     stone: new THREE.MeshStandardMaterial({ color: 0x2a2626, roughness: .9 }),
     rug: new THREE.MeshStandardMaterial({ map: rug, roughness: 1 }),
     books: new THREE.MeshStandardMaterial({ map: booksTex, roughness: .9 }),
-    glass: new THREE.MeshBasicMaterial({ color: 0x24305e }),
+    glass: new THREE.MeshBasicMaterial({ color: 0x1a2448 }),
   };
   const box = (w, h, d, m) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.castShadow = o.receiveShadow = true; return o; };
   const cyl = (rt, rb, h, m, s = 20) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, s), m); o.castShadow = o.receiveShadow = true; return o; };
@@ -189,18 +201,18 @@ export function createWorld(canvas, opts) {
   });
 
   // ------------------------------------------------ lights
-  scene.add(new THREE.HemisphereLight(0x6f78b8, 0x2a140a, .55));
+  scene.add(new THREE.HemisphereLight(0x3a4470, 0x120806, .3)); // just enough to find the walls; candles and the moon do the rest
   const candleLights = [];
   const point = (color, intensity, dist, x, y, z, shadow) => {
     const l = new THREE.PointLight(color, intensity, dist, 1.6); l.position.set(x, y, z);
     if (shadow) { l.castShadow = true; l.shadow.mapSize.set(512, 512); l.shadow.bias = -.003; }
     scene.add(l); return l;
   };
-  const chandelier = point(0xffc277, 18, 12, 0, 3.1, 6.5, false);
+  const chandelier = point(0xffa955, 24, 11, 0, 2.55, 6.5, true); // below the shades, so they are lit from inside without glaring
   const dinA = point(0xffb45a, 9, 9, -.9, 1.6, -2, true); candleLights.push(dinA);
   const dinB = point(0xffb45a, 9, 9, .9, 1.6, -2, false); candleLights.push(dinB);
-  const fire = point(0xff6a2a, 10, 7, -4.3, .8, -2, false);
-  const lamp = point(0xffc890, 9, 7, 8.2, 1.5, 5.4, true);
+  const fire = point(0xff5a20, 8, 6, -4.3, .6, -2, false);
+  const lamp = point(0xffc890, 6, 5, 8.2, 1.5, 5.4, true);
   const pianoLight = point(0x9fb4ff, 0, 5, 3.2, 1.8, -4.4, false);
   // moonlit windows
   const windowAt = (x, z, ry) => {
@@ -208,7 +220,7 @@ export function createWorld(canvas, opts) {
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.2), M.glass); g.add(pane);
     [[0, 1.12, 1.4, .1], [0, -1.12, 1.4, .1], [-.62, 0, .1, 2.3], [.62, 0, .1, 2.3], [0, 0, .06, 2.2], [0, .3, 1.2, .06]].forEach(([a, b, w, h]) => { const m = box(w, h, .08, M.darkwood); m.position.set(a, b, .02); g.add(m); });
     at(g, x, 2.2, z, ry);
-    const moon = new THREE.SpotLight(0x7f8fe0, 6, 10, .6, .8); moon.position.set(x - Math.sin(ry) * .2, 3.2, z - Math.cos(ry) * .2);
+    const moon = new THREE.SpotLight(0x6f86d8, 4.5, 11, .5, .7); moon.position.set(x - Math.sin(ry) * .2, 3.2, z - Math.cos(ry) * .2);
     moon.target.position.set(x + Math.sin(ry) * 3, 0, z + Math.cos(ry) * 3); scene.add(moon, moon.target);
   };
   windowAt(-3.98, 7, Math.PI / 2); windowAt(9.98, 0, 0); windowAt(-1.5, -5.98, 0); windowAt(1.5, -5.98, 0); windowAt(7, 8.98, Math.PI);
@@ -230,7 +242,10 @@ export function createWorld(canvas, opts) {
     const f = new THREE.Mesh(new THREE.SphereGeometry(.022, 8, 8), M.flame); f.scale.y = 2; f.position.set(Math.cos(a) * .6, .19, Math.sin(a) * .6); cg.add(f); flames.push(f);
   }
   at(cg, 0, 3.05, 6.5);
-  place("Chandelier_01", { x: 0, y: 4, z: 6.5, height: 1.3, anchor: "top", hide: [cg] });
+  place("Chandelier_01", { x: 0, y: 4, z: 6.5, height: 1.3, anchor: "top", tint: 0x7a6c5c, hide: [cg] }).then((r) => {
+    // old, yellowed shades: no glowing white lamps
+    r?.holder.traverse((m) => { if (m.isMesh) [].concat(m.material).forEach((mt) => { if (mt.emissive) mt.emissiveIntensity *= .2; mt.transparent = false; }); });
+  });
   const door = box(1.8, 2.8, .12, M.darkwood); at(door, 0, 1.4, 9.95);
   [-.45, .45].forEach((x) => { const pn = box(.6, 1, .04, M.wood); at(pn, x, 1.9, 9.88); const pn2 = box(.6, .9, .04, M.wood); at(pn2, x, .7, 9.88); });
   const rugMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.6), M.rug); rugMesh.rotation.x = -Math.PI / 2; at(rugMesh, 0, .005, 7);
@@ -245,7 +260,7 @@ export function createWorld(canvas, opts) {
   });
   place("ornate_mirror_01", { x: -3.96, y: 2.1, z: 8.8, ry: Math.PI / 2, height: 1.3, anchor: "center", against: ["x-", -3.98] });
   // portraits hang in carved frames; the canvas sits halfway into the frame's depth
-  const framed = (pic, fr, x, y, z, ry, wall) => place("fancy_picture_frame_01", { x, y, z, ry, rz: Math.PI / 2, height: 1.32, anchor: "center", against: wall, hide: [fr] }).then((r) => {
+  const framed = (pic, fr, x, y, z, ry, wall) => place("fancy_picture_frame_01", { x, y, z, ry, rz: Math.PI / 2, height: 1.32, anchor: "center", against: wall, tint: 0x6a5a48, hide: [fr] }).then((r) => {
     if (!r) return;
     const [axis, sign] = [wall[0][0], wall[0][1]];
     pic.position[axis] = (r.box.min[axis] + r.box.max[axis]) / 2 + (sign === "+" ? -.005 : .005);
@@ -260,7 +275,7 @@ export function createWorld(canvas, opts) {
   // ------------------------------------------------ dining room
   const tableTop = box(4.3, .07, 1.5, M.cloth); at(tableTop, 0, .8, -2);
   const tableLegs = [[-2, -2.6], [2, -2.6], [-2, -1.4], [2, -1.4]].map(([x, z]) => at(box(.09, .78, .09, M.darkwood), x, .39, z));
-  const runner = box(4, .005, .4, new THREE.MeshStandardMaterial({ color: 0x5a1220, roughness: 1 })); at(runner, 0, .84, -2);
+  const runner = box(4, .005, .4, new THREE.MeshStandardMaterial({ color: 0x2a0a0e, roughness: 1 })); at(runner, 0, .84, -2);
   // two tables end to end make the long banquet table; top at the old cloth height so candles and the guest list still sit on it
   [-1.1, 1.1].forEach((x) => place("dining_table", { x, z: -2, size: [2.2, .835, 1.5], hide: [tableTop, ...tableLegs] }).then((r) => {
     if (!r) return;
@@ -278,8 +293,8 @@ export function createWorld(canvas, opts) {
   };
   // ghosts: a sheet over a head and shoulders, folds that deepen toward a ragged hem
   const ghostGeo = (() => {
-    const prof = [[0, 1.46], [.06, 1.455], [.11, 1.43], [.15, 1.39], [.17, 1.33], [.165, 1.26], [.15, 1.2], [.17, 1.15], [.24, 1.09],
-      [.29, 1.0], [.31, .9], [.33, .78], [.36, .64], [.39, .5], [.42, .38], [.44, .3]];
+    const prof = [[0, 1.56], [.05, 1.55], [.09, 1.52], [.125, 1.47], [.14, 1.4], [.14, 1.32], [.13, 1.25], [.12, 1.2], [.16, 1.15], [.23, 1.09],
+      [.27, 1.0], [.28, .9], [.29, .78], [.31, .64], [.34, .5], [.37, .36], [.4, .2], [.42, .08]];
     const geo = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 72);
     const pos = geo.attributes.position, v = new THREE.Vector3();
     for (let i = 0; i < pos.count; i++) {
@@ -287,6 +302,8 @@ export function createWorld(canvas, opts) {
       const a = Math.atan2(v.z, v.x), below = THREE.MathUtils.clamp((1.12 - v.y) / .82, 0, 1), hem = THREE.MathUtils.clamp((.48 - v.y) / .18, 0, 1);
       const fold = Math.sin(a * 9 + Math.sin(a * 3) * 1.5) * .11 * below ** 1.4 + Math.sin(a * 17) * .03 * below;
       v.x *= 1 + fold; v.z *= 1 + fold;
+      const head = THREE.MathUtils.clamp((v.y - 1.2) / .36, 0, 1); // the head leans forward and to one side, like something tired of waiting
+      v.z += head * head * .05; v.x += head * .018 + Math.sin(a * 2 + 1) * .012 * head;
       v.y -= ((Math.sin(a * 7) * .5 + .5) * .09 + Math.sin(a * 13) * .02) * hem;
       pos.setXYZ(i, v.x, v.y, v.z);
     }
@@ -294,29 +311,42 @@ export function createWorld(canvas, opts) {
   })();
   // translucent cloth: the hem drifts in a slow draught and the edges glow (a fresnel rim), one shader for every ghost
   const ghostTime = { value: 0 };
-  const ghostMaterial = ({ color = 0xe8ecf6, emissive = 0x28304a, emissiveIntensity = .8, rim = 0x9fb4ff, opacity = .9 } = {}) => {
-    const mat = new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity, roughness: .9, transparent: true, opacity, envMapIntensity: ENV });
-    const phase = { value: Math.random() * 10 }, rimColor = { value: new THREE.Color(rim) };
+  // Cold, half-there cloth: the body fades toward a hem that frays into nothing, the edges glow like breath on glass,
+  // and uFade lets a ghost thin out and come back. Eyes are soft hollows, not cut-out circles.
+  const ghostMaterial = ({ color = 0x6f7a90, emissive = 0x0c1222, emissiveIntensity = .6, rim = 0x7d98ff, opacity = .42 } = {}) => {
+    const mat = new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity, roughness: .95, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: ENV });
+    const phase = { value: Math.random() * 10 }, rimColor = { value: new THREE.Color(rim) }, fade = { value: 1 };
+    mat.userData.fade = fade;
     mat.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, { uTime: ghostTime, uPhase: phase, uRim: rimColor });
-      sh.vertexShader = "uniform float uTime;\nuniform float uPhase;\n" + sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
+      Object.assign(sh.uniforms, { uTime: ghostTime, uPhase: phase, uRim: rimColor, uFade: fade });
+      sh.vertexShader = "uniform float uTime;\nuniform float uPhase;\nvarying vec3 vLocal;\n" + sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
         float hemK = smoothstep(1.0, 0.3, position.y), ang = atan(position.z, position.x);
-        transformed.xz += normalize(position.xz + 1e-5) * sin(uTime * 1.6 + uPhase + ang * 3.0 + position.y * 6.0) * 0.022 * hemK;
-        transformed.y += sin(uTime * 2.1 + uPhase + ang * 5.0) * 0.018 * hemK * hemK;`);
-      sh.fragmentShader = "uniform vec3 uRim;\n" + sh.fragmentShader.replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
-        totalEmissiveRadiance += uRim * pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 2.2) * 0.9;`);
+        transformed.xz += normalize(position.xz + 1e-5) * sin(uTime * 1.1 + uPhase + ang * 3.0 + position.y * 6.0) * 0.03 * hemK;
+        transformed.y += sin(uTime * 1.5 + uPhase + ang * 5.0) * 0.02 * hemK * hemK;
+        vLocal = position;`);
+      sh.fragmentShader = "uniform vec3 uRim;\nuniform float uTime;\nuniform float uPhase;\nuniform float uFade;\nvarying vec3 vLocal;\n" +
+        "float gh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n" +
+        "float gn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(gh(i),gh(i+vec2(1,0)),f.x),mix(gh(i+vec2(0,1)),gh(i+vec2(1,1)),f.x),f.y);}\n" +
+        sh.fragmentShader
+          .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+        totalEmissiveRadiance += uRim * pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 2.0) * 0.75;`)
+          .replace("#include <alphatest_fragment>", `#include <alphatest_fragment>
+        float a = atan(vLocal.z, vLocal.x);
+        float tatter = gn(vec2(a * 4.0, vLocal.y * 9.0 - uTime * 0.25 + uPhase));            // ragged, slowly crawling holes
+        float body = smoothstep(0.05, 0.75, vLocal.y + (tatter - 0.5) * 0.35);              // fades out toward the hem
+        float eyes = 0.0;                                                                    // two soft dark hollows on the face
+        for (int k = 0; k < 2; k++) { vec2 c = vec2(k == 0 ? -0.052 : 0.052, 1.37); vec2 d = vec2(vLocal.x - c.x, (vLocal.y - c.y) * 0.42);
+          eyes += (1.0 - smoothstep(0.006, 0.03, length(d))) * smoothstep(0.0, 0.08, vLocal.z); } // long, drooping, soft-edged
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.0), clamp(eyes, 0.0, 1.0) * 0.85);
+        diffuseColor.a = mix(diffuseColor.a, 0.95, clamp(eyes, 0.0, 1.0) * 0.8); // the hollows stay dark even where the cloth is thin
+        diffuseColor.a *= body * uFade * (0.85 + 0.15 * sin(uTime * 3.0 + uPhase));
+        if (diffuseColor.a < 0.01) discard;`);
     };
-    mat.customProgramCacheKey = () => "ghost";
+    mat.customProgramCacheKey = () => "ghost2";
     return mat;
   };
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x050508, polygonOffset: true, polygonOffsetFactor: -2 });
-  const eyeGeo = new THREE.CircleGeometry(.03, 24);
   const ghost = (mat = ghostMaterial()) => {
-    const g = new THREE.Group(), m = new THREE.Mesh(ghostGeo, mat); g.add(m);
-    [-.06, .06].forEach((x) => { // hollow oval eyes that follow the curve of the head
-      const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.set(1, 1.55, 1);
-      e.position.set(x, 1.32, Math.sqrt(.168 ** 2 - x * x) + .004); e.rotation.set(-.08, Math.atan2(x, .16), x < 0 ? .12 : -.12); m.add(e);
-    });
+    const g = new THREE.Group(), m = new THREE.Mesh(ghostGeo, mat); m.renderOrder = 2; g.add(m);
     return g;
   };
   const SEATS = [
@@ -325,8 +355,8 @@ export function createWorld(canvas, opts) {
   ];
   const ghosts = SEATS.map((s, i) => {
     chair(s.x, s.z, s.face);
-    const gh = ghost(); gh.userData = { base: Math.atan2(0 - s.x, -2 - s.z), phase: i * 1.3 };
-    gh.scale.setScalar(.94 + (i % 3) * .04); gh.children[0].rotation.z = i % 2 ? .04 : -.04; // not six copies of one sheet
+    const gh = ghost(); gh.userData = { base: Math.atan2(0 - s.x, -2 - s.z), phase: i * 1.3, fadeAt: 8 + i * 7 + Math.random() * 10, fadeT: -1 };
+    gh.scale.setScalar(.94 + (i % 3) * .04); gh.children[0].rotation.set(.12 + (i % 3) * .04, 0, i % 2 ? .05 : -.05); // heads bowed over their plates; not six copies
     // drawn in toward the table, so each sheet sits in front of its chair back rather than through it
     gh.rotation.y = gh.userData.base; return at(gh, s.x * .92, 0, -2 + (s.z + 2) * .82, gh.userData.base);
   });
@@ -354,7 +384,12 @@ export function createWorld(canvas, opts) {
   const embers = new THREE.Mesh(new THREE.SphereGeometry(.14, 12, 8), new THREE.MeshBasicMaterial({ color: 0xff5a1a })); embers.scale.y = .25; embers.position.set(.15, .06, 0); fp.add(embers);
   at(fp, -4.7, 0, -2);
   place("antique_ceramic_vase_01", { x: -4.62, y: 1.4, z: -1.05, height: .32 });
-  place("GothicCabinet_01", { x: 4.6, z: -1.6, ry: -Math.PI / 2, width: 1.5, against: ["x+", 4.97] });
+  place("GothicCabinet_01", { x: 4.6, z: -1.6, ry: -Math.PI / 2, width: 1.5, against: ["x+", 4.97] }).then((r) => {
+    if (r) place("marble_bust_01", { x: (r.box.min.x + r.box.max.x) / 2, y: r.box.max.y, z: -1.6, ry: -Math.PI / 2 - .5, height: .5 }); // she watches the table
+  });
+  [[-1.55, -2.42, .3], [.25, -1.58, 2.9], [1.45, -2.42, -.2]].forEach(([x, z, ry]) => place("brass_goblets", { x, y: .838, z, ry, height: .17 }));
+  place("lantern_chandelier_01", { x: 0, y: 4, z: -2, height: 1.0, anchor: "top", tint: 0x6a5a48 });
+  place("brass_candleholders", { x: -4.6, y: 1.4, z: -2.55, ry: Math.PI / 2, height: .3, tint: 0x8a7458 });
   // piano and bench (seat 7): an upright in black lacquer, 52 keys drawn on a canvas
   const lacquer = new THREE.MeshPhysicalMaterial({ color: 0x050406, roughness: .3, clearcoat: 1, clearcoatRoughness: .1, envMapIntensity: .25 });
   const keyTex = canvasTex(1024, 64, (g, w, h) => {
@@ -399,7 +434,7 @@ export function createWorld(canvas, opts) {
   const lampG = new THREE.Group();
   lampG.add(put(cyl(.08, .1, .04, M.brass), 0, .02, 0));
   lampG.add(put(cyl(.015, .015, .4, M.brass), 0, .22, 0));
-  const shade = new THREE.Mesh(new THREE.ConeGeometry(.18, .2, 20, 1, true), new THREE.MeshStandardMaterial({ color: 0x2f5a3a, emissive: 0x204020, side: THREE.DoubleSide })); shade.position.y = .45; lampG.add(shade);
+  const shade = new THREE.Mesh(new THREE.ConeGeometry(.18, .2, 20, 1, true), new THREE.MeshStandardMaterial({ color: 0x1e3022, emissive: 0x0c1608, side: THREE.DoubleSide })); shade.position.y = .45; lampG.add(shade);
   at(lampG, 8.2, .82, 5.4);
   const shelf = box(.5, 3.4, 5.6, M.darkwood); at(shelf, 9.75, 1.7, 6);
   const bookFace = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 3.1), M.books); at(bookFace, 9.49, 1.75, 6, -Math.PI / 2);
@@ -420,6 +455,42 @@ export function createWorld(canvas, opts) {
   [[-.48, -.42], [.48, -.42], [-.48, .42], [.48, .42]].forEach(([a, b]) => sideTable.add(put(box(.06, .75, .06, M.darkwood), a, .375, b)));
   at(sideTable, 5, 0, 3.55);
   place("ClassicNightstand_01", { x: 5, z: 3.55, size: [.62, .78, .5], hide: [sideTable] });
+  place("gothic_statue", { x: 4.7, z: 8.35, ry: Math.PI * .75, height: 1.55, tint: 0x8c8c94 });
+  const statueLight = point(0x8fa8ff, 1.1, 3, 5.3, .55, 7.7, false); // lit from below, like a grave at night
+  let rocker = null;
+  place("Rockingchair_01", { x: 8.5, z: 3.75, ry: -Math.PI * .8, height: 1.0 }).then((r) => { if (r) rocker = r.holder; });
+  const seascape = canvasTex(256, 168, (g, w, h) => {
+    const sky = g.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, "#0b0e18"); sky.addColorStop(.55, "#2a3346"); sky.addColorStop(.56, "#0f141e"); sky.addColorStop(1, "#05070b");
+    g.fillStyle = sky; g.fillRect(0, 0, w, h);
+    g.fillStyle = "rgba(220,225,235,.5)"; g.beginPath(); g.arc(w * .72, h * .26, 9, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = "rgba(150,165,190,.25)"; for (let i = 0; i < 14; i++) { const y = h * (.6 + i * .028); g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 16) g.lineTo(x, y + Math.sin(x * .07 + i) * 2); g.stroke(); }
+    g.fillStyle = "#020305"; g.beginPath(); g.moveTo(w * .1, h * .62); g.lineTo(w * .16, h * .4); g.lineTo(w * .2, h * .62); g.fill(); // a lone mast
+  });
+  place("hanging_picture_frame_02", { x: 7, y: 2.2, z: 3.03, height: .62, anchor: "center", against: ["z-", 3.02] }).then((r) => {
+    if (!r) return;
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry((r.box.max.x - r.box.min.x) * .82, (r.box.max.y - r.box.min.y) * .75), new THREE.MeshStandardMaterial({ map: seascape, roughness: 1 }));
+    at(pic, 7, (r.box.min.y + r.box.max.y) / 2 - .015, r.box.max.z + .003);
+  });
+
+  // ------------------------------------------------ cobwebs in the upper corners and on the chandeliers
+  const webTex = canvasTex(256, 256, (g, w, h) => {
+    g.strokeStyle = "rgba(220,225,235,.55)"; g.lineWidth = 1;
+    const spokes = 9;
+    for (let k = 0; k <= spokes; k++) { const a = k / spokes * Math.PI / 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * w * 1.2, Math.sin(a) * h * 1.2); g.stroke(); }
+    for (let r = 14; r < w; r += 13 + Math.random() * 8) {
+      g.beginPath();
+      for (let k = 0; k <= spokes; k++) { const a = k / spokes * Math.PI / 2, rr = r * (.92 + Math.random() * .1), sag = k && k < spokes ? r * .06 : 0;
+        const x = Math.cos(a) * rr - Math.cos(a) * sag, y = Math.sin(a) * rr - Math.sin(a) * sag; k ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke();
+    }
+  });
+  const webMat = new THREE.MeshBasicMaterial({ map: webTex, transparent: true, opacity: .2, depthWrite: false, side: THREE.DoubleSide, fog: true });
+  // a web across each upper corner, angled 45 degrees between the two walls
+  [[-4, 10, Math.PI * .75], [4, 10, -Math.PI * .75], [-4, 2.01, Math.PI * .25], [-5, -6, Math.PI * .25], [5, -6, -Math.PI * .25], [-5, 2, Math.PI * .75],
+   [10, 3, -Math.PI * .25], [10, 9, -Math.PI * .75], [4.01, 9, Math.PI * .75]].forEach(([x, z, ry]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), webMat);
+    m.position.set(x + Math.sin(ry) * .46, 3.54, z + Math.cos(ry) * .46); m.rotation.set(-Math.PI / 4, ry + Math.PI, 0, "YXZ"); scene.add(m);
+  });
 
   // ------------------------------------------------ the four objects that remember
   const OBJ = {};
@@ -508,6 +579,31 @@ export function createWorld(canvas, opts) {
   petalGeo.setAttribute("position", new THREE.BufferAttribute(ppos, 3));
   const petals = new THREE.Points(petalGeo, new THREE.PointsMaterial({ color: 0xf29a1d, map: dot, size: .045, transparent: true, opacity: .95, depthWrite: false }));
   petals.visible = false; scene.add(petals);
+
+  // ------------------------------------------------ post-processing
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .45, .5, .95); // only bright things (flames, ghost rims, moon) bloom
+  composer.addPass(bloom);
+  const grade = new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uDread: { value: 0 } },
+    vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; uniform float uDread; varying vec2 vUv;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+      void main() {
+        vec2 c = vUv - 0.5; float r = length(c);
+        // a touch of lens fringing toward the edges
+        vec3 col = vec3(texture2D(tDiffuse, vUv + c * 0.004 * r).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - c * 0.004 * r).b);
+        float l = dot(col, vec3(0.299, 0.587, 0.114));
+        col = mix(vec3(l), col, 0.62 - 0.25 * uDread);                       // drained colour; more so as the candles go out
+        col *= mix(vec3(0.82, 0.9, 1.12), vec3(1.06, 0.96, 0.86), smoothstep(0.05, 0.6, l)); // cold shadows, warm candlelight
+        col *= 1.0 - smoothstep(0.4, 0.9, r) * (0.62 + 0.25 * uDread);       // heavy vignette, heavier as the candles die
+        col += (h(vUv * vec2(1920.0, 1080.0) + fract(uTime * 7.3)) - 0.5) * 0.045; // film grain
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+  });
+  composer.addPass(grade);
+  composer.addPass(new OutputPass());
 
   // ------------------------------------------------ player and controls
   dim(scene);
@@ -647,21 +743,34 @@ export function createWorld(canvas, opts) {
     candles.forEach((f, i) => { f.visible = i < candleCount; f.scale.y = 2 + Math.sin(t * 12 + i) * .2; });
     flames.forEach((f, i) => { f.scale.y = 2 + Math.sin(t * 11 + i * 2) * .25; });
     candleLights.forEach((l, i) => { l.intensity = (9 + Math.sin(t * 9 + i) * .6 + Math.sin(t * 23 + i * 3) * .4) * (.25 + .75 * lit) - gust * 4; });
-    chandelier.intensity = 16 + Math.sin(t * 7) * .8 + Math.sin(t * 17) * .5;
+    const stutter = Math.sin(t * .37) > .985 ? .25 + .75 * Math.abs(Math.sin(t * 41)) : 1;
+    chandelier.intensity = (24 + Math.sin(t * 7) * 1.2 + Math.sin(t * 17) * .8) * stutter;
     fire.intensity = 9 + Math.sin(t * 13) * 1.5 + Math.sin(t * 29) * 1;
     gust = Math.max(0, gust - dt * .6);
-    // ghosts sway; after "face" they turn to the bench
-    ghostTime.value = t;
+    // ghosts sway and now and then thin out and come back; one that you walk close to turns its head toward you.
+    // After "face" they all turn to the bench.
+    ghostTime.value = t; grade.uniforms.uTime.value = t; grade.uniforms.uDread.value = 1 - lit;
     ghosts.forEach((g) => {
+      const u = g.userData, dx = player.x - g.position.x, dz = player.z - g.position.z, near = Math.hypot(dx, dz);
       const target = Math.atan2(SEAT7.x - g.position.x, SEAT7.z - g.position.z);
-      const want = g.userData.base + (target - g.userData.base) * turn;
-      g.rotation.y += (want - g.rotation.y) * Math.min(1, dt * 2);
-      g.position.y = .04 + Math.sin(t * 1.3 + g.userData.phase) * .025; // they float, the hem never quite touches the floor
+      let want = u.base + (target - u.base) * turn;
+      if (!turn && near < 2.4 && !cinematic) want = u.base + THREE.MathUtils.clamp(Math.atan2(dx, dz) - u.base, -1.2, 1.2) * (1 - near / 2.4) * .9;
+      g.rotation.y += (want - g.rotation.y) * Math.min(1, dt * (near < 2.4 ? .8 : 2));
+      g.position.y = .04 + Math.sin(t * .9 + u.phase) * .03; // they float, the hem never quite touches the floor
+      if (t > u.fadeAt && u.fadeT < 0) u.fadeT = 0;
+      if (u.fadeT >= 0) {
+        u.fadeT += dt;
+        const f = u.fadeT < 1.2 ? 1 - u.fadeT / 1.2 * .9 : u.fadeT < 2.4 ? .1 : u.fadeT < 3.6 ? .1 + (u.fadeT - 2.4) / 1.2 * .9 : 1;
+        g.children[0].material.userData.fade.value = f;
+        if (u.fadeT > 3.6) { u.fadeT = -1; u.fadeAt = t + 14 + Math.random() * 22; }
+      }
     });
+    if (rocker) rocker.rotation.x = Math.sin(t * 1.1) * .07 * (.6 + .4 * Math.sin(t * .23)); // nobody is sitting in it
+    statueLight.intensity = 1.0 + Math.sin(t * 2.3) * .12;
     // remembering objects pulse until found
     for (const o of Object.values(OBJ)) {
       const p = o.done ? .25 : .7 + Math.sin(t * 2.4 + o.pos.x) * .3;
-      o.sprite.material.opacity = p; o.light.intensity = o.done ? .3 : 1 + p;
+      o.sprite.material.opacity = p * .55; o.light.intensity = o.done ? .15 : .4 + p * .4;
       o.sprite.position.y = o.pos.y + .25 + Math.sin(t * 1.7 + o.pos.z) * .04;
     }
     disc.rotation.y += dt * (opts.isSpinning?.() ? 3.5 : .1);
@@ -684,12 +793,13 @@ export function createWorld(canvas, opts) {
     if (endingT) endingT += dt;
     hover = enabled && !drag ? pick() : null;
     canvas.classList.toggle("hover", !!hover);
-    renderer.render(scene, camera);
+    composer.render(dt);
   }
 
   function resize() {
     const w = innerWidth, h = innerHeight;
-    renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < 760 ? 78 : 70; camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false); composer.setSize(w, h); bloom.resolution.set(w / 2, h / 2);
+    camera.aspect = w / h; camera.fov = w < 760 ? 78 : 70; camera.updateProjectionMatrix();
   }
   addEventListener("resize", resize); resize();
 

@@ -2,7 +2,7 @@
 
 All furniture models (`web/models/*.glb`) and floor/wall textures (`web/textures/*.jpg`) come from
 [Poly Haven](https://polyhaven.com) and are [CC0](https://polyhaven.com/license) (public domain, no attribution required).
-Downloaded 2026-10-27 at 1k resolution.
+Downloaded 2026-10-27 and 2026-10-28 (the seven added in the second batch) at 1k resolution.
 
 | File | Poly Haven asset | Used for |
 |---|---|---|
@@ -20,6 +20,13 @@ Downloaded 2026-10-27 at 1k resolution.
 | ArmChair_01.glb | [Arm Chair 01](https://polyhaven.com/a/ArmChair_01) | study armchair |
 | WoodenTable_02.glb | [Wooden Table 02](https://polyhaven.com/a/WoodenTable_02) | little table by the armchair |
 | ClassicNightstand_01.glb | [Classic Nightstand 01](https://polyhaven.com/a/ClassicNightstand_01) | gramophone stand |
+| brass_candleholders.glb | [Brass Candleholders](https://polyhaven.com/a/brass_candleholders) | candleholders on the dining room mantel |
+| brass_goblets.glb | [Brass Goblets](https://polyhaven.com/a/brass_goblets) | goblets set out on the banquet table |
+| lantern_chandelier_01.glb | [Lantern Chandelier 01](https://polyhaven.com/a/lantern_chandelier_01) | lantern over the dining table |
+| marble_bust_01.glb | [Marble Bust 01](https://polyhaven.com/a/marble_bust_01) | bust on the dining room cabinet |
+| gothic_statue.glb | [Gothic Statue](https://polyhaven.com/a/gothic_statue) | statue in the study corner, lit from below |
+| Rockingchair_01.glb | [Rockingchair 01](https://polyhaven.com/a/Rockingchair_01) | rocking chair in the study (rocks on its own) |
+| hanging_picture_frame_02.glb | [Hanging Picture Frame 02](https://polyhaven.com/a/hanging_picture_frame_02) | seascape frame in the study |
 | herringbone_parquet_*.jpg | [Herringbone Parquet](https://polyhaven.com/a/herringbone_parquet) | floors |
 | decrepit_wallpaper_*.jpg | [Decrepit Wallpaper](https://polyhaven.com/a/decrepit_wallpaper) | walls |
 | dark_paneled_wood_*.jpg | [Dark Paneled Wood](https://polyhaven.com/a/dark_paneled_wood) | wainscot |
@@ -30,5 +37,5 @@ Compression (`@gltf-transform/cli@4.5.1`):
 npx @gltf-transform/cli@4.5.1 optimize <asset>_1k.gltf web/models/<asset>.glb --compress meshopt --texture-compress webp --texture-size 1024
 ```
 
-Small props (clock, vase, books, frame) use `--texture-size 512`; `dining_table` also uses `--join false --flatten false`
+Small props (clock, vase, books, frame, goblets, bust, hanging frame) use `--texture-size 512`; `dining_table` also uses `--join false --flatten false`
 so its cloth stays a separate mesh. Textures were resized with macOS `sips` (diffuse 1024 px, normal and roughness 512 px, JPEG quality 72).
