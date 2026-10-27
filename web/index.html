@@ -9,189 +9,139 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #120b12;
-  --wall: #2a1426;
-  --wood: #3b2117;
-  --cloth: #e9dfcf;
+  --bg: #0c070c;
   --ink: #efe6d6;
   --muted: #a8968a;
   --gold: #e8b04a;
   --marigold: #f29a1d;
-  --blood: #8e2a2a;
-  --panel: rgba(24, 14, 22, .92);
-  --line: rgba(232, 176, 74, .25);
+  --panel: rgba(20, 11, 18, .88);
+  --line: rgba(232, 176, 74, .28);
   --serif: "Cormorant Garamond", Georgia, serif;
   --period: "IM Fell English", Georgia, serif;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
-body {
-  background: radial-gradient(ellipse at 50% 20%, #3a1a33 0%, var(--bg) 60%) fixed, var(--bg);
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1.5;
-  overflow-x: hidden;
-}
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--ink); font-family: var(--serif); font-size: 18px; line-height: 1.5; }
 button { font: inherit; color: inherit; cursor: pointer; }
 .hidden { display: none !important; }
+canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 
-/* header */
+/* HUD */
 header {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 14px 24px; border-bottom: 1px solid var(--line);
+  position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding: 14px 20px; pointer-events: none; background: linear-gradient(rgba(8,4,8,.75), transparent);
 }
-h1 { font-family: var(--period); font-weight: 400; font-size: 30px; margin: 0; letter-spacing: .5px; }
+header > * { pointer-events: auto; }
+h1 { font-family: var(--period); font-weight: 400; font-size: 30px; margin: 0; text-shadow: 0 2px 12px #000; }
 .sub { color: var(--muted); font-style: italic; font-size: 15px; }
-.candles { display: flex; gap: 6px; align-items: flex-end; }
-.candle { width: 8px; height: 26px; background: linear-gradient(#f4ecdc, #cbbfa8); border-radius: 2px; position: relative; }
+.candles { display: flex; gap: 6px; align-items: flex-end; padding-top: 12px; }
+.candle { width: 8px; height: 24px; background: linear-gradient(#f4ecdc, #cbbfa8); border-radius: 2px; position: relative; }
 .candle::before {
   content: ""; position: absolute; left: 50%; top: -12px; width: 8px; height: 12px; transform: translateX(-50%);
   background: radial-gradient(ellipse at 50% 70%, #fff6c8 0%, var(--gold) 45%, transparent 72%);
   border-radius: 50% 50% 40% 40%; animation: flicker 1.6s infinite alternate;
 }
 .candle.out::before { background: none; }
-.candle.out::after {
-  content: ""; position: absolute; left: 50%; top: -18px; width: 2px; height: 14px; transform: translateX(-50%);
-  background: linear-gradient(transparent, rgba(200,200,200,.5)); animation: smoke 2s ease-out forwards;
-}
-@keyframes flicker { from { opacity: .8; transform: translateX(-50%) scale(1); } to { opacity: 1; transform: translateX(-50%) scale(1.15, .95); } }
-@keyframes smoke { from { opacity: .8; } to { opacity: 0; transform: translate(-50%, -10px); } }
+@keyframes flicker { from { opacity: .8; } to { opacity: 1; transform: translateX(-50%) scale(1.15, .95); } }
 
-/* layout */
-main {
-  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px;
-  padding: 20px 24px; max-width: 1280px; margin: 0 auto;
+.hint {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: var(--muted); font-style: italic; font-size: 16px;
+  text-shadow: 0 2px 8px #000; pointer-events: none; text-align: center; padding: 0 16px; transition: opacity .6s;
 }
-@media (max-width: 860px) {
-  main { grid-template-columns: 1fr; padding: 16px; }
-  header { padding: 12px 16px; flex-wrap: wrap; }
-  h1 { font-size: 24px; }
+.tag {
+  position: fixed; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+  padding: 2px 10px; font-family: var(--period); font-size: 15px; transform: translate(-50%, -140%); white-space: nowrap;
 }
 
-/* scene */
-.scene {
-  position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
-  background:
-    repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 2px, transparent 2px 46px),
-    linear-gradient(var(--wall) 0 52%, var(--wood) 52% 100%);
-  min-height: 460px; display: flex; flex-direction: column;
-}
-.chandelier { text-align: center; padding-top: 10px; color: var(--gold); opacity: .8; font-size: 13px; letter-spacing: 6px; }
-.table {
-  margin: auto 18px 22px; background: var(--cloth); border-radius: 10px;
-  background-image: radial-gradient(circle, rgba(0,0,0,.08) 1.2px, transparent 1.6px); background-size: 12px 12px;
-  box-shadow: 0 18px 40px rgba(0,0,0,.6), inset 0 0 40px rgba(120,80,40,.25);
-  padding: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; position: relative;
-}
-@media (max-width: 520px) { .table { grid-template-columns: repeat(2, 1fr); margin: auto 12px 16px; } }
-.obj {
-  background: rgba(30,18,26,.9); border: 1px solid rgba(232,176,74,.35); border-radius: 6px;
-  padding: 10px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  transition: transform .2s, box-shadow .2s, border-color .2s;
-}
-.obj:hover, .obj:focus-visible { transform: translateY(-3px); box-shadow: 0 0 22px rgba(232,176,74,.35); outline: none; }
-.obj.active { border-color: var(--gold); box-shadow: 0 0 26px rgba(232,176,74,.5); }
-.obj svg { width: 56px; height: 56px; }
-.obj span { font-family: var(--period); font-size: 15px; }
-.obj small { color: var(--muted); font-size: 12px; }
-.seat7 {
-  margin: 0 18px 14px; display: flex; align-items: center; justify-content: center; gap: 10px;
-  color: var(--muted); font-style: italic; font-size: 15px;
-}
-.seat7 .chair {
-  width: 34px; height: 34px; border: 2px solid rgba(232,176,74,.4); border-radius: 4px 4px 8px 8px;
-  animation: breathe 5s infinite ease-in-out;
-}
-@keyframes breathe { 50% { box-shadow: 0 0 18px rgba(200,200,255,.25); } }
-
-/* chat */
+/* chat panel */
 .panel {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
-  display: flex; flex-direction: column; min-height: 460px; max-height: 72vh;
+  position: fixed; top: 84px; right: 20px; bottom: 20px; width: min(400px, calc(100vw - 40px));
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; display: flex; flex-direction: column;
+  backdrop-filter: blur(6px); box-shadow: 0 10px 40px rgba(0,0,0,.6);
 }
-@media (max-width: 860px) { .panel { max-height: none; min-height: 380px; } }
-.panel-head { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.panel-head { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
 .panel-head h2 { margin: 0; font-family: var(--period); font-weight: 400; font-size: 22px; }
 .panel-head p { margin: 0; color: var(--muted); font-size: 14px; font-style: italic; }
+.x { background: none; border: none; font-size: 22px; color: var(--muted); line-height: 1; padding: 0 4px; }
 .log { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-.msg { max-width: 92%; padding: 8px 12px; border-radius: 6px; }
+.msg { max-width: 92%; padding: 6px 10px; border-radius: 6px; }
 .msg.you { align-self: flex-end; background: rgba(232,176,74,.12); border: 1px solid var(--line); font-size: 16px; }
 .msg.them { align-self: flex-start; font-family: var(--period); font-size: 18px; }
-.msg.them.photo { color: #d9d9d9; }
-.msg.them.letter { color: #f1dfc0; font-style: italic; }
-.msg.them.record { color: #c9b8f0; letter-spacing: .3px; }
-.msg.them.guest_list { color: #e8e2d4; }
+.msg.photo { color: #dadada; }
+.msg.letter { color: #f1dfc0; font-style: italic; }
+.msg.record { color: #c9b8f0; }
+.msg.guest_list { color: #e8e2d4; }
 .msg.narrator { align-self: center; color: var(--muted); font-style: italic; font-size: 15px; text-align: center; }
 .msg.ink { animation: ink 2.4s ease-out; }
 @keyframes ink { 0% { filter: blur(0); color: #000; text-shadow: 0 0 8px #000; } 40% { filter: blur(2px); } 100% { filter: blur(0); } }
-.typing { opacity: .6; font-style: italic; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; }
-.chip {
-  background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 14px; color: var(--muted);
-}
+.chip { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; font-size: 14px; color: var(--muted); }
 .chip:hover { color: var(--ink); border-color: var(--gold); }
 form.ask { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
 form.ask input {
-  flex: 1; min-width: 0; background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: 4px;
+  flex: 1; min-width: 0; background: rgba(0,0,0,.4); border: 1px solid var(--line); border-radius: 4px;
   color: var(--ink); padding: 8px 10px; font: inherit; font-size: 16px;
 }
 form.ask input:focus { outline: 1px solid var(--gold); }
 .btn {
-  background: linear-gradient(#5a2a1a, #3a160f); border: 1px solid var(--gold); border-radius: 4px; padding: 8px 14px;
+  background: linear-gradient(#5a2a1a, #3a160f); border: 1px solid var(--gold); border-radius: 4px; padding: 7px 14px;
   font-family: var(--period); font-size: 16px; color: var(--ink);
 }
-.btn:disabled { opacity: .4; cursor: not-allowed; }
 .btn.marigold { background: linear-gradient(#b8640e, #7a3d06); border-color: var(--marigold); }
 
 /* journal */
+.dock { position: fixed; left: 20px; bottom: 20px; display: flex; gap: 8px; }
 .journal {
-  grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 12px; align-items: stretch;
+  position: fixed; left: 20px; bottom: 68px; width: min(420px, calc(100vw - 40px)); max-height: 60vh; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; backdrop-filter: blur(6px);
 }
-@media (max-width: 860px) { .journal { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.goal { border: 1px dashed var(--line); border-radius: 6px; padding: 10px 12px; font-size: 15px; }
-.goal h3 { margin: 0 0 4px; font-family: var(--period); font-weight: 400; font-size: 17px; display: flex; justify-content: space-between; }
-.goal ul { margin: 0; padding-left: 16px; color: var(--muted); font-size: 14px; }
-.goal.done { border-style: solid; border-color: var(--gold); }
+.goal { border-bottom: 1px dashed var(--line); padding: 6px 0 8px; }
+.goal:last-child { border-bottom: none; }
+.goal h3 { margin: 0; font-family: var(--period); font-weight: 400; font-size: 17px; display: flex; justify-content: space-between; }
+.goal ul { margin: 2px 0 0; padding-left: 16px; color: var(--muted); font-size: 14px; }
 .goal.done h3::after { content: "✦"; color: var(--gold); }
-.journal .btn { align-self: center; }
-@media (max-width: 860px) { .journal .btn { grid-column: 1 / -1; } }
-footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 16px 24px; font-style: italic; }
+.count { color: var(--gold); }
+
+/* mobile: panel becomes a bottom sheet */
+@media (max-width: 760px) {
+  header { padding: 10px 16px; }
+  h1 { font-size: 22px; }
+  .sub { font-size: 13px; }
+  .panel { top: auto; left: 0; right: 0; bottom: 0; width: 100%; height: 56vh; border-radius: 12px 12px 0 0; }
+  .dock { left: 16px; bottom: 16px; }
+  .hint { bottom: 70px; font-size: 15px; }
+  .journal { left: 16px; bottom: 62px; width: calc(100vw - 32px); }
+  .panel:not(.hidden) ~ .dock, .panel:not(.hidden) ~ .hint { display: none; }
+}
 
 /* overlays */
 .overlay {
-  position: fixed; inset: 0; background: rgba(8,4,8,.88); display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; background: rgba(6,3,6,.82); display: flex; align-items: center; justify-content: center;
   padding: 16px; z-index: 10; backdrop-filter: blur(3px);
 }
+.overlay.soft { background: rgba(6,3,6,.35); backdrop-filter: none; }
 .card {
   background: var(--panel); border: 1px solid var(--gold); border-radius: 8px; max-width: 560px; width: 100%;
   padding: 24px; max-height: 90vh; overflow-y: auto;
 }
 .card h2 { font-family: var(--period); font-weight: 400; margin-top: 0; font-size: 28px; }
 .card p { margin: 0 0 12px; }
-.slot { margin-bottom: 14px; }
+.slot { margin-bottom: 12px; }
 .slot label { display: block; font-family: var(--period); margin-bottom: 4px; }
 .slot select {
-  width: 100%; background: rgba(0,0,0,.4); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: inherit; font-size: 16px;
+  width: 100%; background: rgba(0,0,0,.45); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: inherit; font-size: 16px;
 }
 .feedback { min-height: 24px; color: var(--marigold); font-style: italic; }
 .ending { text-align: center; }
 .ending .line { opacity: 0; transition: opacity 1.6s; margin: 0 0 14px; }
 .ending .line.show { opacity: 1; }
 .ending .said { font-family: var(--period); font-size: 22px; color: var(--marigold); }
-.petals { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 11; }
-.petal {
-  position: absolute; top: -20px; width: 10px; height: 12px; background: var(--marigold); border-radius: 60% 0 60% 0;
-  animation: fall linear forwards; opacity: .9;
-}
-@keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
-
-/* photo figures turn as memory returns */
-.fig { transition: transform 2s ease; transform-box: fill-box; transform-origin: center bottom; }
-@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.note { position: fixed; bottom: 4px; right: 12px; font-size: 11px; color: rgba(168,150,138,.6); font-style: italic; pointer-events: none; }
+@media (max-width: 760px) { .note { display: none; } }
 </style>
 </head>
 <body>
+<canvas id="scene"></canvas>
 
 <header>
   <div>
@@ -201,44 +151,43 @@ footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 
   <div class="candles" id="candles" aria-label="Candles still burning"></div>
 </header>
 
-<main>
-  <section class="scene" aria-label="The dining table">
-    <div class="chandelier">✦ ✦ ✦ ✦ ✦</div>
-    <div class="table" id="table"></div>
-    <div class="seat7"><div class="chair" aria-hidden="true"></div> Seat 7 is empty. It always is.</div>
-  </section>
+<div class="tag hidden" id="tag"></div>
 
-  <section class="panel" aria-live="polite">
-    <div class="panel-head">
-      <h2 id="who">Choose a memory</h2>
-      <p id="whoSub">Everything on this table remembers something. Nothing remembers everything.</p>
-    </div>
-    <div class="log" id="log"></div>
-    <div class="chips" id="chips"></div>
-    <form class="ask" id="ask">
-      <input id="q" autocomplete="off" placeholder="Ask the object a question…" disabled>
-      <button class="btn" id="send" disabled>Ask</button>
-    </form>
-  </section>
+<section class="panel hidden" id="panel" aria-live="polite">
+  <div class="panel-head">
+    <div><h2 id="who"></h2><p id="whoSub"></p></div>
+    <button class="x" id="closePanel" aria-label="Back to the table">×</button>
+  </div>
+  <div class="log" id="log"></div>
+  <div class="chips" id="chips"></div>
+  <form class="ask" id="ask">
+    <input id="q" autocomplete="off" placeholder="Ask a question…">
+    <button class="btn">Ask</button>
+  </form>
+</section>
 
-  <section class="journal" aria-label="What you have remembered">
-    <div class="goal" id="g-name"><h3>Her name</h3><ul></ul></div>
-    <div class="goal" id="g-face"><h3>Her face</h3><ul></ul></div>
-    <div class="goal" id="g-why"><h3>Why she was forgotten</h3><ul></ul></div>
-    <div class="goal" id="g-offering"><h3>What to place for her</h3><ul></ul></div>
-    <button class="btn marigold" id="ofrendaBtn">Set the ofrenda</button>
-  </section>
-</main>
+<div class="dock">
+  <button class="btn" id="journalBtn">Memories <span class="count" id="count">0/4</span></button>
+  <button class="btn marigold" id="ofrendaBtn">Set the ofrenda</button>
+</div>
 
-<footer>Demo build: replies are scripted from the story's fact graph. In the full version, a fine-tuned open-weight model speaks for each object, and is graded on never leaking what it could not know.</footer>
+<section class="journal hidden" id="journal" aria-label="What you have remembered">
+  <div class="goal" id="g-name"><h3>Her name</h3><ul></ul></div>
+  <div class="goal" id="g-face"><h3>Her face</h3><ul></ul></div>
+  <div class="goal" id="g-why"><h3>Why she was forgotten</h3><ul></ul></div>
+  <div class="goal" id="g-offering"><h3>What to place for her</h3><ul></ul></div>
+</section>
+
+<div class="hint" id="hint">Six guests are already seated. Click something on the table.</div>
+<div class="note">Demo: replies are scripted from the story's fact graph. The full version uses a fine-tuned open-weight model.</div>
 
 <div class="overlay" id="intro">
   <div class="card">
     <h2>Every year, at midnight…</h2>
     <p>…the piano in the empty Whitcombe House plays a single bar, and stops.</p>
     <p>The dead return on these nights, if someone remembers them. An ofrenda lights the way: a photograph, a name, the things they loved.</p>
-    <p>Someone is trying to come back to this table. But no one remembers who she was.</p>
-    <p>Four things here remember a piece of her. Ask them. Then set her place before the candles go out.</p>
+    <p>Six guests are already at the table. A seventh is trying to come back. But no one remembers who she was.</p>
+    <p>Four things on the table remember a piece of her. Ask them. Then set her place before the candles go out.</p>
     <button class="btn marigold" id="start">Enter the dining room</button>
   </div>
 </div>
@@ -256,14 +205,17 @@ footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 
   </div>
 </div>
 
-<div class="overlay hidden" id="ending">
-  <div class="card ending" id="endingCard"></div>
-</div>
+<div class="overlay soft hidden" id="ending"><div class="card ending" id="endingCard"></div></div>
 
-<div class="petals" id="petals"></div>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from "three";
 
-<script>
-// ---------- data: mirrors ../facts.json (demo: scripted replies) ----------
+// =====================================================================
+// Story data — mirrors ../facts.json (demo: scripted replies)
+// =====================================================================
 const FACT_NOTES = {
   F01: ["name", "The record: a voice says “Marisol, from Oaxaca.”"],
   F02: ["name", "The guest list: Seat 7, “Miss M. Vega — pianoforte.”"],
@@ -287,16 +239,9 @@ const FACT_NOTES = {
 };
 const GOALS = { name: ["F01", "F02"], face: ["F07", "F08"], why: ["F11", "F12", "F18"], offering: ["F06", "F10", "F17"] };
 
-const ICONS = {
-  photo: '<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="6" y="10" width="44" height="34" rx="2" fill="#2b2b2b" stroke="#c9a45c" stroke-width="2"/><g fill="#8a8a8a"><circle cx="16" cy="24" r="3"/><circle cx="24" cy="23" r="3"/><circle cx="40" cy="24" r="3"/></g><path d="M29 20l5 7M34 20l-5 7" stroke="#d33" stroke-width="1.5"/><rect x="12" y="30" width="32" height="8" fill="#555"/></svg>',
-  letter: '<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="8" y="14" width="40" height="28" rx="2" fill="#efe1c4" stroke="#8a6a3a"/><path d="M8 15l20 15 20-15" fill="none" stroke="#8a6a3a"/><circle cx="28" cy="32" r="4" fill="#8e2a2a"/></svg>',
-  record: '<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="20" fill="#111" stroke="#c9a45c"/><circle cx="28" cy="28" r="14" fill="none" stroke="#333"/><circle cx="28" cy="28" r="9" fill="none" stroke="#333"/><circle cx="28" cy="28" r="5" fill="#8e2a2a"/><circle cx="28" cy="28" r="1.2" fill="#eee"/></svg>',
-  guest_list: '<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="14" y="6" width="28" height="44" rx="1" fill="#f3ead8" stroke="#8a6a3a"/><g stroke="#6a5a4a" stroke-width="1.5"><path d="M18 14h20M18 20h20M18 26h20M18 32h20"/><path d="M18 38h20" stroke="#000" stroke-width="3"/></g></svg>',
-};
-
 const OBJECTS = {
   photo: {
-    name: "The Photograph", sub: "Hallowe'en, 1931 · silver gelatin, black and white",
+    name: "The Photograph", sub: "Hallowe'en, 1931 · black and white",
     hello: "Light remembers. I am what the light kept. Seven of us stand in the parlor glow. Ask me what I see.",
     chips: ["Who is at the piano?", "What is she wearing?", "Is anything written on you?", "Why is her face gone?"],
     intents: [
@@ -312,7 +257,7 @@ const OBJECTS = {
   letter: {
     name: "The Letter", sub: "November, 1931 · sealed, never stamped",
     hello: "My dearest, I have begun this a dozen times. Ask, and I will tell you what my writer could not say aloud.",
-    chips: ["Who are you writing to?", "What happened between you?", "Why did she leave?", "What do you promise?"],
+    chips: ["Who are you writing to?", "What happened between you?", "Why did she leave?", "Do you remember her hair?", "What do you promise?"],
     intents: [
       { k: ["name", "called", "her name"], say: "I dare not write your name, lest Mother read it. Only “my dearest.” Only “my songbird.”" },
       { k: ["engaged", "marry", "ring", "between", "love", "happened"], say: "We were promised to one another. A secret, a ring, a summer of plans no one else knew.", reveals: ["F11"] },
@@ -356,55 +301,397 @@ const OBJECTS = {
   },
 };
 
-// ---------- state ----------
-const state = { current: null, found: new Set(), asked: {}, candles: 7, lastProgress: Date.now(), over: false };
+// =====================================================================
+// 3D scene
+// =====================================================================
+const canvas = document.getElementById("scene");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.25;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0c060c);
+scene.fog = new THREE.Fog(0x0c060c, 7, 16);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 50);
+const HOME = { pos: new THREE.Vector3(0, 2.05, 3.7), look: new THREE.Vector3(0, 0.9, -0.5) };
+const cam = { pos: HOME.pos.clone(), look: HOME.look.clone(), toPos: HOME.pos.clone(), toLook: HOME.look.clone() };
+
+function canvasTex(w, h, draw, repeat) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  draw(c.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); }
+  t.anisotropy = 4;
+  return t;
+}
+
+// --- textures
+const wallpaper = canvasTex(256, 256, (g, w, h) => {
+  g.fillStyle = "#3b1838"; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#522850";
+  for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+    const cx = x * 64 + (y % 2 ? 32 : 0), cy = y * 64 + 32;
+    g.beginPath(); g.ellipse(cx, cy, 10, 18, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(cx, cy, 18, 6, 0, 0, Math.PI * 2); g.fill();
+  }
+  g.fillStyle = "rgba(232,176,74,.18)";
+  for (let i = 0; i < 40; i++) g.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+}, [6, 2]);
+const woodFloor = canvasTex(256, 256, (g, w, h) => {
+  for (let i = 0; i < 8; i++) {
+    g.fillStyle = i % 2 ? "#3a2014" : "#43261a"; g.fillRect(0, i * 32, w, 32);
+    g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(0, i * 32, w, 2);
+    g.fillRect((i * 97) % w, i * 32, 2, 32);
+  }
+}, [5, 5]);
+const lace = canvasTex(128, 128, (g, w, h) => {
+  g.fillStyle = "#f1e8d8"; g.fillRect(0, 0, w, h);
+  g.globalCompositeOperation = "destination-out";
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+    g.beginPath(); g.arc(x * 16 + 8, y * 16 + 8, (x + y) % 2 ? 4 : 2.5, 0, Math.PI * 2); g.fill();
+  }
+}, [10, 4]);
+
+function photoDraw(restored) {
+  return (g, w, h) => {
+    g.fillStyle = "#6d6a64"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#4a4743"; g.fillRect(0, h * .62, w, h * .38);
+    for (let i = 0; i < 7; i++) {
+      const x = 26 + i * 34, y = 78 + (i % 2) * 6;
+      g.fillStyle = "#2b2926"; g.beginPath(); g.arc(x, y, 11, 0, Math.PI * 2); g.fill();
+      g.fillRect(x - 13, y + 12, 26, 46);
+      if (i === 6) {
+        if (restored) {
+          g.fillStyle = "#d8d8d8"; g.beginPath(); g.arc(x + 7, y - 8, 3, 0, Math.PI * 2); g.fill();
+        } else {
+          g.strokeStyle = "#e9e6df"; g.lineWidth = 2;
+          for (let s = 0; s < 7; s++) { g.beginPath(); g.moveTo(x - 12 + s * 3, y - 12); g.lineTo(x - 4 + s * 3, y + 12); g.stroke(); }
+        }
+      }
+    }
+    g.strokeStyle = "rgba(255,255,255,.08)";
+    for (let i = 0; i < 30; i++) { g.beginPath(); const x = Math.random() * w; g.moveTo(x, 0); g.lineTo(x + 6, h); g.stroke(); }
+  };
+}
+const photoTex = canvasTex(256, 160, photoDraw(false));
+const letterTex = canvasTex(256, 176, (g, w, h) => {
+  g.fillStyle = "#efe1c4"; g.fillRect(0, 0, w, h);
+  g.strokeStyle = "#a88a5a"; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 0); g.lineTo(w / 2, h * .62); g.lineTo(w, 0); g.stroke();
+  g.fillStyle = "#8e2a2a"; g.beginPath(); g.arc(w / 2, h * .62, 18, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#4a3a2a"; g.font = "italic 20px Georgia"; g.fillText("My dearest —", 24, h - 22);
+});
+const listTex = canvasTex(160, 240, (g, w, h) => {
+  g.fillStyle = "#f3ead8"; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#3a2a1a"; g.font = "italic 15px Georgia"; g.fillText("Hallowe'en Supper", 14, 28);
+  g.font = "12px Georgia";
+  ["Mr. T. Whitcombe", "Mrs. Ashby", "Dr. Pell", "Miss Croft", "Mr. Lowe", "Mrs. Hale", "Miss M. Vega"].forEach((n, i) => g.fillText(`${i + 1}.  ${n}`, 14, 56 + i * 24));
+  g.strokeStyle = "#111"; g.lineWidth = 6; g.beginPath(); g.moveTo(10, 56 + 6 * 24 - 4); g.lineTo(w - 10, 56 + 6 * 24 - 4); g.stroke();
+});
+
+// --- lights
+scene.add(new THREE.HemisphereLight(0x8a72a8, 0x2a160c, 0.9));
+const moon = new THREE.DirectionalLight(0x8a7ad0, 0.35);
+moon.position.set(-4, 5, 3); scene.add(moon);
+const fill = new THREE.DirectionalLight(0xffd8b0, 0.45);
+fill.position.set(0, 3, 6); scene.add(fill);
+const candleLights = [];
+function addCandleLight(x, z) {
+  const l = new THREE.PointLight(0xffb45a, 12, 9, 1.2);
+  l.position.set(x, 1.45, z); l.castShadow = true;
+  l.shadow.mapSize.set(512, 512); l.shadow.bias = -0.002;
+  scene.add(l); candleLights.push(l); return l;
+}
+addCandleLight(-0.85, -0.25);
+addCandleLight(0.85, -0.25);
+const pianoLight = new THREE.PointLight(0x9fb4ff, 0, 4, 2);
+pianoLight.position.set(3.1, 1.6, -2.1); scene.add(pianoLight);
+
+// --- materials
+const M = {
+  wall: new THREE.MeshStandardMaterial({ map: wallpaper, roughness: .95 }),
+  wains: new THREE.MeshStandardMaterial({ color: 0x24110c, roughness: .8 }),
+  floor: new THREE.MeshStandardMaterial({ map: woodFloor, roughness: .7 }),
+  wood: new THREE.MeshStandardMaterial({ color: 0x3a1c12, roughness: .55, metalness: .05 }),
+  cloth: new THREE.MeshStandardMaterial({ color: 0xf1e8d8, roughness: .95 }),
+  lace: new THREE.MeshStandardMaterial({ map: lace, alphaTest: .5, side: THREE.DoubleSide, roughness: .95 }),
+  velvet: new THREE.MeshStandardMaterial({ color: 0x4a2440, roughness: 1 }),
+  brass: new THREE.MeshStandardMaterial({ color: 0xc9a45c, roughness: .35, metalness: .85 }),
+  wax: new THREE.MeshStandardMaterial({ color: 0xf4ecdc, roughness: .6, emissive: 0x2a1a08 }),
+  flame: new THREE.MeshBasicMaterial({ color: 0xffd27a }),
+  sheet: new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: .92, emissive: 0x2c2a3a }),
+  plate: new THREE.MeshStandardMaterial({ color: 0xf6f3ee, roughness: .3 }),
+  black: new THREE.MeshStandardMaterial({ color: 0x0b0b0b, roughness: .4 }),
+};
+const box = (w, h, d, m) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.castShadow = o.receiveShadow = true; return o; };
+const cyl = (rt, rb, h, m, s = 24) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, s), m); o.castShadow = o.receiveShadow = true; return o; };
+
+// --- room
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 12), M.floor);
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+[[0, -3.5, 0], [-5, 0, Math.PI / 2], [5, 0, -Math.PI / 2]].forEach(([x, z, r]) => {
+  const w = new THREE.Mesh(new THREE.PlaneGeometry(14, 5), M.wall);
+  w.position.set(x, 2.5, z); w.rotation.y = r; w.receiveShadow = true; scene.add(w);
+  const b = box(14, 1, .06, M.wains); b.position.set(x, .5, z); b.rotation.y = r; scene.add(b);
+});
+// portraits on the back wall
+[-2.2, 2.2].forEach((x, i) => {
+  const frame = box(.8, 1, .06, M.brass); frame.position.set(x, 2.4, -3.45); scene.add(frame);
+  const pic = new THREE.Mesh(new THREE.PlaneGeometry(.64, .84), new THREE.MeshStandardMaterial({ color: i ? 0x2a2420 : 0x1e1a24, roughness: 1 }));
+  pic.position.set(x, 2.4, -3.41); scene.add(pic);
+  const face = new THREE.Mesh(new THREE.CircleGeometry(.12, 20), new THREE.MeshStandardMaterial({ color: 0x8a7a6a, roughness: 1 }));
+  face.position.set(x, 2.52, -3.40); scene.add(face);
+});
+// window with moonlight
+const win = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.8), new THREE.MeshBasicMaterial({ color: 0x2a3466 }));
+win.position.set(-4.97, 2.3, -1); win.rotation.y = Math.PI / 2; scene.add(win);
+
+// --- table
+const tableTop = box(4.3, .07, 1.5, M.cloth); tableTop.position.set(0, .8, 0); scene.add(tableTop);
+[[-2.0, -.6], [2.0, -.6], [-2.0, .6], [2.0, .6]].forEach(([x, z]) => { const l = box(.08, .78, .08, M.wood); l.position.set(x, .39, z); scene.add(l); });
+// lace overhang
+[[0, .78, .76, 4.3, 0], [0, .78, -.76, 4.3, 0], [2.16, .78, 0, 1.5, Math.PI / 2], [-2.16, .78, 0, 1.5, Math.PI / 2]].forEach(([x, y, z, w, r]) => {
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(w, .32), M.lace); p.position.set(x, y - .14, z); p.rotation.y = r; scene.add(p);
+});
+
+// --- chairs (seat 1..6 around the table)
+function chair(x, z, face) {
+  const g = new THREE.Group();
+  const seat = box(.5, .07, .5, M.velvet); seat.position.y = .48; g.add(seat);
+  const back = box(.5, .8, .06, M.wood); back.position.set(0, .9, -.24); g.add(back);
+  const pad = box(.38, .55, .02, M.velvet); pad.position.set(0, .92, -.2); g.add(pad);
+  [[-.21, -.21], [.21, -.21], [-.21, .21], [.21, .21]].forEach(([a, b]) => { const l = box(.05, .46, .05, M.wood); l.position.set(a, .23, b); g.add(l); });
+  g.position.set(x, 0, z); g.rotation.y = face; scene.add(g); return g;
+}
+// sheet ghost: lathe-turned drape with a wavy hem
+function ghost() {
+  const pts = [];
+  const prof = [[0, 1.42], [.1, 1.41], [.17, 1.36], [.2, 1.27], [.19, 1.17], [.17, 1.1], [.24, 1.0], [.31, .86], [.36, .7], [.4, .56], [.43, .46]];
+  prof.forEach(([r, y]) => pts.push(new THREE.Vector2(r, y)));
+  const geo = new THREE.LatheGeometry(pts, 40);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    if (y < .62) {
+      const a = Math.atan2(pos.getZ(i), pos.getX(i));
+      const k = (.62 - y) / .16;
+      pos.setY(i, y - Math.sin(a * 7) * .035 * k - .04 * k);
+      const s = 1 + Math.sin(a * 5) * .05 * k;
+      pos.setX(i, pos.getX(i) * s); pos.setZ(i, pos.getZ(i) * s);
+    }
+  }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, M.sheet); m.castShadow = true; m.receiveShadow = true;
+  const g = new THREE.Group(); g.add(m);
+  // eye holes show which way each guest is looking
+  [-.065, .065].forEach((x) => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.028, 12, 10), M.black);
+    eye.scale.set(1, 1.5, .4); eye.position.set(x, 1.28, .185); m.add(eye);
+  });
+  return g;
+}
+const SEATS = [
+  { x: -1.35, z: -1.05, face: 0 }, { x: 0, z: -1.05, face: 0 }, { x: 1.35, z: -1.05, face: 0 },
+  { x: -2.6, z: 0, face: Math.PI / 2 }, { x: 2.6, z: 0, face: -Math.PI / 2 }, { x: -1.6, z: 1.05, face: Math.PI },
+];
+const ghosts = SEATS.map((s, i) => {
+  chair(s.x, s.z, s.face);
+  // seated ghosts face the table centre
+  const gh = ghost();
+  gh.position.set(s.x * .98, 0, s.z * .95);
+  gh.userData = { base: Math.atan2(0 - s.x, 0 - s.z), phase: i * 1.3 };
+  gh.rotation.y = gh.userData.base;
+  scene.add(gh);
+  return gh;
+});
+
+// --- piano + bench (seat 7)
+const piano = new THREE.Group();
+const body = box(1.5, 1.25, .6, M.black); body.position.y = .625; piano.add(body);
+const keys = box(1.36, .05, .22, new THREE.MeshStandardMaterial({ color: 0xece6d8, roughness: .4 })); keys.position.set(0, .78, .38); piano.add(keys);
+const keyBed = box(1.5, .1, .3, M.black); keyBed.position.set(0, .72, .38); piano.add(keyBed);
+const music = box(.5, .32, .02, new THREE.MeshStandardMaterial({ color: 0xe8dcc0 })); music.position.set(0, 1.05, .32); music.rotation.x = -.2; piano.add(music);
+piano.position.set(3.1, 0, -2.85); piano.rotation.y = -.35; scene.add(piano);
+const bench = new THREE.Group();
+const bTop = box(.8, .08, .36, M.velvet); bTop.position.y = .5; bench.add(bTop);
+[[-.34, -.14], [.34, -.14], [-.34, .14], [.34, .14]].forEach(([a, b]) => { const l = box(.05, .48, .05, M.wood); l.position.set(a, .24, b); bench.add(l); });
+bench.position.set(2.8, 0, -2.05); bench.rotation.y = -.35; scene.add(bench);
+
+// --- candelabras: 7 candles = 7 game candles
+const candles = [];
+function candelabra(x, z, n) {
+  const g = new THREE.Group();
+  const stem = cyl(.025, .06, .5, M.brass); stem.position.y = .25; g.add(stem);
+  const foot = cyl(.12, .14, .03, M.brass); foot.position.y = .015; g.add(foot);
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0 : i / (n - 1) - .5;
+    const cx = t * .5, cy = .5 + (1 - Math.abs(t) * 2) * .08;
+    const arm = box(Math.abs(cx) + .01, .015, .015, M.brass); arm.position.set(cx / 2, cy - .02, 0); g.add(arm);
+    const cup = cyl(.03, .02, .03, M.brass); cup.position.set(cx, cy, 0); g.add(cup);
+    const wax = cyl(.017, .017, .2, M.wax, 12); wax.position.set(cx, cy + .11, 0); g.add(wax);
+    const flame = new THREE.Mesh(new THREE.SphereGeometry(.018, 10, 10), M.flame.clone());
+    flame.scale.set(1, 2, 1); flame.position.set(cx, cy + .24, 0); g.add(flame);
+    candles.push(flame);
+  }
+  g.position.set(x, .835, z); scene.add(g);
+}
+candelabra(-.85, -.25, 4);
+candelabra(.85, -.25, 3);
+
+// --- table dressing: cake, plates, goblets
+const cake = new THREE.Group();
+[[.2, .12], [.15, .1], [.1, .09]].reduce((y, [r, h]) => { const t = cyl(r, r, h, M.plate); t.position.y = y + h / 2; cake.add(t); return y + h; }, 0);
+const stand = cyl(.05, .1, .12, M.brass); stand.position.y = -.06; cake.add(stand);
+cake.position.set(0, .95, -.35); scene.add(cake);
+[[-1.35, -.45], [0, -.6], [1.35, -.45], [-1.9, 0], [1.9, 0], [-1.6, .45]].forEach(([x, z]) => {
+  const p = cyl(.16, .13, .02, M.plate); p.position.set(x, .845, z); scene.add(p);
+  const food = new THREE.Mesh(new THREE.SphereGeometry(.06, 10, 8), new THREE.MeshStandardMaterial({ color: [0x8a3a1a, 0x5a7a2a, 0xa8642a][Math.floor(Math.random() * 3)], roughness: .8 }));
+  food.scale.y = .5; food.position.set(x + .03, .87, z); scene.add(food);
+  const gob = cyl(.03, .015, .14, new THREE.MeshStandardMaterial({ color: 0xaab4c8, transparent: true, opacity: .45, roughness: .1 }), 12);
+  gob.position.set(x + .2, .91, z - .05); scene.add(gob);
+});
+
+// --- the four remembering objects
+const pickables = [];
+function makePick(key, obj, label) {
+  obj.userData.key = key;
+  obj.traverse((o) => { if (o.isMesh) { o.userData.key = key; if (o.material.emissive) o.material = o.material.clone(); } });
+  pickables.push(obj); scene.add(obj);
+  OBJECTS[key].node = obj; OBJECTS[key].label = label;
+  return obj;
+}
+// photograph in a standing frame
+const pf = new THREE.Group();
+pf.add(Object.assign(box(.36, .26, .02, M.brass), {}));
+const photoFace = new THREE.Mesh(new THREE.PlaneGeometry(.31, .2), new THREE.MeshStandardMaterial({ map: photoTex, roughness: .9 }));
+photoFace.position.z = .012; pf.add(photoFace);
+const strut = box(.02, .24, .02, M.brass); strut.position.set(0, -.02, -.07); strut.rotation.x = .5; pf.add(strut);
+pf.position.set(-1.25, .98, .3); pf.rotation.set(-.12, .25, 0);
+makePick("photo", pf, "The Photograph");
+// letter lying on the cloth
+const lt = new THREE.Mesh(new THREE.BoxGeometry(.32, .006, .22), [M.plate, M.plate, new THREE.MeshStandardMaterial({ map: letterTex, roughness: .9 }), M.plate, M.plate, M.plate]);
+lt.castShadow = true; lt.position.set(-.45, .84, .42); lt.rotation.y = -.25;
+makePick("letter", lt, "The Letter");
+// gramophone
+const gr = new THREE.Group();
+const gBase = box(.36, .12, .36, M.wood); gBase.position.y = .06; gr.add(gBase);
+const disc = cyl(.15, .15, .01, M.black, 40); disc.position.y = .125; gr.add(disc);
+const label = cyl(.05, .05, .012, new THREE.MeshStandardMaterial({ color: 0x8e2a2a }), 24); label.position.y = .127; gr.add(label);
+const arm = box(.18, .012, .012, M.brass); arm.position.set(.08, .145, .12); arm.rotation.y = .6; gr.add(arm);
+const horn = new THREE.Mesh(new THREE.ConeGeometry(.16, .32, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0xb08a3a, metalness: .7, roughness: .35, side: THREE.DoubleSide }));
+horn.position.set(-.12, .34, -.1); horn.rotation.set(Math.PI * .75, 0, .4); horn.castShadow = true; gr.add(horn);
+gr.position.set(.45, .835, .35); gr.rotation.y = -.3;
+makePick("record", gr, "The Record");
+// guest list on a little easel
+const gl = new THREE.Group();
+const card = new THREE.Mesh(new THREE.PlaneGeometry(.2, .3), new THREE.MeshStandardMaterial({ map: listTex, roughness: .9, side: THREE.DoubleSide }));
+card.position.y = .16; card.rotation.x = -.18; card.castShadow = true; gl.add(card);
+const easel = box(.02, .3, .02, M.brass); easel.position.set(0, .14, -.06); easel.rotation.x = .35; gl.add(easel);
+gl.position.set(1.25, .835, .32); gl.rotation.y = -.3;
+makePick("guest_list", gl, "The Guest List");
+
+// --- petals for the ending
+const petalGeo = new THREE.BufferGeometry();
+const P = 500, pPos = new Float32Array(P * 3), pVel = new Float32Array(P);
+for (let i = 0; i < P; i++) { pPos[i * 3] = (Math.random() - .5) * 9; pPos[i * 3 + 1] = 3 + Math.random() * 4; pPos[i * 3 + 2] = (Math.random() - .5) * 6; pVel[i] = .3 + Math.random() * .6; }
+petalGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+const petals = new THREE.Points(petalGeo, new THREE.PointsMaterial({ color: 0xf29a1d, size: .05, transparent: true, opacity: .95 }));
+petals.visible = false; scene.add(petals);
+
+// her ghost appears at the piano
+const her = ghost();
+her.children[0].material = new THREE.MeshStandardMaterial({ color: 0xffe6c0, emissive: 0xf29a1d, emissiveIntensity: .35, transparent: true, opacity: 0, roughness: .8 });
+her.position.set(2.8, .05, -2.05); her.rotation.y = Math.PI - .35; scene.add(her);
+const marigold = new THREE.Mesh(new THREE.SphereGeometry(.05, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf29a1d, emissive: 0xf29a1d, emissiveIntensity: .6 }));
+marigold.position.set(.14, 1.36, .08); her.add(marigold); marigold.visible = false;
+
+// =====================================================================
+// Interaction
+// =====================================================================
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), parallax = new THREE.Vector2();
+let hovered = null;
+function keyAt(ev) {
+  const r = canvas.getBoundingClientRect();
+  mouse.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(pickables, true)[0];
+  return hit ? hit.object.userData.key : null;
+}
+function setGlow(key, on) {
+  if (!key) return;
+  OBJECTS[key].node.traverse((o) => { if (o.isMesh && o.material.emissive) o.material.emissive.setHex(on ? 0x5a3a10 : 0x000000); });
+}
+canvas.addEventListener("pointermove", (ev) => {
+  parallax.set((ev.clientX / innerWidth - .5), (ev.clientY / innerHeight - .5));
+  const k = state.started && !state.over ? keyAt(ev) : null;
+  if (k !== hovered) { setGlow(hovered, hovered === state.current); setGlow(k, true); hovered = k; }
+  canvas.style.cursor = k ? "pointer" : "default";
+  const tag = $("tag");
+  if (k) { tag.textContent = OBJECTS[k].label; tag.style.left = ev.clientX + "px"; tag.style.top = ev.clientY + "px"; tag.classList.remove("hidden"); }
+  else tag.classList.add("hidden");
+});
+canvas.addEventListener("click", (ev) => { if (!state.started || state.over) return; const k = keyAt(ev); if (k) select(k); });
+
+function focusOn(key) {
+  if (!key) { cam.toPos.copy(HOME.pos); cam.toLook.copy(HOME.look); return; }
+  const p = new THREE.Vector3(); OBJECTS[key].node.getWorldPosition(p);
+  const mobile = innerWidth < 760;
+  cam.toLook.set(p.x + (mobile ? 0 : .35), p.y + (mobile ? -.12 : .02), p.z);
+  cam.toPos.set(p.x * .6 + (mobile ? 0 : .45), p.y + .75, p.z + 1.45);
+}
+
+// =====================================================================
+// Game state + UI
+// =====================================================================
+const state = { started: false, current: null, found: new Set(), asked: {}, candles: 7, lastProgress: Date.now(), over: false, turn: 0 };
 const $ = (id) => document.getElementById(id);
 
 function renderCandles() {
   $("candles").innerHTML = Array.from({ length: 7 }, (_, i) => `<div class="candle ${i >= state.candles ? "out" : ""}"></div>`).join("");
-}
-
-function renderTable() {
-  $("table").innerHTML = Object.entries(OBJECTS).map(([key, o]) =>
-    `<button class="obj ${state.current === key ? "active" : ""}" data-obj="${key}">${ICONS[key]}<span>${o.name.replace("The ", "")}</span><small>${o.sub.split(" · ")[0]}</small></button>`
-  ).join("");
-  document.querySelectorAll(".obj").forEach((b) => b.addEventListener("click", () => select(b.dataset.obj)));
+  candles.forEach((f, i) => { f.visible = i < state.candles; });
+  candleLights.forEach((l) => { l.userData.target = 7 * state.candles / 7; });
 }
 
 function addMsg(text, cls) {
   const div = document.createElement("div");
-  div.className = "msg " + cls;
-  div.textContent = text;
-  $("log").appendChild(div);
-  $("log").scrollTop = $("log").scrollHeight;
+  div.className = "msg " + cls; div.textContent = text;
+  $("log").appendChild(div); $("log").scrollTop = $("log").scrollHeight;
   return div;
 }
 
 function select(key) {
+  if (state.current) setGlow(state.current, false);
   state.current = key;
+  setGlow(key, true);
   const o = OBJECTS[key];
-  $("who").textContent = o.name;
-  $("whoSub").textContent = o.sub;
+  $("who").textContent = o.name; $("whoSub").textContent = o.sub;
   $("log").innerHTML = "";
   addMsg(o.hello, "them " + key);
-  $("q").disabled = false; $("send").disabled = false;
-  $("q").placeholder = `Ask ${o.name.toLowerCase()}…`;
-  renderTable(); renderChips();
-  if (window.matchMedia("(max-width: 860px)").matches) document.querySelector(".panel").scrollIntoView({ behavior: "smooth" });
+  $("panel").classList.remove("hidden");
+  $("hint").style.opacity = 0;
+  $("journal").classList.add("hidden");
+  renderChips(); focusOn(key);
+}
+function closePanel() {
+  if (state.current) setGlow(state.current, false);
+  state.current = null; $("panel").classList.add("hidden"); focusOn(null);
 }
 
 function renderChips() {
-  const o = OBJECTS[state.current];
-  const asked = state.asked[state.current] || new Set();
+  const o = OBJECTS[state.current], asked = state.asked[state.current] || new Set();
   $("chips").innerHTML = o.chips.filter((c) => !asked.has(c)).map((c) => `<button class="chip" type="button">${c}</button>`).join("");
   document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => ask(c.textContent)));
 }
 
 function reply(key, q) {
-  const o = OBJECTS[key];
-  const text = q.toLowerCase();
-  const hit = o.intents.find((it) => it.k.some((k) => text.includes(k)));
-  return hit || { say: o.unknown };
+  const o = OBJECTS[key], text = q.toLowerCase();
+  return o.intents.find((it) => it.k.some((k) => text.includes(k))) || { say: o.unknown };
 }
 
 function ask(q) {
@@ -412,13 +699,14 @@ function ask(q) {
   const key = state.current;
   (state.asked[key] ||= new Set()).add(q);
   addMsg(q, "you");
-  const wait = addMsg("…", "them typing " + key);
+  const wait = addMsg("…", "them " + key);
   const r = reply(key, q);
   setTimeout(() => {
     wait.remove();
     let say = r.say;
-    if (key === "record" && Math.random() < 0.18 && !say.includes("save me a seat")) say += " …save me a seat… save me a…";
-    const m = addMsg(say, "them " + key + (r.fx === "ink" ? " ink" : ""));
+    if (key === "record" && Math.random() < .18 && !say.includes("save me a seat")) say += " …save me a seat… save me a…";
+    addMsg(say, "them " + key + (r.fx === "ink" ? " ink" : ""));
+    if (key === "record") state.spin = 3;
     (r.reveals || []).forEach(learn);
     renderChips();
   }, 700 + Math.random() * 600);
@@ -426,48 +714,44 @@ function ask(q) {
 
 function learn(id) {
   if (state.found.has(id) || !FACT_NOTES[id]) return;
-  state.found.add(id);
-  state.lastProgress = Date.now();
+  state.found.add(id); state.lastProgress = Date.now();
   const [goal, note] = FACT_NOTES[id];
-  const li = document.createElement("li");
-  li.textContent = note;
+  const li = document.createElement("li"); li.textContent = note;
   document.querySelector(`#g-${goal} ul`).appendChild(li);
   Object.entries(GOALS).forEach(([g, ids]) => {
-    const done = ids.every((x) => state.found.has(x));
     const el = $("g-" + g);
-    if (done && !el.classList.contains("done")) {
-      el.classList.add("done");
-      addMsg(goalLine(g), "narrator");
+    if (ids.every((x) => state.found.has(x)) && !el.classList.contains("done")) {
+      el.classList.add("done"); goalReached(g);
     }
   });
+  $("count").textContent = document.querySelectorAll(".goal.done").length + "/4";
 }
 
-function goalLine(g) {
-  return {
-    name: "Marisol Vega. Somewhere in the house, a piano key sinks by itself.",
-    face: "In the photograph, the six other guests have turned their heads toward the scratched face.",
-    why: "A ring, a mother, a line of ink. The draft in the room grows colder.",
+function goalReached(g) {
+  addMsg({
+    name: "Marisol Vega. Across the room, a piano key sinks by itself.",
+    face: "The six guests turn, slowly, toward the empty piano bench.",
+    why: "A ring, a mother, a line of ink. The candles lean as if something passed them.",
     offering: "You know what she loved, and where she sat. The marigolds would show her the way.",
-  }[g];
+  }[g], "narrator");
+  if (g === "name") state.pianoFlash = 1.2;
+  if (g === "face") state.turn = 1;
+  if (g === "why") state.gust = 1;
 }
 
-// candles go out while nothing new is remembered
 setInterval(() => {
-  if (state.over || !$("intro").classList.contains("hidden")) return;
-  if (Date.now() - state.lastProgress > 150000) {
-    state.lastProgress = Date.now();
-    snuff("Somewhere, someone forgets her a little more.");
-  }
+  if (!state.started || state.over) return;
+  if (Date.now() - state.lastProgress > 150000) { state.lastProgress = Date.now(); snuff("Somewhere, someone forgets her a little more."); }
 }, 5000);
 
 function snuff(why) {
   state.candles = Math.max(0, state.candles - 1);
   renderCandles();
-  addMsg(why, "narrator");
+  if (state.current) addMsg(why, "narrator");
   if (state.candles === 0) forgotten();
 }
 
-// ---------- ofrenda ----------
+// ofrenda
 const SLOTS = [
   { id: "seat", label: "Where her place is set", opts: ["Seat 2", "The head of the table", "Seat 7, the piano bench"], right: 2 },
   { id: "photo", label: "The photograph", opts: ["Leave the photograph as it is", "Restore the scratched face"], right: 1, needs: "face" },
@@ -475,7 +759,6 @@ const SLOTS = [
   { id: "flowers", label: "Flowers to light the way", opts: ["White lilies", "Marigolds (cempasúchil)", "Red roses"], right: 1 },
   { id: "drink", label: "Something she loved", opts: ["Earl Grey tea", "Champagne", "Hot chocolate with cinnamon"], right: 2 },
 ];
-
 function openOfrenda() {
   $("slots").innerHTML = SLOTS.map((s) => {
     const locked = s.needs && !$("g-" + s.needs).classList.contains("done");
@@ -485,7 +768,6 @@ function openOfrenda() {
   $("feedback").textContent = "";
   $("ofrenda").classList.remove("hidden");
 }
-
 function lightOfrenda() {
   const picks = SLOTS.map((s) => $("s-" + s.id).value);
   if (picks.some((p) => p === "")) { $("feedback").textContent = "Every part of the ofrenda needs something. Some things you may not remember yet."; return; }
@@ -499,27 +781,19 @@ function lightOfrenda() {
   ending();
 }
 
-// ---------- endings ----------
-function petals() {
-  for (let i = 0; i < 70; i++) {
-    const p = document.createElement("div");
-    p.className = "petal";
-    p.style.left = Math.random() * 100 + "vw";
-    p.style.animationDuration = 4 + Math.random() * 5 + "s";
-    p.style.animationDelay = Math.random() * 4 + "s";
-    $("petals").appendChild(p);
-  }
-}
-
 function sequence(lines) {
   $("endingCard").innerHTML = lines.map((l) => `<p class="line ${l.cls || ""}">${l.t}</p>`).join("");
   $("ending").classList.remove("hidden");
   [...$("endingCard").children].forEach((el, i) => setTimeout(() => el.classList.add("show"), 600 + i * 1900));
 }
-
 function ending() {
-  state.over = true;
-  petals();
+  state.over = true; closePanel();
+  $("hint").style.opacity = 0;
+  cam.toPos.set(1.2, 1.9, 1.2); cam.toLook.set(2.8, .9, -2.1);
+  // restore the photograph
+  const c = photoTex.image; photoDraw(true)(c.getContext("2d"), c.width, c.height); photoTex.needsUpdate = true;
+  petals.visible = true; state.turn = 1; state.her = 0.001; marigold.visible = true;
+  pianoLight.color.setHex(0xffa040);
   sequence([
     { t: "The marigolds catch the candlelight. A path of orange petals runs from the door to Seat 7." },
     { t: "The piano begins, and this time it does not stop." },
@@ -529,9 +803,8 @@ function ending() {
     { t: "<button class='btn marigold' onclick='location.reload()'>Play again</button>" },
   ]);
 }
-
 function forgotten() {
-  state.over = true;
+  state.over = true; closePanel();
   sequence([
     { t: "The last candle goes out." },
     { t: "The piano is silent. Seat 7 is just a chair now." },
@@ -540,14 +813,82 @@ function forgotten() {
   ]);
 }
 
-// ---------- wiring ----------
+// wiring
 $("ask").addEventListener("submit", (e) => { e.preventDefault(); ask($("q").value); $("q").value = ""; });
-$("start").addEventListener("click", () => { $("intro").classList.add("hidden"); state.lastProgress = Date.now(); });
+$("start").addEventListener("click", () => { $("intro").classList.add("hidden"); state.started = true; state.lastProgress = Date.now(); });
+$("closePanel").addEventListener("click", closePanel);
+$("journalBtn").addEventListener("click", () => $("journal").classList.toggle("hidden"));
 $("ofrendaBtn").addEventListener("click", openOfrenda);
 $("closeOfrenda").addEventListener("click", () => $("ofrenda").classList.add("hidden"));
 $("light").addEventListener("click", lightOfrenda);
+addEventListener("keydown", (e) => { if (e.key === "Escape") { closePanel(); $("ofrenda").classList.add("hidden"); } });
 renderCandles();
-renderTable();
+window.game = { state, select, ask, openOfrenda, lightOfrenda, closePanel };
+
+// =====================================================================
+// Render loop
+// =====================================================================
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.fov = w < 760 ? 60 : 45;
+  camera.updateProjectionMatrix();
+  // portrait screens: step back so the whole table fits the width
+  const portrait = w / h < 1;
+  HOME.pos.set(0, portrait ? 3.1 : 2.05, portrait ? 6.4 : 3.7);
+  HOME.look.set(0, portrait ? .75 : .9, portrait ? -.3 : -.5);
+  if (!state.current && !state.over) { cam.toPos.copy(HOME.pos); cam.toLook.copy(HOME.look); }
+}
+addEventListener("resize", resize); resize(); cam.pos.copy(cam.toPos); cam.look.copy(cam.toLook);
+
+const clock = new THREE.Clock();
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const pianoBenchAngle = (g) => Math.atan2(2.8 - g.position.x, -2.05 - g.position.z);
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  // camera easing + gentle parallax
+  const k = 1 - Math.pow(.02, dt);
+  cam.pos.lerp(cam.toPos, k); cam.look.lerp(cam.toLook, k);
+  const px = reduce || state.current ? 0 : parallax.x * .35, py = reduce || state.current ? 0 : parallax.y * .15;
+  camera.position.set(cam.pos.x + px, cam.pos.y - py, cam.pos.z);
+  camera.lookAt(cam.look);
+  // candle flicker
+  candleLights.forEach((l, i) => {
+    const lit = state.candles / 7;
+    l.intensity = (11 + Math.sin(t * 9 + i) * .5 + Math.sin(t * 23 + i * 3) * .35) * lit + (state.gust > 0 ? -2.5 * state.gust : 0);
+  });
+  candles.forEach((f, i) => { f.scale.set(1, 2 + Math.sin(t * 12 + i) * .25, 1); });
+  if (state.gust > 0) state.gust = Math.max(0, state.gust - dt * .6);
+  // ghosts sway, and turn toward the piano bench once her face is remembered
+  ghosts.forEach((g) => {
+    const target = state.turn ? pianoBenchAngle(g) : g.userData.base;
+    let d = target - g.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+    g.rotation.y += d * Math.min(1, dt * .6);
+    g.children[0].rotation.z = reduce ? 0 : Math.sin(t * .7 + g.userData.phase) * .015;
+    g.position.y = reduce ? 0 : Math.sin(t * .9 + g.userData.phase) * .006;
+  });
+  // piano glow when a key "plays itself"
+  if (state.pianoFlash > 0) { state.pianoFlash = Math.max(0, state.pianoFlash - dt * .5); }
+  pianoLight.intensity = (state.pianoFlash || 0) * 6 + (state.her ? 4 : .6 + Math.sin(t * .8) * .3);
+  // gramophone spins while it speaks
+  if (state.spin > 0) { state.spin -= dt; disc.rotation.y += dt * 3.5; label.rotation.y += dt * 3.5; }
+  // ending: she fades in, petals fall
+  if (state.her) {
+    state.her = Math.min(1, state.her + dt * .15);
+    her.children[0].material.opacity = state.her * .9;
+    her.position.y = .05 + Math.sin(t * 1.2) * .01;
+  }
+  if (petals.visible) {
+    for (let i = 0; i < P; i++) {
+      pPos[i * 3 + 1] -= pVel[i] * dt;
+      pPos[i * 3] += Math.sin(t + i) * dt * .1;
+      if (pPos[i * 3 + 1] < 0) pPos[i * 3 + 1] = 4 + Math.random() * 2;
+    }
+    petalGeo.attributes.position.needsUpdate = true;
+  }
+  renderer.render(scene, camera);
+});
 </script>
 </body>
 </html>
