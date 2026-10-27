@@ -1,11 +1,27 @@
-# Render Blueprint: a free static site. No model runs on Render.
-# - Suggested questions use answers Gemma 4 E4B wrote in advance (web/gen/answer_cache.json).
-# - Typed questions run Gemma 4 E2B in the player's own browser (WebGPU), through the same
-#   guardrail ported to JavaScript (web/harness.js, data exported by build_web.py).
-# To serve Gemma from a server instead, see Dockerfile (needs a paid plan with more than 8 GB of RAM).
+# Render Blueprint: two ways to play the same game.
+#
+# the-last-guest       Paid Docker service: server.py and Gemma 4 E4B (Ollama, CPU) in one container.
+#                      Typed questions are answered on the server (about 27 s each, measured 2026-10-28 on
+#                      pro plus); the container holds about 7.1 GB, so 8 GB leaves little headroom.
+#                      Kept running only while the credits last; suspend it in the dashboard afterwards.
+# the-last-guest-site  Free static site: no model on Render. Suggested questions use the answers Gemma 4 E4B
+#                      wrote in advance; typed questions run Gemma 4 E2B in the player's browser (WebGPU)
+#                      behind the same guardrail ported to JavaScript (web/harness.js, data from build_web.py).
+#
+# On both, a player who loads browser Gemma gets its answers in a few seconds instead.
 services:
   - type: web
     name: the-last-guest
+    runtime: docker
+    plan: pro plus
+    healthCheckPath: /healthz
+    envVars:
+      - key: LIVE_PER_IP
+        value: "30"
+      - key: LIVE_QUEUE
+        value: "4"
+  - type: web
+    name: the-last-guest-site
     runtime: static
     buildCommand: echo "static site, nothing to build"
     staticPublishPath: web

@@ -12,7 +12,8 @@ const L = () => C[settings.lang];
 
 // With server.py (local or a model host) the server answers; on a static host the browser runs the harness itself.
 const MODE = await fetch("/healthz").then((r) => (r.ok && r.headers.get("content-type")?.includes("json") ? "server" : "browser")).catch(() => "browser");
-if (MODE === "browser") await harness.loadHarness();
+// the harness also runs in server mode, so a player who loads browser Gemma gets fast local answers there too
+await harness.loadHarness().catch((e) => { if (MODE === "browser") throw e; console.warn("browser harness unavailable", e); });
 
 // Gemma 4 E2B in the player's browser, loaded only when the player agrees to the download
 const gemma = { state: navigator.gpu ? "idle" : "unsupported", progress: 0, worker: null, pending: new Map(), next: 0 };
@@ -38,10 +39,10 @@ function generate(messages) {
 }
 function renderGemma() {
   const el = $("gemmaBar"); if (!el) return;
-  el.classList.toggle("hidden", MODE !== "browser");
+  el.classList.toggle("hidden", !navigator.gpu && MODE === "server"); // on the server version, offer it only where it can run
   const B = L().browser;
   if (gemma.state === "idle" || gemma.state === "failed") {
-    el.innerHTML = `<p>${gemma.state === "failed" ? B.failed : B.offer}</p>${gemma.state === "idle" ? `<button class="btn gold" type="button">${B.load}</button>` : ""}`;
+    el.innerHTML = `<p>${gemma.state === "failed" ? B.failed : MODE === "server" ? B.offerServer : B.offer}</p>${gemma.state === "idle" ? `<button class="btn gold" type="button">${B.load}</button>` : ""}`;
     el.querySelector("button")?.addEventListener("click", loadGemma);
   } else if (gemma.state === "loading") el.innerHTML = `<p>${B.loading.replace("{p}", gemma.progress)}</p><div class="bar"><i style="width:${gemma.progress}%"></i></div>`;
   else if (gemma.state === "ready") el.innerHTML = `<p class="ok">✦ ${B.ready}</p>`;
@@ -253,12 +254,16 @@ function scripted(key, q) {
   return o.intents.find((it) => it.k.some((k) => text.includes(k))) || { say: o.unknown, reveals: [] };
 }
 async function modelReply(key, q) {
-  if (MODE === "browser") {
+  // Browser Gemma, when the player has loaded it, answers on their own device in a few seconds, on either version.
+  // Otherwise the static site falls back to the script and the server version asks the server.
+  if (MODE === "browser" || gemma.state === "ready") {
     const hist = state.history[key + settings.lang] ||= [];
     const c = harness.cached(settings.lang, key, q);
     if (c) { hist.push({ q, a: c.say }); return c; }
-    if (gemma.state !== "ready") return null;
-    try { const r = await harness.answer(key, q, hist, settings.lang, generate); hist.push({ q, a: r.say }); return r; } catch (e) { console.warn(e); return null; }
+    if (gemma.state === "ready") {
+      try { const r = await harness.answer(key, q, hist, settings.lang, generate); hist.push({ q, a: r.say }); return r; } catch (e) { console.warn(e); }
+    }
+    if (MODE === "browser") return null;
   }
   try {
     const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ obj: key, q, lang: settings.lang, history: (state.history[key + settings.lang] || []) }) });

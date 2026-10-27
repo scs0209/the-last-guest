@@ -600,7 +600,8 @@
       "noWebgpu": "This browser has no WebGPU, so Gemma can't run here. Suggested questions still use Gemma's own answers.",
       "failed": "Gemma could not start in this browser. Suggested questions still use Gemma's own answers.",
       "meanwhile": "(Until Gemma is loaded, the house answers typed questions from its script.)",
-      "status": "Gemma in your browser"
+      "status": "Gemma in your browser",
+      "offerServer": "Typed questions are answered by Gemma 4 E4B on this site's server, which takes about half a minute. For answers in seconds, load Gemma into your own browser: it downloads once (about 3.1 GB) and then runs on your device."
     }
   },
   "ko": {
@@ -1131,7 +1132,8 @@
       "noWebgpu": "이 브라우저는 WebGPU를 지원하지 않아 Gemma를 돌릴 수 없어요. 추천 질문은 계속 Gemma가 쓴 답으로 진행됩니다.",
       "failed": "이 브라우저에서 Gemma를 시작하지 못했어요. 추천 질문은 계속 Gemma가 쓴 답으로 진행됩니다.",
       "meanwhile": "(Gemma를 불러오기 전까지, 직접 입력한 질문에는 저택의 대본으로 답합니다.)",
-      "status": "브라우저 속 Gemma"
+      "status": "브라우저 속 Gemma",
+      "offerServer": "직접 입력한 질문에는 이 사이트 서버의 Gemma 4 E4B가 답하며, 30초쯤 걸립니다. 몇 초 만에 답을 받으려면 Gemma를 내 브라우저로 불러오세요. 처음 한 번 내려받으면(약 3.1GB) 이 기기에서 돌아갑니다."
     }
   }
 }
