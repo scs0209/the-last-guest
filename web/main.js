@@ -29,6 +29,7 @@ function loadGemma() {
       else { gemma.state = "failed"; renderGemma(); console.warn("Gemma failed to load:", data.message); }
     }
   };
+  gemma.worker.onerror = (e) => { gemma.state = "failed"; renderGemma(); console.warn("Gemma worker error:", e.message); };
   gemma.worker.postMessage({ type: "load" });
 }
 function generate(messages) {

@@ -594,7 +594,7 @@
       "close": "Close"
     },
     "browser": {
-      "offer": "Typed questions are answered by Gemma running in your own browser. It downloads once (about 3.4 GB) and then runs on your device; nothing you type leaves it.",
+      "offer": "Typed questions are answered by Gemma running in your own browser. It downloads once (about 3.1 GB) and then runs on your device; nothing you type leaves it.",
       "load": "Load Gemma in my browser",
       "loading": "Bringing Gemma into this house… {p}%",
       "ready": "Gemma is here. Typed questions are now answered live, on your device.",
@@ -1126,7 +1126,7 @@
       "close": "닫기"
     },
     "browser": {
-      "offer": "직접 입력한 질문에는 내 브라우저에서 돌아가는 Gemma가 답합니다. 처음 한 번 내려받으면(약 3.4GB) 이 기기에서 돌아가고, 입력한 내용은 기기 밖으로 나가지 않아요.",
+      "offer": "직접 입력한 질문에는 내 브라우저에서 돌아가는 Gemma가 답합니다. 처음 한 번 내려받으면(약 3.1GB) 이 기기에서 돌아가고, 입력한 내용은 기기 밖으로 나가지 않아요.",
       "load": "내 브라우저에 Gemma 불러오기",
       "loading": "Gemma를 저택으로 불러오는 중… {p}%",
       "ready": "Gemma가 도착했어요. 이제 직접 입력한 질문에 이 기기에서 실시간으로 답합니다.",

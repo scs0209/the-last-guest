@@ -1,0 +1,37 @@
+# The Last Guest — working notes
+
+DEV.to Hacktoberfest Open-Source AI Challenge, Week 4 "Ghost in the Machine". Deadline: Oct 31, 2026, 11:59 PM PDT (Nov 1, 3:59 PM KST).
+A Día de los Muertos ghost story: four objects (photo, letter, record, guest list) each remember only their own facts about the forgotten pianist Marisol Vega. Open models answer as the objects; code keeps them honest.
+
+## Rules for this project
+- Reply to the user in Korean first, then English.
+- All commits and pushes go under GitHub `scs0209` with `Changsu Seong <110822847+scs0209@users.noreply.github.com>` as the repo-local identity. Never the machine's global/work identity. Use `GH_TOKEN="$(gh auth token -u scs0209)"` per command instead of switching gh's active account.
+- Public repo: scs0209/the-last-guest. Agent session logs go only to the private repo scs0209/the-last-guest-sessions (Entire checkpoint refs). `agent-session/` and `.env` are git-ignored; never commit them, never print `.env`.
+- Before pushing, scan for API-key-shaped strings and personal emails.
+- Push only after the user confirms. Render watches `main`: pushing a changed `render.yaml` to main can create or change paid services.
+- No made-up results: every number in the game, README or post must come from `results/`.
+
+## Setup on a new machine
+```bash
+git clone https://github.com/scs0209/the-last-guest && cd the-last-guest
+git config user.name "Changsu Seong" && git config user.email "110822847+scs0209@users.noreply.github.com"
+uv sync                                    # Python 3.12+
+ollama pull gemma4:e4b && ollama pull embeddinggemma
+uv run python server.py                    # http://localhost:8765 (server mode, Gemma E4B via Ollama)
+python3 -m http.server 8770 --directory web  # static mode, same as the Render free site
+```
+`.env` (TINKER_API_KEY) is only needed for the Tinker scripts; Tinker credits are used up.
+
+## Where things stand (2026-10-27)
+- Data and evals: 22-fact graph (`facts.json`, Korean check words included), 478 eval questions, 891 filtered training conversations. Baselines (judge = Qwen3.5-397B on Tinker): Qwen3.5-4B prompt-only leaks 49.0%, Gemma 4 E4B 8.6%. Gemma inside the game harness: 0/478 by word check, 7 fallbacks, clue recall 74/97 by code (no judge).
+- Fine-tuning: Tinker credits ran out; MLX LoRA on Qwen3.5-4B is set up (`prep_mlx.py`, `lora.yaml`) but paused after out-of-memory errors while Gemma was loaded. Not trained.
+- Game (`web/`): title screen, first-person house, dialogue, journal, ofrenda, endings, Korean and English. Korean and English playthroughs reach the ending with suggested questions only.
+- Two ways to run the model: `server.py` (Ollama, E4B), or the static site where typed questions run Gemma 4 E2B in the player's browser (`web/gemma-worker.js`, WebGPU) behind `web/harness.js`, a JS port of the guardrail that matched Python on 1,058 answers. Regenerate `web/gen/` with `uv run python build_web.py` after changing facts, cards, server constants or the cache.
+- Render: a Blueprint was created from the earlier paid `pro plus` Docker config. `render.yaml` is now a free static site, but that change is on the work branch only. The paid service may need suspending or deleting in the dashboard.
+
+## Next steps
+1. Finish the in-browser Gemma test: the worker now imports Transformers.js from jsDelivr's `+esm` build and loads `Gemma4ForCausalLM` (text only, ~3.1 GB). Loading started in the preview; generation is untested.
+2. Merge the work branch to main after the user confirms, then deploy the free static site; stop the paid Render service.
+3. Optional: .tech domain on the Render site.
+4. Write the DEV post (writing is weighted most). Include measured numbers only, the known limits, and why open models matter here.
+5. Before submitting: export the full session log, delete the Tinker key and personal emails from it, and push it to the private sessions repo.
