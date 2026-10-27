@@ -193,7 +193,7 @@ form.ask input:focus { outline: 1px solid var(--accent); }
 /* ------------------------------------------------ ending */
 .ending { position: fixed; inset: 0; z-index: 45; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 32px; padding: 32px clamp(16px, 6vw, 90px); background: radial-gradient(ellipse at 30% 50%, rgba(40, 20, 10, .3), rgba(3, 3, 8, .82) 70%); opacity: 0; transition: opacity 2.5s; }
 .ending.show { opacity: 1; }
-.ending canvas { width: min(100%, 440px); aspect-ratio: 4 / 5; justify-self: center; filter: drop-shadow(0 0 40px rgba(242, 154, 29, .35)); }
+.ending canvas { width: min(100%, 440px); aspect-ratio: 4 / 5; justify-self: center; filter: drop-shadow(0 0 34px rgba(170, 182, 210, .22)); }
 .ending .name { font-family: var(--display); font-size: clamp(36px, 5vw, 58px); color: var(--gold); margin: 0; line-height: 1.1; }
 html[lang="ko"] .ending .name { font-family: var(--body); }
 .ending .dates { font-family: var(--sans); color: var(--muted); letter-spacing: .2em; margin-bottom: 18px; }

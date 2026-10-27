@@ -318,75 +318,100 @@ export function drawWave(g, w, h, t, active) {
 
 // ---------------------------------------------------------------- the portrait for the ending
 // A painted oval portrait: dark hair with a silver hummingbird comb and a marigold, a high-collared dress.
-export function drawPortrait(g, w, h, t) {
-  g.clearRect(0, 0, w, h);
-  const cx = w / 2, cy = h / 2, rx = w * .4, ry = h * .44;
-  // gilt oval frame
-  const fr = g.createLinearGradient(0, 0, w, h);
-  fr.addColorStop(0, "#6e4f1c"); fr.addColorStop(.45, "#f0cd7c"); fr.addColorStop(1, "#5d4115");
-  g.fillStyle = fr; g.beginPath(); g.ellipse(cx, cy, rx + w * .06, ry + w * .06, 0, 0, Math.PI * 2); g.fill();
-  g.strokeStyle = "rgba(60,40,10,.6)"; g.lineWidth = 3; g.beginPath(); g.ellipse(cx, cy, rx + w * .02, ry + w * .02, 0, 0, Math.PI * 2); g.stroke();
+// The ending: her photograph, restored. A black-and-white cabinet card in the style of the 1930s, the only colour
+// the marigold someone hand-tinted later. Her eyes are open and on you. The card is drawn once and cached; each frame
+// only adds the flicker of a faint second exposure and grain.
+let portraitCache = null;
+function paintPortraitCard(w, h) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d"), r = rand(41);
+  // card mount: dark board with a gilt bevel and a printed studio line
+  g.fillStyle = "#17120e"; g.fillRect(0, 0, w, h);
+  g.strokeStyle = "rgba(190,160,100,.55)"; g.lineWidth = 3; g.strokeRect(w * .06, h * .05, w * .88, h * .9);
+  g.fillStyle = "rgba(190,160,100,.6)"; g.font = `italic ${w * .032}px "Cormorant Garamond", Georgia, serif`; g.textAlign = "center";
+  g.fillText("Oaxaca · 1931", w / 2, h * .925);
+  // the print: an oval vignette, soft and silvery
+  const cx = w / 2, cy = h * .45, rx = w * .36, ry = h * .38;
   g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.clip();
-  // painted background, warm candlelight from the left
-  const bg = g.createRadialGradient(cx - rx * .5, cy - ry * .4, 0, cx, cy, rx * 1.4);
-  bg.addColorStop(0, "#6d4a2c"); bg.addColorStop(.6, "#33201a"); bg.addColorStop(1, "#140c0a");
+  const bg = g.createRadialGradient(cx - rx * .3, cy - ry * .2, rx * .1, cx, cy, rx * 1.2);
+  bg.addColorStop(0, "#9a958e"); bg.addColorStop(.7, "#55514c"); bg.addColorStop(1, "#24221f");
   g.fillStyle = bg; g.fillRect(0, 0, w, h);
-  const s = rx / 100;
-  const P = (x, y) => [cx + x * s, cy + y * s];
-  const shape = (pts, fill) => { g.fillStyle = fill; g.beginPath(); pts.forEach(([x, y], i) => { const [a, b] = P(x, y); i ? g.lineTo(a, b) : g.moveTo(a, b); }); g.closePath(); g.fill(); };
-  // dress and shoulders
-  const dress = g.createLinearGradient(0, cy, 0, h);
-  dress.addColorStop(0, "#3b2347"); dress.addColorStop(1, "#1c1024");
-  g.fillStyle = dress; g.beginPath(); const [d1, d2] = P(-95, 140); g.moveTo(d1, d2);
-  [[-80, 70], [-40, 52], [-14, 46], [14, 46], [40, 52], [80, 70], [95, 140]].forEach(([x, y]) => { const [a, b] = P(x, y); g.lineTo(a, b); }); g.fill();
-  // lace collar
-  g.fillStyle = "rgba(240,228,205,.85)";
-  for (let i = -5; i <= 5; i++) { const [a, b] = P(i * 6, 50 + Math.abs(i) * 1.2); g.beginPath(); g.arc(a, b, 4 * s, 0, Math.PI * 2); g.fill(); }
-  // neck
-  shape([[-12, 48], [-10, 20], [10, 20], [12, 48]], "#c69a7a");
-  // hair behind
-  g.fillStyle = "#140c0a"; g.beginPath(); const [h1, h2] = P(0, -18); g.ellipse(h1, h2, 46 * s, 54 * s, 0, 0, Math.PI * 2); g.fill();
-  // face
-  const skin = g.createRadialGradient(...P(-10, -24), 2 * s, ...P(0, -14), 40 * s);
-  skin.addColorStop(0, "#e2b994"); skin.addColorStop(1, "#a9785a");
-  g.fillStyle = skin; g.beginPath(); const [f1, f2] = P(0, -14); g.ellipse(f1, f2, 30 * s, 38 * s, 0, 0, Math.PI * 2); g.fill();
-  // soft features: brows, closed eyes, lips
-  g.strokeStyle = "rgba(50,28,20,.7)"; g.lineWidth = 2.2 * s; g.lineCap = "round";
-  [[-13, -26], [13, -26]].forEach(([x, y]) => { const [a, b] = P(x, y); g.beginPath(); g.arc(a, b + 6 * s, 7 * s, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); });
-  g.lineWidth = 1.6 * s;
-  [[-12, -17], [12, -17]].forEach(([x, y]) => { const [a, b] = P(x, y); g.beginPath(); g.arc(a, b - 3 * s, 6 * s, Math.PI * .2, Math.PI * .8); g.stroke(); });
-  g.strokeStyle = "rgba(120,60,40,.5)"; g.lineWidth = 1.4 * s; { const [a, b] = P(0, -12); g.beginPath(); g.moveTo(a, b - 6 * s); g.lineTo(a - 2 * s, b + 2 * s); g.stroke(); }
-  g.fillStyle = "#9a4a3e"; { const [a, b] = P(0, 4); g.beginPath(); g.ellipse(a, b, 7 * s, 2.6 * s, 0, 0, Math.PI * 2); g.fill(); }
-  // hair framing the face, parted in the middle, gathered up
-  g.fillStyle = "#1a100c";
-  g.beginPath(); const [p1, p2] = P(0, -52); g.moveTo(p1, p2);
-  g.quadraticCurveTo(...P(-38, -50), ...P(-32, -6)); g.quadraticCurveTo(...P(-26, -30), ...P(0, -44));
-  g.quadraticCurveTo(...P(26, -30), ...P(32, -6)); g.quadraticCurveTo(...P(38, -50), p1, p2); g.fill();
-  g.beginPath(); const [b1, b2] = P(0, -60); g.ellipse(b1, b2, 26 * s, 14 * s, 0, 0, Math.PI * 2); g.fill();
+  const s = rx / 66, P = (x, y) => [cx + x * s, cy + (y + 10) * s]; // a close head-and-shoulders crop
+  const shade = (x, y, r0, r1, a, b) => { const [px, py] = P(x, y); const gr = g.createRadialGradient(px, py, r0 * s, px, py, r1 * s); gr.addColorStop(0, a); gr.addColorStop(1, b); return gr; };
+  g.filter = "blur(0.6px)";
+  // shoulders, a dark dress with a lace collar
+  g.fillStyle = shade(-20, 95, 10, 110, "#3a3734", "#0e0d0c"); g.beginPath();
+  const [d0x, d0y] = P(-110, 140); g.moveTo(d0x, d0y);
+  [[-95, 82], [-55, 62], [-22, 56], [22, 56], [55, 62], [95, 82], [110, 140]].forEach(([x, y]) => g.lineTo(...P(x, y))); g.fill();
+  g.fillStyle = "rgba(225,222,215,.75)";
+  for (let k = -6; k <= 6; k++) { const [lx, ly] = P(k * 5.5, 57 + Math.abs(k) * 1.1); g.beginPath(); g.arc(lx, ly, 3.4 * s, 0, Math.PI * 2); g.fill(); }
+  // neck, then hair behind the head
+  g.fillStyle = shade(-4, 40, 2, 22, "#a39d95", "#5b5650"); g.beginPath(); g.moveTo(...P(-15, 58)); g.lineTo(...P(-12, 22)); g.lineTo(...P(12, 22)); g.lineTo(...P(15, 58)); g.fill();
+  g.fillStyle = "#0d0c0b"; g.beginPath(); g.ellipse(...P(0, -14), 43 * s, 52 * s, 0, 0, Math.PI * 2); g.fill();
+  // face: light from the upper left, a soft shadow along the right cheek and jaw
+  g.fillStyle = shade(-10, -22, 4, 44, "#d6d1c9", "#6f6a63"); g.beginPath(); g.ellipse(...P(0, -12), 29 * s, 37 * s, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = shade(24, -4, 2, 26, "rgba(40,36,32,.55)", "rgba(40,36,32,0)"); g.beginPath(); g.ellipse(...P(16, -6), 16 * s, 30 * s, 0, 0, Math.PI * 2); g.fill();
+  // brows
+  g.strokeStyle = "rgba(25,22,20,.85)"; g.lineCap = "round"; g.lineWidth = 2.6 * s;
+  [[-12, -1], [12, 1]].forEach(([x, k]) => { const [bx, by] = P(x, -27); g.beginPath(); g.moveTo(bx - 8 * s, by + 1.5 * s * (k < 0 ? 1 : 1)); g.quadraticCurveTo(bx, by - 3 * s, bx + 8 * s, by + 1 * s); g.stroke(); });
+  // eyes, open: shadowed sockets, whites, dark irises with a catchlight, heavy upper lids
+  [[-12, -19], [12, -19]].forEach(([x, y]) => {
+    const [ex, ey] = P(x, y);
+    g.fillStyle = shade(x, y, 2, 11, "rgba(50,45,40,.55)", "rgba(50,45,40,0)"); g.beginPath(); g.ellipse(ex, ey, 11 * s, 7 * s, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#cfcac2"; g.beginPath(); g.ellipse(ex, ey, 6.6 * s, 3.2 * s, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#151311"; g.beginPath(); g.arc(ex + .4 * s, ey + .2 * s, 2.9 * s, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "rgba(255,255,255,.9)"; g.beginPath(); g.arc(ex - .6 * s, ey - .9 * s, .8 * s, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = "rgba(20,18,16,.9)"; g.lineWidth = 1.7 * s; g.beginPath(); g.ellipse(ex, ey + .6 * s, 6.8 * s, 3.6 * s, 0, Math.PI * 1.05, Math.PI * 1.95); g.stroke();
+  });
+  // nose and lips
+  g.strokeStyle = "rgba(60,55,50,.6)"; g.lineWidth = 1.3 * s; g.beginPath(); g.moveTo(...P(2, -16)); g.quadraticCurveTo(...P(5, -3), ...P(1, 0)); g.stroke();
+  g.fillStyle = "rgba(55,50,46,.55)"; g.beginPath(); g.ellipse(...P(-2, 1), 5 * s, 1.8 * s, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#5c5550"; g.beginPath(); g.moveTo(...P(-9, 12)); g.quadraticCurveTo(...P(0, 9), ...P(9, 12)); g.quadraticCurveTo(...P(0, 17), ...P(-9, 12)); g.fill();
+  g.strokeStyle = "rgba(30,27,25,.7)"; g.lineWidth = 1 * s; g.beginPath(); g.moveTo(...P(-9, 12)); g.quadraticCurveTo(...P(0, 13), ...P(9, 12)); g.stroke();
+  // hair framing the face, parted in the middle and drawn back
+  g.fillStyle = "#0b0a09"; g.beginPath(); g.moveTo(...P(0, -52));
+  g.quadraticCurveTo(...P(-40, -50), ...P(-33, -2)); g.quadraticCurveTo(...P(-27, -34), ...P(0, -45));
+  g.quadraticCurveTo(...P(27, -34), ...P(33, -2)); g.quadraticCurveTo(...P(40, -50), ...P(0, -52)); g.fill();
+  g.strokeStyle = "rgba(120,115,108,.25)"; g.lineWidth = 1; for (let k = 0; k < 14; k++) { g.beginPath(); g.moveTo(...P(-2, -50)); g.quadraticCurveTo(...P(-20 - k, -44 + k), ...P(-30 + k * .6, -10 + k * 2)); g.stroke(); }
   // silver hummingbird comb
-  const [hx, hy] = P(24, -52);
-  g.save(); g.translate(hx, hy); g.rotate(-.5);
-  const sil = g.createLinearGradient(-10 * s, 0, 10 * s, 0); sil.addColorStop(0, "#9aa3b5"); sil.addColorStop(.5, "#f4f6fb"); sil.addColorStop(1, "#8a92a5");
-  g.fillStyle = sil;
-  g.beginPath(); g.ellipse(0, 0, 7 * s, 3 * s, 0, 0, Math.PI * 2); g.fill();                         // body
-  g.beginPath(); g.moveTo(6 * s, -1 * s); g.lineTo(15 * s, -2.5 * s); g.lineTo(6 * s, 1 * s); g.fill(); // beak
-  g.beginPath(); g.moveTo(-2 * s, -1 * s); g.quadraticCurveTo(-4 * s, -12 * s, 4 * s, -14 * s); g.quadraticCurveTo(2 * s, -6 * s, 2 * s, -1 * s); g.fill(); // wing
-  g.beginPath(); g.moveTo(-6 * s, 0); g.lineTo(-13 * s, -3 * s); g.lineTo(-12 * s, 3 * s); g.fill(); // tail
+  const [hx, hy] = P(25, -46); g.save(); g.translate(hx, hy); g.rotate(-.5);
+  g.fillStyle = "#e8e6e2"; g.beginPath(); g.ellipse(0, 0, 7 * s, 3 * s, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.moveTo(6 * s, -1 * s); g.lineTo(15 * s, -2.5 * s); g.lineTo(6 * s, 1 * s); g.fill();
+  g.beginPath(); g.moveTo(-2 * s, -1 * s); g.quadraticCurveTo(-4 * s, -12 * s, 4 * s, -14 * s); g.quadraticCurveTo(2 * s, -6 * s, 2 * s, -1 * s); g.fill();
   g.restore();
-  // marigold on the other side
-  const [mx, my] = P(-28, -48);
-  for (let ring = 3; ring >= 1; ring--) {
-    for (let i = 0; i < 12; i++) {
-      const a = i / 12 * Math.PI * 2 + ring;
-      g.fillStyle = ring === 3 ? "#d8650a" : ring === 2 ? "#f08a12" : "#ffb52e";
-      g.beginPath(); g.ellipse(mx + Math.cos(a) * ring * 2.6 * s, my + Math.sin(a) * ring * 2.6 * s, 3.4 * s, 2 * s, a, 0, Math.PI * 2); g.fill();
-    }
+  g.filter = "none";
+  // grain, a few scratches, silvering at the rim of the oval
+  for (let i = 0; i < 6000; i++) { g.fillStyle = `rgba(${r() > .5 ? "255,255,255" : "0,0,0"},${r() * .09})`; g.fillRect(r() * w, r() * h, 1, 1); }
+  g.strokeStyle = "rgba(235,232,225,.35)"; g.lineWidth = .8;
+  for (let i = 0; i < 9; i++) { const x0 = cx - rx + r() * rx * 2, y0 = cy - ry + r() * ry * 2; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0 + (r() - .5) * 30, y0 + r() * 90); g.stroke(); }
+  const rim = g.createRadialGradient(cx, cy, rx * .55, cx, cy, rx * 1.05);
+  rim.addColorStop(0, "rgba(0,0,0,0)"); rim.addColorStop(.8, "rgba(10,9,8,.6)"); rim.addColorStop(1, "rgba(150,155,165,.45)");
+  g.fillStyle = rim; g.fillRect(0, 0, w, h);
+  g.restore();
+  // make the whole print monochrome
+  const img = g.getImageData(0, 0, w, h), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const l = d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11; d[i] = l * 1.02; d[i + 1] = l; d[i + 2] = l * .96; }
+  g.putImageData(img, 0, 0);
+  // the one hand-tinted thing: the marigold in her hair
+  const [mx, my] = P(-29, -46);
+  for (let ring = 3; ring >= 1; ring--) for (let k = 0; k < 12; k++) {
+    const a = k / 12 * Math.PI * 2 + ring;
+    g.fillStyle = ring === 3 ? "rgba(200,95,15,.85)" : ring === 2 ? "rgba(235,135,25,.85)" : "rgba(250,180,50,.9)";
+    g.beginPath(); g.ellipse(mx + Math.cos(a) * ring * 2.6 * s, my + Math.sin(a) * ring * 2.6 * s, 3.4 * s, 2 * s, a, 0, Math.PI * 2); g.fill();
   }
-  // brush texture and candle glow
-  const rr = rand(3);
-  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${rr() > .5 ? "255,230,190" : "0,0,0"},${rr() * .05})`; g.fillRect(rr() * w, rr() * h, 2 + rr() * 3, 1); }
-  const cg = g.createRadialGradient(cx - rx * .6, cy + ry * .2, 0, cx - rx * .6, cy + ry * .2, rx);
-  cg.addColorStop(0, `rgba(255,170,70,${.18 + .05 * Math.sin(t * 4)})`); cg.addColorStop(1, "rgba(255,170,70,0)");
-  g.fillStyle = cg; g.fillRect(0, 0, w, h);
+  return { c, cx, cy, rx, ry };
+}
+
+export function drawPortrait(g, w, h, t) {
+  if (!portraitCache || portraitCache.c.width !== w) portraitCache = paintPortraitCard(w, h);
+  const { c, cx, cy, rx, ry } = portraitCache;
+  g.clearRect(0, 0, w, h);
+  g.drawImage(c, 0, 0);
+  // a second exposure that is not quite there: slightly offset, breathing in and out
+  const a = .07 + .06 * Math.sin(t * .9) + (Math.sin(t * 7.3) > .97 ? .12 : 0);
+  g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.clip();
+  g.globalAlpha = a; g.drawImage(c, 6 + Math.sin(t * .5) * 3, -4, w, h); g.globalAlpha = 1;
+  // living grain
+  for (let i = 0; i < 700; i++) { g.fillStyle = `rgba(${Math.random() > .5 ? "255,255,255" : "0,0,0"},${Math.random() * .08})`; g.fillRect(cx - rx + Math.random() * rx * 2, cy - ry + Math.random() * ry * 2, 1.5, 1.5); }
   g.restore();
 }
