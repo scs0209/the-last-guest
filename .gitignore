@@ -4,3 +4,4 @@ agent-session/
 .venv/
 .env
 .env.*
+!.env.example
