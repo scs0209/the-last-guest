@@ -4,7 +4,7 @@ const rand = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 
 // ---------------------------------------------------------------- title scene
 // A moonlit mansion on a hill, lit windows, bare trees, iron gate, a lantern path and a jack-o'-lantern.
-export function drawTitle(g, w, h, t) {
+function drawTitleDrawn(g, w, h, t) { // the code-drawn scene: shown until the title image loads, or if it fails
   const r = rand(7);
   const sky = g.createLinearGradient(0, 0, 0, h);
   sky.addColorStop(0, "#050a1f"); sky.addColorStop(.55, "#14254e"); sky.addColorStop(1, "#1d1a33");
@@ -141,6 +141,92 @@ export function drawTitle(g, w, h, t) {
   // vignette
   const v = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .3, w / 2, h / 2, Math.max(w, h) * .75);
   v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.7)");
+  g.fillStyle = v; g.fillRect(0, 0, w, h);
+}
+
+// The title image (web/img/title.webp, supplied by the project owner), with life laid over it in code: the image
+// drifts with the mouse, fog rolls across the hill, the lit windows and the path candles flicker, the tower window
+// sometimes goes dark as if someone passed it, marigold petals fall, and grain and a vignette sit on top.
+const titleImg = new Image();
+titleImg.src = "img/title.webp";
+const TW = 1672, TH = 941; // the image's size, for the light positions below
+const LIGHTS = [ // [x, y, radius, kind] in image pixels
+  [1232, 205, 26, "tower"], [1140, 378, 22, "win"], [1235, 372, 22, "win"], [1135, 462, 18, "win"], [1238, 470, 26, "door"],
+  [1203, 462, 12, "lamp"], [1273, 461, 12, "lamp"],
+  [1240, 560, 8, "c"], [1262, 600, 8, "c"], [1222, 640, 9, "c"], [1300, 680, 9, "c"], [1228, 700, 9, "c"], [1352, 700, 10, "c"],
+  [1100, 790, 12, "c"], [1385, 742, 11, "c"], [1426, 796, 12, "c"], [1058, 852, 14, "c"], [1590, 905, 15, "c"], [1340, 660, 9, "c"],
+];
+const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+addEventListener("pointermove", (e) => { mouse.tx = e.clientX / innerWidth - .5; mouse.ty = e.clientY / innerHeight - .5; });
+let fogTex = null, grainTex = null;
+const petals = Array.from({ length: 70 }, (_, i) => ({ x: Math.random(), y: Math.random(), s: .5 + Math.random(), v: .02 + Math.random() * .03, p: Math.random() * 6 }));
+function makeFog() {
+  const c = document.createElement("canvas"); c.width = 1024; c.height = 256; const g = c.getContext("2d");
+  for (let i = 0; i < 90; i++) {
+    const x = Math.random() * 1024, y = 60 + Math.random() * 150, r = 40 + Math.random() * 110;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "rgba(170,180,210,.16)"); gr.addColorStop(1, "rgba(170,180,210,0)");
+    g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+    if (x < r) { g.fillStyle = gr; g.save(); g.translate(1024, 0); g.fillRect(x - r, y - r, r * 2, r * 2); g.restore(); } // tile seamlessly
+    if (x > 1024 - r) { g.save(); g.translate(-1024, 0); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); g.restore(); }
+  }
+  return c;
+}
+function makeGrain() {
+  const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"), d = g.createImageData(256, 256);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 22; }
+  g.putImageData(d, 0, 0); return c;
+}
+
+export function drawTitle(g, w, h, t) {
+  if (!(titleImg.complete && titleImg.naturalWidth)) return drawTitleDrawn(g, w, h, t);
+  fogTex ||= makeFog(); grainTex ||= makeGrain();
+  mouse.x += (mouse.tx - mouse.x) * .04; mouse.y += (mouse.ty - mouse.y) * .04;
+  const portrait = w < h * .9;
+  // cover the canvas; on tall screens keep the mansion (x ≈ 0.73) in view, on wide ones anchor to the right
+  const k = Math.max(w / TW, h / TH) * 1.05, iw = TW * k, ih = TH * k;
+  const focusX = portrait ? 1230 / TW : 1;
+  let ox = portrait ? w / 2 - focusX * iw : w - iw, oy = portrait ? Math.min(0, h * .38 - (420 / TH) * ih) : (h - ih) / 2;
+  ox = Math.min(0, Math.max(w - iw, ox - mouse.x * w * .02)); oy = Math.min(0, Math.max(h - ih, oy - mouse.y * h * .015));
+  g.fillStyle = "#04060c"; g.fillRect(0, 0, w, h);
+  g.drawImage(titleImg, ox, oy, iw, ih);
+  const P = (x, y) => [ox + x * k, oy + y * k];
+  // lights: candles waver fast, windows breathe; the tower window sometimes goes dark for a moment
+  g.globalCompositeOperation = "lighter";
+  const shadowPass = Math.sin(t * .31) > .93; // someone walking past the tower window
+  LIGHTS.forEach(([x, y, r, kind], i) => {
+    let f = kind === "c" ? .55 + .3 * Math.sin(t * 9 + i * 1.7) + .15 * Math.sin(t * 23 + i) : .6 + .2 * Math.sin(t * 1.3 + i) + .08 * Math.sin(t * 11 + i);
+    if (kind === "tower" && shadowPass) f = .05;
+    const [px, py] = P(x, y), rr = r * k * (kind === "c" ? 2.2 : 2.6);
+    const gr = g.createRadialGradient(px, py, 0, px, py, rr);
+    gr.addColorStop(0, `rgba(255,170,70,${.32 * f})`); gr.addColorStop(1, "rgba(255,140,50,0)");
+    g.fillStyle = gr; g.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+  });
+  g.globalCompositeOperation = "source-over";
+  if (shadowPass) { const [px, py] = P(1232, 205); g.fillStyle = "rgba(5,4,6,.55)"; g.fillRect(px - 9 * k, py - 16 * k, 18 * k, 30 * k); }
+  // fog: two layers drifting at different speeds across the lower half
+  [[.012, .55, .9], [.02, .68, 1.2]].forEach(([speed, top, scale], j) => {
+    const fh = h * .35 * scale, fw = fh * 4, x0 = -((t * speed * w + j * 300) % fw);
+    g.globalAlpha = .3 + .1 * Math.sin(t * .2 + j);
+    for (let x = x0; x < w; x += fw) g.drawImage(fogTex, x, h * top, fw, fh);
+    g.globalAlpha = 1;
+  });
+  // falling marigold petals
+  petals.forEach((p) => {
+    p.y += p.v * .016; p.x += Math.sin(t * .8 + p.p) * .0006;
+    if (p.y > 1.05) { p.y = -.05; p.x = Math.random(); }
+    const px = p.x * w, py = p.y * h;
+    g.fillStyle = `rgba(242,${120 + p.s * 30 | 0},30,${.55 + .3 * p.s})`;
+    g.beginPath(); g.ellipse(px, py, 3.2 * p.s, 1.8 * p.s, t * p.v * 20 + p.p, 0, Math.PI * 2); g.fill();
+  });
+  // keep the left side dark for the title (wide screens) or the bottom (tall screens)
+  const side = portrait ? g.createLinearGradient(0, h * .45, 0, h) : g.createLinearGradient(0, 0, w * .55, 0);
+  side.addColorStop(0, portrait ? "rgba(3,4,10,0)" : "rgba(3,4,10,.75)"); side.addColorStop(1, portrait ? "rgba(3,4,10,.85)" : "rgba(3,4,10,0)");
+  g.fillStyle = side; g.fillRect(0, 0, w, h);
+  // grain and vignette, as in the house
+  g.globalAlpha = .9; g.fillStyle = g.createPattern(grainTex, "repeat");
+  g.save(); g.translate(Math.random() * 256, Math.random() * 256); g.fillRect(-256, -256, w + 512, h + 512); g.restore(); g.globalAlpha = 1;
+  const v = g.createRadialGradient(w * .6, h * .45, Math.min(w, h) * .35, w * .6, h * .45, Math.max(w, h) * .8);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.65)");
   g.fillStyle = v; g.fillRect(0, 0, w, h);
 }
 

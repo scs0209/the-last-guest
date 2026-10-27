@@ -226,3 +226,7 @@ html[lang="ko"] .ending .name { font-family: var(--body); }
   .tagline { margin-bottom: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+/* tall screens of any width: the house fills the top, the title and menu sit below it */
+@media (max-aspect-ratio: 9/10) {
+  .menu-inner { top: auto; bottom: 64px; transform: none; }
+}
