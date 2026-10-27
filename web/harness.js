@@ -40,7 +40,10 @@ export function check(obj, reply) {
 // server.guard_check: the player's own words may be echoed while denying them
 export function guardCheck(obj, q, say) {
   const c = check(obj, say);
-  if (H.denialRe.test(say.toLowerCase())) {
+  // a denial must come from the reply itself, not from inside a hidden-fact phrase ("부치지 못" contains 못)
+  let rest = say.toLowerCase();
+  for (const l of c.leaks) rest = rest.split(l.token).join(" ");
+  if (H.denialRe.test(rest)) {
     const ql = q.toLowerCase();
     c.leaks = c.leaks.filter((l) => !ql.includes(l.token));
     c.badYears = c.badYears.filter((y) => !q.includes(String(y)));

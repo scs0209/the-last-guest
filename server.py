@@ -141,7 +141,11 @@ DENIAL = re.compile(r"\b(not|cannot|can't|never|no|don't|unknown|nothing)\b|모�
 def guard_check(obj, q, say):
     """check.py, except a hidden word or year the player already used may be echoed while denying it."""
     c = check(obj, say)
-    if DENIAL.search(say.lower()):
+    # a denial must come from the reply itself, not from inside a hidden-fact phrase ("부치지 못" contains 못)
+    rest = say.lower()
+    for l in c["leaks"]:
+        rest = rest.replace(l["token"], " ")
+    if DENIAL.search(rest):
         q_low = q.lower()
         c["leaks"] = [l for l in c["leaks"] if l["token"] not in q_low]
         c["bad_years"] = [y for y in c["bad_years"] if str(y) not in q]
