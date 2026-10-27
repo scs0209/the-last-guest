@@ -1,0 +1,60 @@
+{
+  "version": "0.1",
+  "objects": {
+    "photo": {
+      "label": "The Photograph (Oct. 31, 1931 group photo, black and white)",
+      "allowed_years": [1931]
+    },
+    "letter": {
+      "label": "The Letter (Thomas's unsent letter, Nov. 1931)",
+      "allowed_years": [1931]
+    },
+    "record": {
+      "label": "The Record (home recording, Halloween 1931 party)",
+      "allowed_years": [1931]
+    },
+    "guest_list": {
+      "label": "The Guest List (Eleanor Whitcombe's lists, 1928-1932)",
+      "allowed_years": [1928, 1929, 1930, 1931, 1932]
+    }
+  },
+  "facts": [
+    {"id": "F01", "text": "Her first name is Marisol.", "holders": ["record"], "tokens": ["marisol"], "goal": "name"},
+    {"id": "F02", "text": "The guest list names her as Miss M. Vega.", "holders": ["guest_list"], "tokens": ["vega"], "goal": "name"},
+    {"id": "F03", "text": "The back of the photo reads 'M.V. at the piano'.", "holders": ["photo"], "tokens": ["m.v."], "goal": "name"},
+    {"id": "F04", "text": "She came from Oaxaca.", "holders": ["record", "letter"], "tokens": ["oaxaca"], "goal": "why"},
+    {"id": "F05", "text": "She played piano and sang at the Halloween parties from 1928 to 1931.", "holders": ["guest_list"], "tokens": ["pianoforte"], "goal": "name"},
+    {"id": "F06", "text": "Seat 7 at the table is the piano bench, and it was hers.", "holders": ["guest_list"], "tokens": ["seat 7", "seat seven", "seventh seat", "number seven"], "goal": "offering"},
+    {"id": "F07", "text": "The pianist's face is scratched out of the photo.", "holders": ["photo"], "tokens": ["scratched", "scraped"], "goal": "face"},
+    {"id": "F08", "text": "She wore a silver comb shaped like a hummingbird.", "holders": ["photo"], "tokens": ["hummingbird"], "goal": "face"},
+    {"id": "F09", "text": "She wore a flower in her hair (the photo cannot see its color).", "holders": ["photo"], "tokens": [], "goal": "offering"},
+    {"id": "F10", "text": "The flowers she pinned in her hair were marigolds.", "holders": ["letter"], "tokens": ["marigold", "cempasúchil", "cempasuchil"], "goal": "offering"},
+    {"id": "F11", "text": "She and Thomas were secretly engaged.", "holders": ["letter"], "tokens": ["engaged", "engagement", "betrothed", "marry", "married"], "goal": "why"},
+    {"id": "F12", "text": "Thomas's mother forbade the engagement and sent her away.", "holders": ["letter"], "tokens": ["forbade", "forbid", "sent her away", "sent you away"], "goal": "why"},
+    {"id": "F13", "text": "The guest lists were written by Eleanor Whitcombe.", "holders": ["guest_list"], "tokens": ["eleanor"], "goal": "why"},
+    {"id": "F14", "text": "Thomas promised to keep her place empty every year.", "holders": ["letter"], "tokens": ["keep your place", "keep your seat", "place empty", "seat empty"], "goal": "offering"},
+    {"id": "F15", "text": "At the end of the recording she says: 'Next year, save me a seat.'", "holders": ["record"], "tokens": ["save me a seat"], "goal": "offering"},
+    {"id": "F16", "text": "She sang La Llorona.", "holders": ["record"], "tokens": ["llorona"], "goal": "offering"},
+    {"id": "F17", "text": "She loved hot chocolate made her grandmother's way, with cinnamon.", "holders": ["record"], "tokens": ["cinnamon", "chocolate", "grandmother"], "goal": "offering"},
+    {"id": "F18", "text": "Her line is struck through in the 1932 guest list.", "holders": ["guest_list"], "tokens": ["struck", "crossed out", "inked out"], "goal": "why"},
+    {"id": "F19", "text": "Seven people are in the photo.", "holders": ["photo"], "tokens": [], "goal": null},
+    {"id": "F20", "text": "The letter is signed by Thomas.", "holders": ["letter", "guest_list"], "tokens": ["thomas"], "goal": "why"},
+    {"id": "F21", "text": "The letter was never sent.", "holders": [], "tokens": ["never sent", "never mailed"], "goal": null, "narrator_only": true},
+    {"id": "F22", "text": "She died in Oaxaca in 1933.", "holders": [], "tokens": ["1933", "died", "death"], "goal": null, "narrator_only": true}
+  ],
+  "unknowables": [
+    "her eye color",
+    "her parents' names",
+    "her life in Oaxaca after 1931",
+    "how she died",
+    "who took the photograph",
+    "what Eleanor felt",
+    "whether she ever read the letter"
+  ],
+  "goals": {
+    "name": "Recover her name",
+    "face": "Restore her face in the photo",
+    "why": "Learn why she was forgotten",
+    "offering": "Know what to place at seat 7: photo, name card, marigolds, cinnamon chocolate"
+  }
+}
