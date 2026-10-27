@@ -15,7 +15,7 @@
 ### 순서
 | # | 할 일 | 누가 | 확인 방법 |
 |---|---|---|---|
-| R1 | Render 대시보드에서 유료 서비스(`the-last-guest`, Docker, pro plus)의 상태와 요금제 확인 → **일시정지 또는 삭제** | 사용자 | Billing에서 예상 청구액이 늘지 않는지 |
+| R1 | ~~유료 서비스(`the-last-guest`, Docker, pro plus) 일시정지 또는 삭제~~ **2026-10-28 일시정지함** (삭제는 안 함). 일시정지 중에도 과금되는지는 Billing에서 확인 필요 | 사용자 | Billing에서 예상 청구액이 늘지 않는지 |
 | R2 | Billing에서 크레딧 잔액과 1달러 청구의 정체 확인 (임시 승인인지, 사용료인지) | 사용자 | 인보이스, 카드사 앱 |
 | R3 | `wip/browser-gemma` 검토 후 `main`에 병합하고 푸시 | 사용자 확인 → Claude | `git log origin/main` |
 | R4 | 정적 사이트 배포. 기존 서비스와 이름이 같아서(`the-last-guest`) Blueprint 동기화가 서비스 종류(Docker → static)를 못 바꿀 수 있다. 그럴 땐 R1에서 서비스를 지운 뒤 동기화하거나, `render.yaml`의 `name`을 바꾼다 (예: `the-last-guest-site`) | 사용자(대시보드) + Claude(`render.yaml`) | 대시보드에 static site로 표시, 요금 Free |
