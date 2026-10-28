@@ -163,7 +163,7 @@ render.yaml, Dockerfile          the two Render services
 ## Credits
 
 - **3D models and textures:** [Poly Haven](https://polyhaven.com), CC0. Full list and processing in [`web/models/SOURCES.md`](web/models/SOURCES.md).
-- **Title image and Marisol's photograph:** supplied by the project owner ([`web/img/SOURCES.md`](web/img/SOURCES.md)).
+- **Title image and Marisol's photograph:** generated with ChatGPT image generation (OpenAI) ([`web/img/SOURCES.md`](web/img/SOURCES.md)).
 - **Marisol's voice:** generated with Qwen3-TTS ([`make_voice.py`](make_voice.py)); her tune is written for this game.
 - **Models:** Gemma 4 (Google) through [Ollama](https://ollama.com) and [Transformers.js](https://github.com/huggingface/transformers.js) (`onnx-community/gemma-4-E2B-it-ONNX`).
 - **Engine:** [Three.js](https://threejs.org).
@@ -172,7 +172,7 @@ Marisol, the Whitcombes and their house are fictional.
 
 ## License
 
-No license has been chosen yet. Until one is added, all rights are reserved by the author; third-party assets keep their own licenses listed above.
+The code is released under the [MIT License](LICENSE). Third-party assets keep their own terms, listed in [Credits](#credits): the Poly Haven models and textures are CC0.
 
 ---
 

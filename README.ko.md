@@ -163,7 +163,7 @@ render.yaml, Dockerfile          Render 서비스 두 개
 ## 만든 데 쓴 것들
 
 - **3D 모델과 텍스처:** [Poly Haven](https://polyhaven.com), CC0. 전체 목록과 처리 방법은 [`web/models/SOURCES.md`](web/models/SOURCES.md)
-- **시작 화면 이미지와 마리솔 사진:** 프로젝트 소유자 제공 ([`web/img/SOURCES.md`](web/img/SOURCES.md))
+- **시작 화면 이미지와 마리솔 사진:** ChatGPT 이미지 생성(OpenAI)으로 만듦 ([`web/img/SOURCES.md`](web/img/SOURCES.md))
 - **마리솔의 목소리:** Qwen3-TTS로 생성 ([`make_voice.py`](make_voice.py)). 그녀의 노래는 이 게임을 위해 만든 선율입니다
 - **모델:** Gemma 4 (Google), [Ollama](https://ollama.com)와 [Transformers.js](https://github.com/huggingface/transformers.js) (`onnx-community/gemma-4-E2B-it-ONNX`)로 실행
 - **엔진:** [Three.js](https://threejs.org)
@@ -172,7 +172,7 @@ render.yaml, Dockerfile          Render 서비스 두 개
 
 ## 라이선스
 
-아직 라이선스를 정하지 않았습니다. 라이선스를 추가하기 전까지 모든 권리는 저작자에게 있으며, 외부 자산은 위에 적은 각자의 라이선스를 따릅니다.
+코드는 [MIT 라이선스](LICENSE)로 공개합니다. 외부 자산은 위 크레딧에 적은 각자의 조건을 따릅니다. Poly Haven 모델과 텍스처는 CC0입니다.
 
 ---
 

@@ -11,7 +11,7 @@ Sources for the numbers: results/ and the README; frame time from commit "Speed 
 
 Still needs you (search for "YOU:"):
 1. The .tech domain link (or drop that category).
-2. Where the title image and Marisol's photograph came from.
+2. (done) Title image and Marisol's photograph: ChatGPT image generation.
 3. The Spirit of It: a first draft is written below; rewrite it in your own words.
 4. Whether to keep the Render billing paragraph.
 5. The agent session link: the sessions repo is private, so the post cannot link it as is.
@@ -217,7 +217,7 @@ I wanted a ghost story where the scary part is forgetting, and where the AI is h
 ## Credits
 
 - 3D models and textures: [Poly Haven](https://polyhaven.com), CC0
-- Title image and Marisol's photograph: <!-- YOU: where they came from; if generated, say with what -->
+- Title image and Marisol's photograph: generated with ChatGPT image generation (OpenAI)
 - Marisol's voice on the record: generated with Qwen3-TTS (Apache-2.0); her tune was written for the game
 - Models: Gemma 4 through [Ollama](https://ollama.com) and [Transformers.js](https://github.com/huggingface/transformers.js)
 - Engine: [Three.js](https://threejs.org)
