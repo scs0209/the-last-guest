@@ -65,7 +65,7 @@ Suggested questions are answered instantly on every version, with answers Gemma 
 ## How the AI works: the model reads, code verifies
 
 ```mermaid
-flowchart TD
+flowchart LR
     Q[Player's question] --> C{Suggested question?}
     C -- yes --> K[Answer Gemma wrote in advance<br/>through the same checks]
     C -- no --> P[Prompt with ONLY this object's facts<br/>from the fact graph]
