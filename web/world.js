@@ -230,7 +230,7 @@ export function createWorld(canvas, opts) {
   });
 
   // ------------------------------------------------ lights
-  const sky = new THREE.HemisphereLight(0x3a4470, 0x120806, .24); scene.add(sky); // just enough to find the walls; candles and the moon do the rest
+  const sky = new THREE.HemisphereLight(0x3a4470, 0x120806, .27); scene.add(sky); // just enough to find the walls; candles and the moon do the rest
   const candleLights = [];
   const point = (color, intensity, dist, x, y, z, shadow) => {
     const l = new THREE.PointLight(color, intensity, dist, 1.6); l.position.set(x, y, z);
@@ -863,7 +863,7 @@ export function createWorld(canvas, opts) {
   // ------------------------------------------------ post-processing
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .45, .5, .95); // only bright things (flames, ghost rims, moon) bloom
+  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .55, .6, .95); // only bright things (flames, ghost rims, moon) bloom
   composer.addPass(bloom);
   const grade = new ShaderPass({
     uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uDread: { value: 0 } },
@@ -875,11 +875,12 @@ export function createWorld(canvas, opts) {
         // a touch of lens fringing toward the edges
         vec3 col = vec3(texture2D(tDiffuse, vUv + c * 0.004 * r).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - c * 0.004 * r).b);
         float l = dot(col, vec3(0.299, 0.587, 0.114));
-        col = mix(vec3(l), col, 0.76 - 0.3 * uDread);                        // muted colour; more drained as the candles go out
+        col = mix(vec3(l), col, 0.68 - 0.28 * uDread);                       // muted colour; more drained as the candles go out
         col *= mix(vec3(0.74, 0.9, 1.16), vec3(1.12, 0.95, 0.8), smoothstep(0.04, 0.5, l)); // teal shadows, orange candlelight
-        vec3 c1 = clamp(col, 0.0, 1.0); col += (c1 * c1 * (3.0 - 2.0 * c1) - c1) * 0.35; // a gentle S-curve below white: deeper blacks
+        vec3 c1 = clamp(col, 0.0, 1.0); col += (c1 * c1 * (3.0 - 2.0 * c1) - c1) * 0.1; // the faintest S-curve
+        col = col * 0.95 + vec3(0.012, 0.014, 0.022);                          // blacks lifted into a cold haze, like breath on old glass
         col *= 1.0 - smoothstep(0.4, 0.9, r) * (0.62 + 0.25 * uDread);       // heavy vignette, heavier as the candles die
-        col += (h(vUv * vec2(1920.0, 1080.0) + fract(uTime * 7.3)) - 0.5) * 0.032; // film grain
+        col += (h(vUv * vec2(1920.0, 1080.0) + fract(uTime * 7.3)) - 0.5) * 0.045; // film grain
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
@@ -1063,7 +1064,7 @@ export function createWorld(canvas, opts) {
     skyMat.color.copy(SKY).multiplyScalar(1 + flash * 4);
     boltMat.opacity = ls < .5 ? flash : 0;
     moons.forEach((m) => { m.intensity = 4.5 + flash * 140; });
-    sky.intensity = .24 + flash * 1.3;
+    sky.intensity = .27 + flash * 1.3;
     M.glass.color.setHex(0x1a2448).lerp(WHITE_BLUE, flash * .8);
     gust = Math.max(0, gust - dt * .6);
     // Ghosts sway and now and then thin out and come back. Come within 5 m and, one after another, each turns its
