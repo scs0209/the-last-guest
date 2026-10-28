@@ -31,7 +31,7 @@ python3 -m http.server 8770 --directory web  # static mode, same as the Render f
 - Fine-tuning: Tinker credits ran out; MLX LoRA on Qwen3.5-4B is set up (`prep_mlx.py`, `lora.yaml`) but paused after out-of-memory errors while Gemma was loaded. Not trained.
 - Game (`web/`): title screen, first-person house, dialogue, journal, ofrenda, endings, Korean and English. Korean and English playthroughs reach the ending with suggested questions only.
 - Two ways to run the model: `server.py` (Ollama, E4B), or the static site where typed questions run Gemma 4 E2B in the player's browser (`web/gemma-worker.js`, WebGPU) behind `web/harness.js`, a JS port of the guardrail that matched Python on 1,058 answers. Regenerate `web/gen/` with `uv run python build_web.py` after changing facts, cards, server constants or the cache.
-- Render: a Blueprint was created from the earlier paid `pro plus` Docker config. `render.yaml` is now a free static site, but that change is on the work branch only. The paid service may need suspending or deleting in the dashboard.
+- Render (from `main`, two services in `render.yaml`): `the-last-guest` (paid pro plus Docker, Gemma 4 E4B on CPU, about 27 s per typed answer, run only while the $50 credit lasts, about 8.6 days) and `the-last-guest-site` (free static site, browser Gemma). Suspend the paid one in the dashboard before the credit runs out.
 
 ## Next steps
-The full remaining plan, starting with the Render deploy (R1–R7), the schedule and the pre-submit checklist, is in [PLAN.md](PLAN.md). Work on the `wip/browser-gemma` branch until the user approves merging to main.
+The full remaining plan, starting with the Render deploy (R1–R7), the schedule and the pre-submit checklist, is in [PLAN.md](PLAN.md). Work on `main` (the old `wip/browser-gemma` branch was merged and removed on 2026-10-28). Every push to `main` redeploys both Render services, so push only after the user confirms.

@@ -10,14 +10,14 @@
 - `https://the-last-guest.onrender.com/healthz` → 502, 헤더 `x-render-routing: no-deploy` (2026-10-27 확인). 아직 성공한 배포가 없었다.
 - 카드 등록 후 1달러가 청구됐다. 카드 확인용 임시 승인일 가능성이 있으나 확인하지 않았다.
 - 크레딧 $50. Pro Plus는 공식 가격표 기준 월 $175(하루 약 $5.8)라, 켜 두면 약 8.6일 만에 다 쓴다. 넘으면 카드로 과금될 수 있다.
-- 새 `render.yaml`(무료 정적 사이트)은 **`wip/browser-gemma` 브랜치에만** 있다. `main`에는 아직 없다.
+- 2026-10-28: `render.yaml`에 유료 서버(`the-last-guest`)와 무료 정적 사이트(`the-last-guest-site`)를 함께 넣어 `main`에 병합했다. 두 서비스 모두 `main`에서 배포된다. 작업 브랜치(`wip/browser-gemma`)는 병합 후 삭제했다.
 
 ### 순서
 | # | 할 일 | 누가 | 확인 방법 |
 |---|---|---|---|
 | R1 | ~~유료 서비스(`the-last-guest`, Docker, pro plus) 일시정지 또는 삭제~~ **2026-10-28 일시정지함** (삭제는 안 함). 일시정지 중에도 과금되는지는 Billing에서 확인 필요 | 사용자 | Billing에서 예상 청구액이 늘지 않는지 |
 | R2 | Billing에서 크레딧 잔액과 1달러 청구의 정체 확인 (임시 승인인지, 사용료인지) | 사용자 | 인보이스, 카드사 앱 |
-| R3 | `wip/browser-gemma` 검토 후 `main`에 병합하고 푸시 | 사용자 확인 → Claude | `git log origin/main` |
+| R3 | ~~작업 브랜치를 `main`에 병합하고 푸시~~ **완료 (2026-10-28)** | 사용자 확인 → Claude | `git log origin/main` |
 | R4 | 정적 사이트 배포. 기존 서비스와 이름이 같아서(`the-last-guest`) Blueprint 동기화가 서비스 종류(Docker → static)를 못 바꿀 수 있다. 그럴 땐 R1에서 서비스를 지운 뒤 동기화하거나, `render.yaml`의 `name`을 바꾼다 (예: `the-last-guest-site`) | 사용자(대시보드) + Claude(`render.yaml`) | 대시보드에 static site로 표시, 요금 Free |
 | R5 | 배포 확인: `/`, `/gen/harness.json`, `/gen/answer_cache.json`이 200인지, 메인 화면 → 한·영 플레이 → 엔딩 | Claude | 브라우저로 직접 플레이 |
 | R6 | 배포된 사이트에서 브라우저 Gemma 확인: 불러오기 → 직접 입력 질문 → 가드레일 통과 답. 첫 로딩 시간, 답 하나 걸리는 시간 기록 (글에 쓸 숫자) | Claude | 측정값을 `results/`에 저장 |
