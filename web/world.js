@@ -338,12 +338,12 @@ export function createWorld(canvas, opts) {
   const ghostTime = { value: 0 };
   // Cold, half-there cloth: the body fades toward a hem that frays into nothing, the edges glow like breath on glass,
   // and uFade lets a ghost thin out and come back. Eyes are soft hollows, not cut-out circles.
-  const ghostMaterial = ({ color = 0x6f7a90, emissive = 0x0c1222, emissiveIntensity = .6, rim = 0x7d98ff, opacity = .42 } = {}) => {
+  const ghostMaterial = ({ color = 0x6f7a90, emissive = 0x0c1222, emissiveIntensity = .6, rim = 0x7d98ff, opacity = .42, eyes = 1 } = {}) => {
     const mat = new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity, roughness: .95, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: ENV });
-    const phase = { value: Math.random() * 10 }, rimColor = { value: new THREE.Color(rim) }, fade = { value: 1 }, head = { value: 0 };
+    const phase = { value: Math.random() * 10 }, rimColor = { value: new THREE.Color(rim) }, fade = { value: 1 }, head = { value: 0 }, eyeK = { value: eyes };
     mat.userData.fade = fade; mat.userData.head = head;
     mat.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, { uTime: ghostTime, uPhase: phase, uRim: rimColor, uFade: fade, uHead: head });
+      Object.assign(sh.uniforms, { uTime: ghostTime, uPhase: phase, uRim: rimColor, uFade: fade, uHead: head, uEyes: eyeK });
       sh.vertexShader = "uniform float uTime;\nuniform float uPhase;\nuniform float uHead;\nvarying vec3 vLocal;\n" + sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
         // the head turns on its own, ahead of the body: vertices above the shoulders rotate about the vertical axis
         float headK = smoothstep(1.02, 1.24, position.y), ha = uHead * headK, hc = cos(ha), hs = sin(ha);
@@ -352,7 +352,7 @@ export function createWorld(canvas, opts) {
         transformed.xz += normalize(position.xz + 1e-5) * sin(uTime * 1.1 + uPhase + ang * 3.0 + position.y * 6.0) * 0.03 * hemK;
         transformed.y += sin(uTime * 1.5 + uPhase + ang * 5.0) * 0.02 * hemK * hemK;
         vLocal = position;`);
-      sh.fragmentShader = "uniform vec3 uRim;\nuniform float uTime;\nuniform float uPhase;\nuniform float uFade;\nvarying vec3 vLocal;\n" +
+      sh.fragmentShader = "uniform vec3 uRim;\nuniform float uTime;\nuniform float uPhase;\nuniform float uFade;\nuniform float uEyes;\nvarying vec3 vLocal;\n" +
         "float gh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n" +
         "float gn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(gh(i),gh(i+vec2(1,0)),f.x),mix(gh(i+vec2(0,1)),gh(i+vec2(1,1)),f.x),f.y);}\n" +
         sh.fragmentShader
@@ -365,6 +365,7 @@ export function createWorld(canvas, opts) {
         float eyes = 0.0;                                                                    // two soft dark hollows on the face
         for (int k = 0; k < 2; k++) { vec2 c = vec2(k == 0 ? -0.052 : 0.052, 1.37); vec2 d = vec2(vLocal.x - c.x, (vLocal.y - c.y) * 0.42);
           eyes += (1.0 - smoothstep(0.006, 0.03, length(d))) * smoothstep(0.0, 0.08, vLocal.z); } // long, drooping, soft-edged
+        eyes *= uEyes;
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.0), clamp(eyes, 0.0, 1.0) * 0.85);
         diffuseColor.a = mix(diffuseColor.a, 0.95, clamp(eyes, 0.0, 1.0) * 0.8); // the hollows stay dark even where the cloth is thin
         diffuseColor.a *= body * uFade * (0.85 + 0.15 * sin(uTime * 3.0 + uPhase));
@@ -600,11 +601,29 @@ export function createWorld(canvas, opts) {
   at(ofrendaSpot, 3.9, 0, -4.4);
   const OFRENDA_POS = new THREE.Vector3(3.9, .6, -4.4);
 
-  // her ghost, revealed at the end
-  const herMat = ghostMaterial({ color: 0xffe6c0, emissive: 0xf29a1d, emissiveIntensity: .4, rim: 0xffb85a, opacity: 0 });
-  const her = ghost(herMat); at(her, 3.9, .02, -4.3, Math.PI);
-  const herFlower = new THREE.Mesh(new THREE.SphereGeometry(.05, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf29a1d, emissive: 0xf29a1d, emissiveIntensity: .7 }));
-  herFlower.position.set(.15, 1.39, .05); her.children[0].add(herFlower); herFlower.visible = false;
+  // her ghost, revealed at the end: warm where the guests are cold, no hollow eyes, a marigold in her hair.
+  // She sits at the bench facing the piano, then turns, head first, to look at whoever remembered her.
+  const herMat = ghostMaterial({ color: 0xb8a690, emissive: 0x8a4a14, emissiveIntensity: .35, rim: 0xe0904a, opacity: 0, eyes: 0 });
+  const her = ghost(herMat); at(her, 3.9, .02, -4.3, Math.PI); her.scale.set(.9, .97, .9);
+  // her face from the photograph, glowing faintly through the cloth, and a marigold in her hair; both turn with her head
+  const herHead = new THREE.Group(); her.children[0].add(herHead);
+  const faceTex = canvasTex(256, 256, () => {}), faceMat = new THREE.MeshBasicMaterial({ map: faceTex, color: 0xffe0bc, transparent: true, opacity: 0, depthWrite: false });
+  const faceImg = new Image(); faceImg.src = "img/marisol.webp";
+  faceImg.onload = () => { // crop the face, feather it into a soft oval
+    const g = faceTex.image.getContext("2d"), W = faceImg.width, H = faceImg.height;
+    g.clearRect(0, 0, 256, 256); g.filter = "brightness(1.7) contrast(1.1)"; g.drawImage(faceImg, W * .36, H * .29, W * .33, H * .275, 0, 0, 256, 256);
+    const m = g.createRadialGradient(128, 120, 30, 128, 128, 126); m.addColorStop(0, "#fff"); m.addColorStop(.6, "rgba(255,255,255,.7)"); m.addColorStop(1, "rgba(255,255,255,0)");
+    g.filter = "none"; g.globalCompositeOperation = "destination-in"; g.fillStyle = m; g.fillRect(0, 0, 256, 256); faceTex.needsUpdate = true;
+  };
+  const herFace = new THREE.Mesh(new THREE.PlaneGeometry(.2, .2), faceMat); herFace.position.set(.01, 1.37, .2); herFace.renderOrder = 3; herHead.add(herFace);
+  const herFlower = new THREE.Group(), petalMat = new THREE.MeshStandardMaterial({ color: 0xf29a1d, emissive: 0xf28a10, emissiveIntensity: 1.6 });
+  for (let i = 0; i < 7; i++) {
+    const pt = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), petalMat), a = i / 7 * Math.PI * 2;
+    pt.scale.set(1, .45, .7); pt.position.set(Math.cos(a) * .035, Math.sin(a) * .035, 0); pt.rotation.z = a; herFlower.add(pt);
+  }
+  herFlower.add(new THREE.Mesh(new THREE.SphereGeometry(.022, 8, 6), new THREE.MeshStandardMaterial({ color: 0x7a2a00, emissive: 0xc04000, emissiveIntensity: 1 })));
+  herFlower.position.set(.12, 1.47, .06); herFlower.rotation.y = .9; herHead.add(herFlower); herFlower.visible = false;
+  let herTurn = 0;
 
   // drifting dust in the light, and marigold petals for the ending
   const dot = canvasTex(32, 32, (g, w, h) => {
@@ -790,7 +809,8 @@ export function createWorld(canvas, opts) {
     if (cinematic) {
       cinematic.t = Math.min(1, cinematic.t + dt / cinematic.dur);
       const k = cinematic.t * cinematic.t * (3 - 2 * cinematic.t);
-      camera.position.lerpVectors(cinematic.from, cinematic.to, k);
+      const u = 1 - k; // quadratic Bezier through a raised midpoint, so the camera rises over the table and the guests
+      camera.position.set(0, 0, 0).addScaledVector(cinematic.from, u * u).addScaledVector(cinematic.mid, 2 * u * k).addScaledVector(cinematic.to, k * k);
       tmp.lerpVectors(cinematic.lookFrom, cinematic.look, k); camera.lookAt(tmp);
     } else {
       camera.position.set(player.x, EYE + Math.sin(player.bob) * .025, player.z);
@@ -853,7 +873,17 @@ export function createWorld(canvas, opts) {
       }
       pp.needsUpdate = true;
     }
-    if (herAlpha >= 0) { herAlpha = Math.min(.85, herAlpha + dt * .12); herMat.opacity = herAlpha; her.position.y = .02 + Math.sin(t * 1.1) * .03; }
+    if (herAlpha >= 0) {
+      herAlpha = Math.min(.72, herAlpha + dt * .14); herMat.opacity = herAlpha; her.position.y = .02 + Math.sin(t * 1.1) * .03;
+      // once she is there, she turns toward you: the head leads (about 1 rad), the body follows the rest of the way
+      if (endingT > 3.2) herTurn = Math.min(1, herTurn + dt * .35);
+      const k = herTurn * herTurn * (3 - 2 * herTurn), toCam = Math.atan2(camera.position.x - her.position.x, camera.position.z - her.position.z);
+      const full = Math.atan2(Math.sin(toCam - Math.PI), Math.cos(toCam - Math.PI));
+      const headK = THREE.MathUtils.clamp(endingT > 3.2 ? (endingT - 3.2) * .9 : 0, 0, 1);
+      const head = THREE.MathUtils.clamp(full * (headK - .65 * k), -1.1, 1.1);
+      her.rotation.y = Math.PI + full * .65 * k; herMat.userData.head.value = head;
+      herHead.rotation.y = head; faceMat.opacity = herAlpha * .95; // turns with the shader's head rotation
+    }
     if (endingT) endingT += dt;
     hover = enabled && !drag ? pick() : null;
     canvas.classList.toggle("hover", !!hover);
@@ -891,8 +921,10 @@ export function createWorld(canvas, opts) {
     },
     ending() {
       petals.visible = true; marigolds.visible = true; herAlpha = 0; herFlower.visible = true; turn = 1; endingT = .001;
-      const look = new THREE.Vector3(3.9, 1.1, -4.6);
-      cinematic = { t: 0, dur: 5, from: camera.position.clone(), to: new THREE.Vector3(1.6, 1.6, -2.4), lookFrom: camera.position.clone().add(fwd.set(-Math.sin(player.yaw), 0, -Math.cos(player.yaw))), look };
+      pianoLight.color.set(0xffb070); // the piano lamp turns warm for her
+      const look = new THREE.Vector3(3.9, 1.2, -4.3), from = camera.position.clone(), to = new THREE.Vector3(3.55, 1.5, -2.85);
+      const mid = from.clone().lerp(to, .5); mid.y = Math.max(from.y, to.y) + 1.4; // peak about 0.7 m above eye height
+      cinematic = { t: 0, dur: 6, from, mid, to, lookFrom: from.clone().add(fwd.set(-Math.sin(player.yaw), 0, -Math.cos(player.yaw))), look };
     },
   };
 }
