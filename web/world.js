@@ -1100,7 +1100,7 @@ export function createWorld(canvas, opts) {
       o.sprite.position.y = o.pos.y + .25 + Math.sin(t * 1.7 + o.pos.z) * .04;
     }
     disc.rotation.y += dt * (opts.isSpinning?.() ? 3.5 : .1);
-    pianoLight.intensity = Math.max(pianoLight.intensity - dt * 1.5, herAlpha >= 0 ? 6 : 0) + pianoFlash;
+    pianoLight.intensity = (herAlpha >= 0 ? 6 : 0) + pianoFlash; // the flash decays below; adding it to last frame's value piled it up to ~300
     pianoFlash = Math.max(0, pianoFlash - dt * 2);
     // dust drift
     const dp = dust.geometry.attributes.position;
