@@ -134,6 +134,7 @@ export function createWorld(canvas, opts) {
   // ------------------------------------------------ materials
   const M = {
     wall: pbr("decrepit_wallpaper", { color: 0x6a6070, side: THREE.DoubleSide }),
+    stoneWall: pbr("medieval_blocks_03", { color: 0x8a8480 }), // the dining room is older than the rest of the house
     wains: pbr("dark_paneled_wood", { color: 0x8a6a5a }),
     floor: pbr("herringbone_parquet", { color: 0x7a6658 }),
     ceil: new THREE.MeshStandardMaterial({ color: 0x08060a, roughness: 1, side: THREE.DoubleSide }),
@@ -150,6 +151,7 @@ export function createWorld(canvas, opts) {
     books: new THREE.MeshStandardMaterial({ map: booksTex, roughness: .9 }),
     glass: new THREE.MeshBasicMaterial({ color: 0x1a2448 }),
   };
+  M.floor.roughnessMap = null; M.floor.roughness = .82; // old, dull varnish: candles and lightning no longer mirror as hot spots on it
   const box = (w, h, d, m) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.castShadow = o.receiveShadow = true; return o; };
   const cyl = (rt, rb, h, m, s = 20) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, s), m); o.castShadow = o.receiveShadow = true; return o; };
   const at = (o, x, y, z, ry = 0) => { o.position.set(x, y, z); o.rotation.y = ry; scene.add(o); return o; };
@@ -199,8 +201,18 @@ export function createWorld(canvas, opts) {
     const f = new THREE.Mesh(tileUV(new THREE.PlaneGeometry(w, d), w / 1.6, d / 1.6), M.floor); f.rotation.x = -Math.PI / 2; f.receiveShadow = true; at(f, cx, 0, cz);
     const c = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.ceil); c.rotation.x = Math.PI / 2; at(c, cx, H, cz);
   }
+  const STONE = 2.2; // metres per tile of the stone blocks
   for (const [x1, z1, x2, z2] of WALLS) {
     const len = Math.hypot(x2 - x1, z2 - z1), ang = Math.atan2(z2 - z1, x2 - x1);
+    if (Math.max(z1, z2) <= 2 && Math.min(z1, z2) < 2) { // a dining room wall (the side walls run up to z = 2): bare stone to the floor
+      const wall = new THREE.Mesh(tileUV(new THREE.PlaneGeometry(len, H), len / STONE, H / STONE), M.stoneWall); wall.receiveShadow = true; blockers.push(wall);
+      wall.material.side = THREE.DoubleSide; at(wall, (x1 + x2) / 2, H / 2, (z1 + z2) / 2, -ang);
+      continue;
+    }
+    if (z1 === 2 && z2 === 2) { // the wall shared with the foyer gets a stone face on the dining side
+      const face = new THREE.Mesh(tileUV(new THREE.PlaneGeometry(len, H), len / STONE, H / STONE), M.stoneWall); face.receiveShadow = true;
+      at(face, (x1 + x2) / 2, H / 2, 1.92, Math.PI);
+    }
     const wall = new THREE.Mesh(tileUV(new THREE.PlaneGeometry(len, H), len / 1.4, H / 1.4), M.wall); wall.receiveShadow = true; blockers.push(wall);
     at(wall, (x1 + x2) / 2, H / 2, (z1 + z2) / 2, -ang);
     const panel = new THREE.Mesh(tileUV(new THREE.BoxGeometry(len, 1, .08), len / 1.2, 1 / 1.2), M.wains); panel.receiveShadow = true;
@@ -218,7 +230,7 @@ export function createWorld(canvas, opts) {
   });
 
   // ------------------------------------------------ lights
-  scene.add(new THREE.HemisphereLight(0x3a4470, 0x120806, .3)); // just enough to find the walls; candles and the moon do the rest
+  const sky = new THREE.HemisphereLight(0x3a4470, 0x120806, .24); scene.add(sky); // just enough to find the walls; candles and the moon do the rest
   const candleLights = [];
   const point = (color, intensity, dist, x, y, z, shadow) => {
     const l = new THREE.PointLight(color, intensity, dist, 1.6); l.position.set(x, y, z);
@@ -228,7 +240,7 @@ export function createWorld(canvas, opts) {
   const chandelier = point(0xffa955, 24, 11, 0, 2.55, 6.5, false); // below the shades, so they are lit from inside without glaring
   const dinA = point(0xffb45a, 9, 9, -.9, 1.6, -2, true); candleLights.push(dinA);
   const dinB = point(0xffb45a, 9, 9, .9, 1.6, -2, false); candleLights.push(dinB);
-  const fire = point(0xff5a20, 8, 6, -4.3, .6, -2, false);
+  const fire = point(0xff6a24, 7, 7, -3.95, 1.15, -2, false); // out in front and up at mantel height: lights the surround and room, no hot spot mirrored on the floor
   const lamp = point(0xffc890, 6, 5, 8.2, 1.5, 5.4, false);
   const pianoLight = point(0x9fb4ff, 0, 5, 3.2, 1.8, -4.4, false);
   // moonlit windows
@@ -237,11 +249,92 @@ export function createWorld(canvas, opts) {
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.2), M.glass); g.add(pane);
     [[0, 1.12, 1.4, .1], [0, -1.12, 1.4, .1], [-.62, 0, .1, 2.3], [.62, 0, .1, 2.3], [0, 0, .06, 2.2], [0, .3, 1.2, .06]].forEach(([a, b, w, h]) => { const m = box(w, h, .08, M.darkwood); m.position.set(a, b, .02); g.add(m); });
     at(g, x, 2.2, z, ry);
-    if (!moonlit) return;
-    const moon = new THREE.SpotLight(0x6f86d8, 4.5, 11, .5, .7); moon.position.set(x - Math.sin(ry) * .2, 3.2, z - Math.cos(ry) * .2);
-    moon.target.position.set(x + Math.sin(ry) * 3, 0, z + Math.cos(ry) * 3); scene.add(moon, moon.target);
+    if (moonlit) moonAt(x, z, ry, 3.2);
   };
-  windowAt(-3.98, 7, Math.PI / 2); windowAt(-1.5, -5.98, 0, false); windowAt(1.5, -5.98, 0); windowAt(7, 8.98, Math.PI); // one moon light per room
+  const moons = [];
+  const moonAt = (x, z, ry, y) => {
+    const moon = new THREE.SpotLight(0x6f86d8, 4.5, 11, .5, .7); moon.position.set(x - Math.sin(ry) * .2, y, z - Math.cos(ry) * .2);
+    moon.target.position.set(x + Math.sin(ry) * 3, 0, z + Math.cos(ry) * 3); scene.add(moon, moon.target); moons.push(moon);
+  };
+  windowAt(-3.98, 7, Math.PI / 2); windowAt(7, 8.98, Math.PI); // one moon light per room; the dining room's is the gothic window below
+
+  // the dining room's great window: a pointed arch with stone tracery, a storm outside, bare trees, and now and then lightning
+  const GW = 2.3, GS = .95, GR = GW * Math.sqrt(3) / 2, GY = .95; // width, straight height, arch rise, sill
+  const archShape = (w, hs) => { // an equilateral pointed arch: each side is an arc centred on the opposite springing point
+    const sh = new THREE.Shape(), r = w, rise = w * Math.sqrt(3) / 2;
+    sh.moveTo(-w / 2, 0); sh.lineTo(w / 2, 0); sh.lineTo(w / 2, hs);
+    sh.absarc(-w / 2, hs, r, 0, Math.PI / 3, false);       // right side up to the apex
+    sh.absarc(w / 2, hs, r, Math.PI * 2 / 3, Math.PI, false); // apex down the left side
+    sh.lineTo(-w / 2, 0); return { sh, top: hs + rise };
+  };
+  const archGeo = (w, hs) => { // flat arch with UVs spread over its bounding box
+    const { sh, top } = archShape(w, hs), geo = new THREE.ShapeGeometry(sh, 24), a = geo.attributes.position, uv = geo.attributes.uv;
+    for (let i = 0; i < a.count; i++) uv.setXY(i, (a.getX(i) + w / 2) / w, a.getY(i) / top);
+    return geo;
+  };
+  const skyTex = canvasTex(512, 768, (g, w, h) => {
+    const sk = g.createLinearGradient(0, 0, 0, h); sk.addColorStop(0, "#0c1430"); sk.addColorStop(.55, "#2a3a62"); sk.addColorStop(1, "#46557a");
+    g.fillStyle = sk; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) { // heavy storm clouds
+      const x = Math.random() * w, y = Math.random() * h * .6, r = 40 + Math.random() * 120, c = g.createRadialGradient(x, y, 0, x, y, r);
+      c.addColorStop(0, `rgba(${Math.random() < .5 ? "10,14,30" : "70,84,120"},${.25 + Math.random() * .3})`); c.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = c; g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    g.strokeStyle = "#04050a"; g.lineCap = "round"; // bare trees against the sky
+    const branch = (x, y, len, ang, wdt) => {
+      if (wdt < .6) return;
+      const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+      g.lineWidth = wdt; g.beginPath(); g.moveTo(x, y); g.lineTo(x2, y2); g.stroke();
+      branch(x2, y2, len * .72, ang - .35 - Math.random() * .3, wdt * .68); branch(x2, y2, len * .72, ang + .3 + Math.random() * .3, wdt * .68);
+    };
+    [[60, 110], [190, 80], [330, 120], [450, 90]].forEach(([x, l]) => branch(x, h, l, -Math.PI / 2 + (Math.random() - .5) * .3, 9));
+    g.fillStyle = "#04050a"; g.fillRect(0, h * .93, w, h * .07);
+    // stone tracery: three lancets, a rose of circles in the head, a transom
+    g.strokeStyle = "#07070a"; g.fillStyle = "#07070a"; g.lineWidth = 10;
+    const top = (GS + GR) / GW; // canvas height in widths
+    const Y = (yw) => h - yw / top * h; // y measured up from the sill in window widths
+    [1 / 3, 2 / 3].forEach((u) => { g.beginPath(); g.moveTo(u * w, h); g.lineTo(u * w, Y(GS / GW + .05)); g.stroke(); });
+    g.lineWidth = 7; g.beginPath(); g.moveTo(0, Y(GS / GW * .5)); g.lineTo(w, Y(GS / GW * .5)); g.stroke();
+    [1 / 6, .5, 5 / 6].forEach((u) => { // little pointed heads on each lancet
+      const cx = u * w, hw = w / 6, base = Y(GS / GW + .02);
+      g.beginPath(); g.moveTo(cx - hw, base); g.quadraticCurveTo(cx - hw, base - hw * 1.3, cx, base - hw * 1.6); g.quadraticCurveTo(cx + hw, base - hw * 1.3, cx + hw, base); g.stroke();
+    });
+    const rc = Y(GS / GW + GR / GW * .55), rr = w * .2;
+    g.lineWidth = 8; g.beginPath(); g.arc(w / 2, rc, rr, 0, Math.PI * 2); g.stroke();
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; g.beginPath(); g.arc(w / 2 + Math.cos(a) * rr * .5, rc + Math.sin(a) * rr * .5, rr * .42, 0, Math.PI * 2); g.lineWidth = 5; g.stroke(); }
+    g.beginPath(); g.arc(w / 2, rc, rr * .16, 0, Math.PI * 2); g.fill();
+    for (let y = 0; y < h; y += 26) { g.globalAlpha = .35; g.lineWidth = 1.5; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } // leaded panes
+    for (let x = 0; x < w; x += 22) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+    g.globalAlpha = 1;
+  });
+  const SKY = new THREE.Color().setRGB(2.2, 2.5, 3.3); // moonlit storm; the window is a light source, so fog does not swallow it
+  const skyMat = new THREE.MeshBasicMaterial({ map: skyTex, color: SKY.clone(), fog: false });
+  const boltTex = canvasTex(256, 384, () => {});
+  const drawBolt = () => { // a new jagged fork for every strike
+    const g = boltTex.image.getContext("2d"), w = 256, h = 384; g.clearRect(0, 0, w, h);
+    const fork = (x, y, len, wdt) => {
+      let px = x, py = y;
+      g.beginPath(); g.moveTo(px, py);
+      while (py < y + len && py < h) { px += (Math.random() - .5) * 30; py += 10 + Math.random() * 16; g.lineTo(px, py); if (wdt > 2 && Math.random() < .12) fork(px, py, len * .4, wdt * .5); }
+      g.lineWidth = wdt; g.strokeStyle = "rgba(225,235,255,1)"; g.shadowColor = "rgba(150,180,255,1)"; g.shadowBlur = 14; g.stroke();
+    };
+    fork(w * (.3 + Math.random() * .4), 0, h * .8, 4);
+    boltTex.needsUpdate = true;
+  };
+  const boltMat = new THREE.MeshBasicMaterial({ map: boltTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+  const gWin = new THREE.Group();
+  const skyPane = new THREE.Mesh(archGeo(GW, GS), skyMat); gWin.add(skyPane);
+  const bolt = new THREE.Mesh(archGeo(GW, GS), boltMat); bolt.position.z = .004; gWin.add(bolt); // in front of the sky, clipped to the arch
+  { // a deep stone surround: the arch outline, a little proud of the wall
+    const { sh } = archShape(GW + .36, GS), hole = archShape(GW, GS).sh; sh.holes.push(new THREE.Path(hole.getPoints(32)));
+    const surround = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: .14, bevelEnabled: false, curveSegments: 24 }), M.stone);
+    surround.receiveShadow = true; gWin.add(surround);
+    const sill = box(GW + .5, .08, .3, M.stone); sill.position.set(0, -.04, .1); gWin.add(sill);
+  }
+  at(gWin, 0, GY, -5.97);
+  moonAt(0, -5.98, 0, GY + GS + .4);
+  const storm = { next: 7, start: -1 }; // lightning every 9 to 23 seconds
+  const WHITE_BLUE = new THREE.Color(0xc8d8ff);
 
   // ------------------------------------------------ foyer: staircases, chandelier, front door, rug
   const stairs = (x0, dir) => {
@@ -406,13 +499,117 @@ export function createWorld(canvas, opts) {
     return at(g, x, .835, z);
   };
   candelabra(-.9, -2, 4); candelabra(.9, -2, 3);
-  // fireplace with a mantel
-  const fp = new THREE.Group();
-  const surround = box(.5, 1.3, 2.2, M.stone); surround.position.y = .65; fp.add(surround);
-  const mantel = box(.6, .1, 2.5, M.darkwood); mantel.position.y = 1.35; fp.add(mantel);
-  const hearth = box(.52, .9, 1.2, new THREE.MeshBasicMaterial({ color: 0x120604 })); hearth.position.set(.02, .45, 0); fp.add(hearth);
-  const embers = new THREE.Mesh(new THREE.SphereGeometry(.14, 12, 8), new THREE.MeshBasicMaterial({ color: 0xff5a1a })); embers.scale.y = .25; embers.position.set(.15, .06, 0); fp.add(embers);
-  at(fp, -4.7, 0, -2);
+  // a soft warm glow, painted where a light would fall (sconces, the hearth floor)
+  const glowTex = canvasTex(128, 128, (g, w, h) => {
+    const r = g.createRadialGradient(w / 2, h * .45, 0, w / 2, h * .45, w / 2);
+    r.addColorStop(0, "rgba(255,170,90,.9)"); r.addColorStop(.35, "rgba(255,120,50,.35)"); r.addColorStop(1, "rgba(255,90,30,0)");
+    g.fillStyle = r; g.fillRect(0, 0, w, h);
+  });
+  // fireplace: a stone surround with an arched opening, a carved mantel, a sooty firebox, iron fire-dogs,
+  // logs that glow along their cracks, a bed of embers, noise-shader flames and a few sparks.
+  // Built facing +z and turned to face the room; the fire light above is the only real light it adds.
+  const fp = new THREE.Group(), FW = 2.3, FH = 1.32, OW = 1.24, OH = .98, FD = .5; // surround, opening, depth
+  const stoneDark = M.stoneWall.clone(); stoneDark.color.setHex(0x6a625e); stoneDark.side = THREE.FrontSide;
+  {
+    const sh = new THREE.Shape(); sh.moveTo(-FW / 2, 0); sh.lineTo(FW / 2, 0); sh.lineTo(FW / 2, FH); sh.lineTo(-FW / 2, FH); sh.lineTo(-FW / 2, 0);
+    const hole = new THREE.Path(), spring = OH - .22; // a shallow segmental arch over the opening
+    hole.moveTo(-OW / 2, 0); hole.lineTo(-OW / 2, spring); hole.quadraticCurveTo(0, OH + .2, OW / 2, spring); hole.lineTo(OW / 2, 0); hole.lineTo(-OW / 2, 0);
+    sh.holes.push(hole);
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: FD, bevelEnabled: true, bevelThickness: .02, bevelSize: .02, bevelSegments: 2, curveSegments: 20 });
+    const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / STONE * 1.6, uv.getY(i) / STONE * 1.6);
+    const surround = new THREE.Mesh(geo, stoneDark); surround.castShadow = surround.receiveShadow = true; fp.add(surround);
+  }
+  // mantel shelf with a moulded lip and two corbels
+  fp.add(put(box(FW + .3, .09, .66, M.darkwood), 0, FH + .045, .22));
+  fp.add(put(box(FW + .26, .05, .05, M.darkwood), 0, FH - .02, .52));
+  [-1, 1].forEach((k) => { const c = box(.12, .22, .14, M.darkwood); c.position.set(k * (FW / 2 - .2), FH - .12, FD + .07); fp.add(c); });
+  // the firebox: soot-black walls, warmer near the fire
+  const sootTex = canvasTex(128, 128, (g, w, h) => {
+    const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, "#5a1c08"); gr.addColorStop(.35, "#1a0805"); gr.addColorStop(1, "#050303");
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 400; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * .3})`; g.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
+  });
+  const sootMat = new THREE.MeshBasicMaterial({ map: sootTex, color: 0xffffff, side: THREE.DoubleSide });
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(OW, OH + .1), sootMat); back.position.set(0, (OH + .1) / 2, .04); fp.add(back);
+  [-1, 1].forEach((k) => { const sw = new THREE.Mesh(new THREE.PlaneGeometry(FD, OH), sootMat); sw.rotation.y = k * Math.PI / 2; sw.position.set(k * OW / 2 * .98, OH / 2, FD / 2); fp.add(sw); });
+  const roof = new THREE.Mesh(new THREE.PlaneGeometry(OW, FD), new THREE.MeshBasicMaterial({ color: 0x030202, side: THREE.DoubleSide })); roof.rotation.x = Math.PI / 2; roof.position.set(0, OH + .05, FD / 2); fp.add(roof);
+  fp.add(put(box(FW + .5, .05, .55, stoneDark), 0, .025, FD + .2)); // hearthstone in front
+  // iron fire-dogs
+  [-1, 1].forEach((k) => {
+    fp.add(put(box(.035, .035, .42, M.black), k * .32, .1, .26));
+    fp.add(put(cyl(.02, .02, .2, M.black, 8), k * .32, .2, .46));
+    fp.add(put(new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), M.brass), k * .32, .31, .46));
+  });
+  // logs: bark, with orange cracks that glow (emissive map), stacked on the fire-dogs
+  const barkTex = canvasTex(256, 64, (g, w, h) => {
+    g.fillStyle = "#1a0e08"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 160; i++) { g.strokeStyle = `rgba(${40 + Math.random() * 30},${22 + Math.random() * 14},12,.8)`; g.lineWidth = 1 + Math.random() * 2; const x = Math.random() * w; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + (Math.random() - .5) * 6, h); g.stroke(); } // grain along the log
+  });
+  const crackTex = canvasTex(256, 64, (g, w, h) => {
+    g.fillStyle = "#000"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) {
+      g.strokeStyle = `rgba(255,${80 + Math.random() * 90},20,${.5 + Math.random() * .5})`; g.lineWidth = 1 + Math.random() * 2;
+      let x = Math.random() * w, y = h * (.55 + Math.random() * .45); g.beginPath(); g.moveTo(x, y);
+      for (let k = 0; k < 5; k++) { x += (Math.random() - .3) * 20; y += (Math.random() - .5) * 8; g.lineTo(x, y); } g.stroke();
+    }
+    // u runs around the log: one side (the underside, after rotation) smoulders
+    const under = g.createLinearGradient(w * .55, 0, w * .95, 0); under.addColorStop(0, "rgba(255,80,15,0)"); under.addColorStop(.5, "rgba(255,80,15,.45)"); under.addColorStop(1, "rgba(255,80,15,0)");
+    g.fillStyle = under; g.fillRect(0, 0, w, h);
+  });
+  const logMat = new THREE.MeshStandardMaterial({ map: barkTex, emissiveMap: crackTex, emissive: 0xff5a18, emissiveIntensity: .7, roughness: .9 });
+  [[0, .16, .3, 0, .08], [-.12, .12, .42, .35, .07], [.13, .13, .4, -.4, .065], [.02, .27, .28, .1, .055]].forEach(([x, y, z, ry, r]) => {
+    const log = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.1, .72, 12), logMat); log.rotation.set(0, ry, Math.PI / 2, "YXZ"); log.position.set(x, y, z); fp.add(log);
+  });
+  // the ember bed
+  const emberTex = canvasTex(256, 128, (g, w, h) => {
+    g.fillStyle = "#000"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 700; i++) {
+      const x = Math.random() * w, y = Math.random() * h, r = 2 + Math.random() * 7, hot = Math.random();
+      const c = g.createRadialGradient(x, y, 0, x, y, r); c.addColorStop(0, `rgba(255,${60 + hot * 150},${hot * 40},${.4 + hot * .6})`); c.addColorStop(1, "rgba(80,10,0,0)");
+      g.fillStyle = c; g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    const fade = g.createRadialGradient(w / 2, h / 2, h * .2, w / 2, h / 2, w * .55); fade.addColorStop(0, "rgba(0,0,0,0)"); fade.addColorStop(1, "rgba(0,0,0,1)");
+    g.fillStyle = fade; g.fillRect(0, 0, w, h);
+  });
+  const emberMat = new THREE.MeshBasicMaterial({ map: emberTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+  const emberBed = new THREE.Mesh(new THREE.PlaneGeometry(.95, .5), emberMat); emberBed.rotation.x = -Math.PI / 2; emberBed.position.set(0, .055, .3); fp.add(emberBed);
+  // flames: value-noise fbm scrolling upward, shaped into tongues, coloured from deep red to a near-white core
+  const fireU = { uTime: { value: 0 }, uGain: { value: 1 } };
+  const flameShader = (seed) => new THREE.ShaderMaterial({
+    uniforms: { ...fireU, uSeed: { value: seed } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: `uniform float uTime; uniform float uGain; uniform float uSeed; varying vec2 vUv;
+      float hs(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }
+      float fbm(vec2 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vn(p); p *= 2.03; a *= 0.5; } return s; }
+      void main() {
+        vec2 uv = vUv; float t = uTime;
+        float n = fbm(vec2(uv.x * 4.0 + uSeed, uv.y * 3.0 - t * 1.9));
+        float n2 = fbm(vec2(uv.x * 7.0 - uSeed, uv.y * 5.0 - t * 2.7));
+        float sway = (n - 0.5) * 0.35 * uv.y;
+        float d = abs(uv.x - 0.5 + sway);
+        float width = mix(0.36, 0.02, pow(uv.y, 0.7));
+        float body = smoothstep(width, width * 0.2, d);
+        float f = body * (0.55 + n * 0.9) * (1.0 - smoothstep(0.35, 1.0, uv.y + (n2 - 0.5) * 0.45));
+        f = clamp(f * 1.4, 0.0, 1.0);
+        vec3 col = mix(vec3(0.5, 0.04, 0.0), vec3(1.0, 0.38, 0.04), smoothstep(0.05, 0.45, f));
+        col = mix(col, vec3(1.0, 0.82, 0.42), smoothstep(0.55, 0.95, f));
+        gl_FragColor = vec4(col * 2.2 * uGain, f);
+      }`,
+  });
+  [[0, .78, 0], [-.2, .62, .9], [.19, .6, -.8], [0, .55, 1.57]].forEach(([x, hgt, ry], i) => {
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(.6, hgt), flameShader(i * 3.7)); pl.position.set(x, .12 + hgt / 2, .3); pl.rotation.y = ry; pl.renderOrder = 3; fp.add(pl);
+  });
+  // sparks drifting up the chimney
+  const SPN = 26, spGeo = new THREE.BufferGeometry(), spPos = new Float32Array(SPN * 3), spVel = new Float32Array(SPN);
+  for (let i = 0; i < SPN; i++) { spPos[i * 3] = (Math.random() - .5) * .6; spPos[i * 3 + 1] = Math.random() * OH; spPos[i * 3 + 2] = .2 + Math.random() * .25; spVel[i] = .25 + Math.random() * .5; }
+  spGeo.setAttribute("position", new THREE.BufferAttribute(spPos, 3));
+  const sparks = new THREE.Points(spGeo, new THREE.PointsMaterial({ color: 0xffa040, size: .018, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })); fp.add(sparks);
+  // a warm pool of light on the floor in front, so the fire reads from across the room without a second light
+  const floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .16 }));
+  floorGlow.rotation.x = -Math.PI / 2; floorGlow.position.set(0, .012, FD + 1.0); fp.add(floorGlow);
+  at(fp, -4.95, 0, -2, Math.PI / 2);
   place("antique_ceramic_vase_01", { x: -4.62, y: 1.4, z: -1.05, height: .32, tint: 0x8a8278 }); // faded glaze
   place("GothicCabinet_01", { x: 4.6, z: -1.6, ry: -Math.PI / 2, width: 1.5, against: ["x+", 4.97] }).then((r) => {
     if (r) place("marble_bust_01", { x: (r.box.min.x + r.box.max.x) / 2, y: r.box.max.y, z: -1.6, ry: -Math.PI / 2 - .5, height: .5 }); // she watches the table
@@ -448,11 +645,33 @@ export function createWorld(canvas, opts) {
   at(bench, 3.9, 0, -4.4);
   piano.userData.pick = bench.userData.pick = "ofrenda"; pickables.push(piano, bench);
   // portraits along the dining room wall
-  [-3, 0, 3].forEach((x, i) => {
+  [-3.1, 3.1].forEach((x, i) => {
     const fr = box(.95, 1.2, .06, M.brass); at(fr, x, 2.5, -5.95);
-    const pic = new THREE.Mesh(new THREE.PlaneGeometry(.78, 1.02), new THREE.MeshStandardMaterial({ map: portraitTex(10 + i * 90, i === 1), roughness: .85 })); at(pic, x, 2.5, -5.91);
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(.78, 1.02), new THREE.MeshStandardMaterial({ map: portraitTex(10 + i * 180, i === 1), roughness: .85 })); at(pic, x, 2.5, -5.91);
     framed(pic, fr, x, 2.5, -5.95, 0, ["z-", -5.98]);
   });
+
+  // stone ribs across the ceiling, springing from corbels on the side walls
+  [-5.1, -3.3, -1.5, .3].forEach((z) => {
+    const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-4.95, 2.85, z), new THREE.Vector3(0, 4.55, z), new THREE.Vector3(4.95, 2.85, z));
+    const rib = new THREE.Mesh(new THREE.TubeGeometry(curve, 28, .09, 6), M.stone); scene.add(rib);
+    [-4.9, 4.9].forEach((x) => at(box(.2, .26, .3, M.stone), x, 2.75, z));
+  });
+  // wall sconces: an iron bracket, one candle, and a warm pool of light painted on the stone behind it (no extra lights)
+  const glows = [];
+  const sconce = (x, z, ry) => {
+    const g = new THREE.Group();
+    g.add(put(box(.06, .2, .05, M.black), 0, 0, .025));
+    g.add(put(box(.04, .04, .16, M.black), 0, -.06, .1));
+    g.add(put(cyl(.05, .03, .04, M.black, 10), 0, -.03, .17));
+    g.add(put(cyl(.022, .022, .16, M.wax, 10), 0, .07, .17));
+    const fl = new THREE.Mesh(new THREE.SphereGeometry(.02, 8, 8), M.flame); fl.scale.y = 2; fl.position.set(0, .19, .17); g.add(fl); flames.push(fl);
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .7 }));
+    glow.position.set(0, .2, .012); g.add(glow); glows.push(glow);
+    at(g, x, 2.0, z, ry);
+  };
+  sconce(-4.99, -4.6, Math.PI / 2); sconce(-4.99, .6, Math.PI / 2); sconce(4.99, -4.4, -Math.PI / 2); sconce(4.99, .6, -Math.PI / 2);
+  sconce(-1.75, -5.99, 0); sconce(1.75, -5.99, 0);
 
   // ------------------------------------------------ study
   const desk = new THREE.Group();
@@ -656,10 +875,11 @@ export function createWorld(canvas, opts) {
         // a touch of lens fringing toward the edges
         vec3 col = vec3(texture2D(tDiffuse, vUv + c * 0.004 * r).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - c * 0.004 * r).b);
         float l = dot(col, vec3(0.299, 0.587, 0.114));
-        col = mix(vec3(l), col, 0.62 - 0.25 * uDread);                       // drained colour; more so as the candles go out
-        col *= mix(vec3(0.82, 0.9, 1.12), vec3(1.06, 0.96, 0.86), smoothstep(0.05, 0.6, l)); // cold shadows, warm candlelight
+        col = mix(vec3(l), col, 0.76 - 0.3 * uDread);                        // muted colour; more drained as the candles go out
+        col *= mix(vec3(0.74, 0.9, 1.16), vec3(1.12, 0.95, 0.8), smoothstep(0.04, 0.5, l)); // teal shadows, orange candlelight
+        vec3 c1 = clamp(col, 0.0, 1.0); col += (c1 * c1 * (3.0 - 2.0 * c1) - c1) * 0.35; // a gentle S-curve below white: deeper blacks
         col *= 1.0 - smoothstep(0.4, 0.9, r) * (0.62 + 0.25 * uDread);       // heavy vignette, heavier as the candles die
-        col += (h(vUv * vec2(1920.0, 1080.0) + fract(uTime * 7.3)) - 0.5) * 0.045; // film grain
+        col += (h(vUv * vec2(1920.0, 1080.0) + fract(uTime * 7.3)) - 0.5) * 0.032; // film grain
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
@@ -823,7 +1043,28 @@ export function createWorld(canvas, opts) {
     candleLights.forEach((l, i) => { l.intensity = (9 + Math.sin(t * 9 + i) * .6 + Math.sin(t * 23 + i * 3) * .4) * (.25 + .75 * lit) - gust * 4; });
     const stutter = Math.sin(t * .37) > .985 ? .25 + .75 * Math.abs(Math.sin(t * 41)) : 1;
     chandelier.intensity = (24 + Math.sin(t * 7) * 1.2 + Math.sin(t * 17) * .8) * stutter;
-    fire.intensity = 9 + Math.sin(t * 13) * 1.5 + Math.sin(t * 29) * 1;
+    const flick = Math.sin(t * 13) * .5 + Math.sin(t * 29 + 1) * .3 + Math.sin(t * 7.3) * .2;
+    fire.intensity = 7 + flick * 2.2;
+    fireU.uTime.value = t; fireU.uGain.value = .85 + flick * .15;
+    logMat.emissiveIntensity = .6 + flick * .25; sootMat.color.setScalar(.75 + flick * .25); floorGlow.material.opacity = .14 + flick * .04;
+    for (let i = 0; i < SPN; i++) { // sparks rise, drift and start again at the logs
+      let y = spPos[i * 3 + 1] + spVel[i] * dt;
+      if (y > OH + .1) { y = .2; spPos[i * 3] = (Math.random() - .5) * .5; }
+      spPos[i * 3 + 1] = y; spPos[i * 3] += Math.sin(t * 3 + i) * dt * .06;
+    }
+    sparks.geometry.attributes.position.needsUpdate = true;
+    glows.forEach((g, i) => { g.material.opacity = (.68 + Math.sin(t * 10 + i * 1.7) * .05 + Math.sin(t * 23 + i) * .03) * (.4 + .6 * lit); });
+    // the storm: a flash (two quick pulses and a fade), the room lit blue-white through every window, thunder a moment later
+    if (t > storm.next) {
+      storm.start = t; storm.next = t + 9 + Math.random() * 14; drawBolt();
+      opts.onThunder?.(.4 + Math.random() * 1.6);
+    }
+    const ls = t - storm.start, flash = storm.start < 0 || ls > 1.6 ? 0 : ls < .07 ? 1 : ls < .15 ? .12 : ls < .24 ? .85 : .85 * Math.exp(-(ls - .24) * 5);
+    skyMat.color.copy(SKY).multiplyScalar(1 + flash * 4);
+    boltMat.opacity = ls < .5 ? flash : 0;
+    moons.forEach((m) => { m.intensity = 4.5 + flash * 140; });
+    sky.intensity = .24 + flash * 1.3;
+    M.glass.color.setHex(0x1a2448).lerp(WHITE_BLUE, flash * .8);
     gust = Math.max(0, gust - dt * .6);
     // Ghosts sway and now and then thin out and come back. Come within 5 m and, one after another, each turns its
     // head to look straight at you, then its body follows. After "face" they all turn to the bench instead.
@@ -899,7 +1140,7 @@ export function createWorld(canvas, opts) {
 
   return {
     update, resize, isTouch, OBJECT_KEYS: Object.keys(OBJ), rooms: ROOMS, walls: WALLS,
-    debug: { renderer, scene, composer, bloom }, // for profiling from the console
+    debug: { renderer, scene, composer, bloom, strike: () => { storm.next = 0; } }, // for profiling and testing from the console
     get player() { return player; },
     get looked() { return looked; },
     nearest,

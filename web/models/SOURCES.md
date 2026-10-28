@@ -32,6 +32,7 @@ Downloaded 2026-10-27 and 2026-10-28 (the seven added in the second batch) at 1k
 | herringbone_parquet_*.jpg | [Herringbone Parquet](https://polyhaven.com/a/herringbone_parquet) | floors |
 | decrepit_wallpaper_*.jpg | [Decrepit Wallpaper](https://polyhaven.com/a/decrepit_wallpaper) | walls |
 | dark_paneled_wood_*.jpg | [Dark Paneled Wood](https://polyhaven.com/a/dark_paneled_wood) | wainscot |
+| medieval_blocks_03_*.jpg | [Medieval Blocks 03](https://polyhaven.com/a/medieval_blocks_03) | dining room stone walls and fireplace (downloaded 2026-10-28; colour map re-encoded at quality 62, normal and roughness maps at 512 px) |
 
 Compression (`@gltf-transform/cli@4.5.1`):
 

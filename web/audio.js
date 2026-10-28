@@ -43,6 +43,22 @@ export function crackle(on) {
   if (crackleGain) crackleGain.gain.setTargetAtTime(on ? .5 : 0, ctx.currentTime, .3);
 }
 
+// thunder after a lightning flash: a low rumble (brown noise through a falling low-pass) with a crack at the start
+export function thunder(delay = 1) {
+  if (!ctx) return;
+  const t0 = ctx.currentTime + delay, dur = 3.5 + Math.random() * 2;
+  const src = ctx.createBufferSource(); src.buffer = noiseBuffer(dur, true);
+  const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(900, t0); lp.frequency.exponentialRampToValueAtTime(90, t0 + dur);
+  const g = ctx.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.9 - delay * .25, t0 + .06); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+  src.connect(lp).connect(g).connect(master); src.start(t0); src.stop(t0 + dur);
+  if (delay < 1) { // close strikes crack
+    const cr = ctx.createBufferSource(); cr.buffer = noiseBuffer(.3, false);
+    const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1200;
+    const cg = ctx.createGain(); cg.gain.setValueAtTime(.35, t0); cg.gain.exponentialRampToValueAtTime(.001, t0 + .3);
+    cr.connect(hp).connect(cg).connect(master); cr.start(t0);
+  }
+}
+
 // a clip of her voice, decoded once; a new clip or stopVoice() cuts the one playing
 const clips = {};
 let voiceSrc = null, voiceId = 0;

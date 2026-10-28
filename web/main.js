@@ -76,6 +76,7 @@ const world = createWorld($("scene"), {
     j.firstElementChild.style.transform = `translate(${x * 32}px, ${z * 32}px)`;
   },
   isSpinning: () => state.current === "record" && (state.waiting || audio.voicePlaying()),
+  onThunder: (delay) => audio.thunder(delay),
 });
 world.setSensitivity(settings.sens);
 
